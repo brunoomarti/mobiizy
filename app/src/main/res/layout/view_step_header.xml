@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="22dp">
+
+    <View
+        android:layout_width="42dp"
+        android:layout_height="4dp"
+        android:layout_marginTop="8dp"
+        android:background="?attr/colorSecondary" />
+
+    <TextView
+        android:id="@+id/stepHeadline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Informações básicas"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="?attr/colorOnBackground" />
+
+    <TextView
+        android:id="@+id/stepSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="Vamos começar! Preencha seus dados para criar sua conta."
+        android:textSize="14sp"
+        android:textColor="?attr/colorOnSurfaceVariant" />
+
+</LinearLayout>

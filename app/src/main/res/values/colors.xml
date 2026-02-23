@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light Mode Palette -->
+    <color name="md_theme_light_primary">#1E293B</color>
+    <color name="md_theme_light_secondary">#3B82F6</color>
+    <color name="md_theme_light_accent">#22C55E</color>
+
+    <color name="md_theme_light_appBackground">#F8FAFC</color>
+    <color name="md_theme_light_formBackground">#FFFFFF</color>
+    <color name="md_theme_light_backgroundMuted">#F1F5F9</color>
+
+    <color name="md_theme_light_textPrimary">#0F172A</color>
+    <color name="md_theme_light_textSecondary">#475569</color>
+    <color name="md_theme_light_textMuted">#94A3B8</color>
+
+    <color name="md_theme_light_borderLight">#E2E8F0</color>
+    <color name="md_theme_light_borderFocus">#3B82F6</color>
+
+    <color name="md_theme_light_success">#16A34A</color>
+    <color name="md_theme_light_warning">#F59E0B</color>
+    <color name="md_theme_light_error">#DC2626</color>
+    <color name="md_theme_light_info">#0EA5E9</color>
+
+    <!-- Dark Mode Palette -->
+    <color name="md_theme_dark_primary">#E2E8F0</color>
+    <color name="md_theme_dark_secondary">#3B82F6</color>
+    <color name="md_theme_dark_accent">#22C55E</color>
+
+    <color name="md_theme_dark_appBackground">#0F172A</color>
+    <color name="md_theme_dark_formBackground">#1E293B</color>
+    <color name="md_theme_dark_backgroundMuted">#334155</color>
+
+    <color name="md_theme_dark_textPrimary">#F8FAFC</color>
+    <color name="md_theme_dark_textSecondary">#94A3B8</color>
+    <color name="md_theme_dark_textMuted">#475569</color>
+
+    <color name="md_theme_dark_borderLight">#334155</color>
+    <color name="md_theme_dark_borderFocus">#3B82F6</color>
+
+    <color name="md_theme_dark_success">#16A34A</color>
+    <color name="md_theme_dark_warning">#F59E0B</color>
+    <color name="md_theme_dark_error">#DC2626</color>
+    <color name="md_theme_dark_info">#0EA5E9</color>
+
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+</resources>

@@ -1,0 +1,69 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.Kotlinproject" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Material core (use suas cores corretas) -->
+        <item name="colorPrimary">@color/md_theme_dark_primary</item>
+        <item name="colorOnPrimary">@color/black</item>
+
+        <item name="colorSecondary">@color/md_theme_dark_secondary</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <item name="colorTertiary">@color/md_theme_dark_accent</item>
+        <item name="colorOnTertiary">@color/black</item>
+
+        <!-- Importante pro Material -->
+        <item name="colorError">@color/md_theme_dark_error</item>
+
+        <!-- Surfaces -->
+        <item name="android:colorBackground">@color/md_theme_dark_appBackground</item>
+        <item name="android:windowBackground">@color/md_theme_dark_appBackground</item>
+        <item name="colorOnBackground">@color/md_theme_dark_textPrimary</item>
+
+        <item name="colorSurface">@color/md_theme_dark_formBackground</item>
+        <item name="colorOnSurface">@color/md_theme_dark_textPrimary</item>
+
+        <item name="colorSurfaceVariant">@color/md_theme_dark_backgroundMuted</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_dark_textSecondary</item>
+
+        <!-- Outline -->
+        <item name="colorOutline">@color/md_theme_dark_borderLight</item>
+        <item name="colorOutlineVariant">@color/md_theme_dark_borderLight</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/md_theme_dark_appBackground</item>
+        <item name="android:windowLightStatusBar">false</item>
+
+        <!-- Ripple/press -->
+        <item name="colorControlHighlight">@color/md_theme_dark_backgroundMuted</item>
+
+        <!-- Foco/ativado (azul vivo) -->
+        <item name="colorControlActivated">@color/md_theme_dark_secondary</item>
+
+        <!-- Seus attrs custom (mantém suas cores) -->
+        <item name="appBackground">@color/md_theme_dark_appBackground</item>
+        <item name="formBackground">@color/md_theme_dark_formBackground</item>
+        <item name="backgroundMuted">@color/md_theme_dark_backgroundMuted</item>
+
+        <item name="textPrimary">@color/md_theme_dark_textPrimary</item>
+        <item name="textSecondary">@color/md_theme_dark_textSecondary</item>
+        <item name="textMuted">@color/md_theme_dark_textMuted</item>
+        <item name="textColorOnForm">@color/md_theme_dark_textPrimary</item>
+
+        <item name="borderLight">@color/md_theme_dark_borderLight</item>
+        <item name="borderFocus">@color/md_theme_dark_borderFocus</item>
+
+        <item name="success">@color/md_theme_dark_success</item>
+        <item name="warning">@color/md_theme_dark_warning</item>
+        <item name="error">@color/md_theme_dark_error</item>
+        <item name="info">@color/md_theme_dark_info</item>
+
+        <item name="elevationOverlayColor">@color/md_theme_dark_appBackground</item>
+
+        <!-- Inputs globais -->
+        <item name="textInputStyle">@style/AppTextInput</item>
+        <item name="android:editTextStyle">@style/AppTextInputEdit</item>
+
+    </style>
+
+</resources>

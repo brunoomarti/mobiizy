@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">kotlinproject</string>
+
+    <!-- LoginActivity -->
+    <string name="login">Login</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="login_subtitle">Access your account to continue</string>
+    <string name="or_divider">or</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="google_web_client_id">810169926219-5pbhfk5rtiupff4ea1s88p4ecpttu5ti.apps.googleusercontent.com
+    </string>
+    <string name="dont_have_an_account_register">Don\'t have an account? Register</string>
+    <string name="login_successful">Login successful.</string>
+    <string name="authentication_failed">Authentication failed.</string>
+    <string name="please_fill_all_fields">Please fill all fields.</string>
+    <string name="password_reset_email_sent">Password reset email sent.</string>
+    <string name="failed_to_send_password_reset_email">Failed to send password reset email.</string>
+    <string name="please_enter_your_email">Please enter your email.</string>
+    <string name="mobiizy_logo">Mobiizy Logo</string>
+    <string name="app_logo">App logo</string>
+
+    <!-- MainActivity -->
+    <string name="hello_world">Hello World!</string>
+</resources>

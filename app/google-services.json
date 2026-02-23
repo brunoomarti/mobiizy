@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "810169926219",
+    "firebase_url": "https://kotlin-project-a4e1a-default-rtdb.firebaseio.com",
+    "project_id": "kotlin-project-a4e1a",
+    "storage_bucket": "kotlin-project-a4e1a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:810169926219:android:5ad7ab856055ebeea283ce",
+        "android_client_info": {
+          "package_name": "com.brunocodex.kotlinproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "810169926219-aivd1opaq92d5pu9blremef3djdld9fq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.brunocodex.kotlinproject",
+            "certificate_hash": "3a06ef9a8f47b7cfb81352c4807a56f5ff72554f"
+          }
+        },
+        {
+          "client_id": "810169926219-5pbhfk5rtiupff4ea1s88p4ecpttu5ti.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcUd-FWGXKfjvSaGczqI2rcyfVmq_Zuik"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "810169926219-5pbhfk5rtiupff4ea1s88p4ecpttu5ti.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- General -->
+    <attr name="appBackground" format="color" />
+    <attr name="formBackground" format="color" />
+    <attr name="backgroundMuted" format="color" />
+
+    <!-- Text -->
+    <attr name="textPrimary" format="color" />
+    <attr name="textSecondary" format="color" />
+    <attr name="textColorOnForm" format="color" />
+    <attr name="textMuted" format="color" />
+
+    <!-- Borders -->
+    <attr name="borderLight" format="color" />
+    <attr name="borderFocus" format="color" />
+
+    <!-- Semantic -->
+    <attr name="success" format="color" />
+    <attr name="warning" format="color" />
+    <attr name="error" format="color" />
+    <attr name="info" format="color" />
+</resources>

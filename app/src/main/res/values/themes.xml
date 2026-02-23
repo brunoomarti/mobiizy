@@ -1,0 +1,69 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.Kotlinproject" parent="Theme.Material3.DayNight.NoActionBar">
+
+        <!-- Material 3 core mapping (usando suas cores personalizadas) -->
+        <item name="colorPrimary">@color/md_theme_light_primary</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <item name="colorSecondary">@color/md_theme_light_secondary</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <item name="colorTertiary">@color/md_theme_light_accent</item>
+        <item name="colorOnTertiary">@color/white</item>
+
+        <!-- IMPORTANTE: Material precisa disso para erros (TextInputLayout etc.) -->
+        <item name="colorError">@color/md_theme_light_error</item>
+
+        <!-- Surfaces -->
+        <item name="android:colorBackground">@color/md_theme_light_appBackground</item>
+        <item name="android:windowBackground">@color/md_theme_light_appBackground</item>
+        <item name="colorOnBackground">@color/md_theme_light_textPrimary</item>
+
+        <item name="colorSurface">@color/md_theme_light_formBackground</item>
+        <item name="colorOnSurface">@color/md_theme_light_textPrimary</item>
+
+        <item name="colorSurfaceVariant">@color/md_theme_light_backgroundMuted</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_light_textSecondary</item>
+
+        <!-- Outline / borders -->
+        <item name="colorOutline">@color/md_theme_light_borderLight</item>
+        <item name="colorOutlineVariant">@color/md_theme_light_borderLight</item>
+
+        <!-- Status bar -->
+        <item name="android:statusBarColor">@color/md_theme_light_appBackground</item>
+        <item name="android:windowLightStatusBar">true</item>
+
+        <!-- Ripple/press -->
+        <item name="colorControlHighlight">@color/md_theme_light_backgroundMuted</item>
+
+        <!-- Cor de "ativado/focado" (use o azul vivo, não o navy) -->
+        <item name="colorControlActivated">?attr/colorPrimary</item>
+
+        <!-- Seus attrs custom (mantém suas cores) -->
+        <item name="appBackground">@color/md_theme_light_appBackground</item>
+        <item name="formBackground">@color/md_theme_light_formBackground</item>
+        <item name="backgroundMuted">@color/md_theme_light_backgroundMuted</item>
+
+        <item name="textPrimary">@color/md_theme_light_textPrimary</item>
+        <item name="textSecondary">@color/md_theme_light_textSecondary</item>
+        <item name="textMuted">@color/md_theme_light_textMuted</item>
+        <item name="textColorOnForm">@color/md_theme_light_textPrimary</item>
+
+        <item name="borderLight">@color/md_theme_light_borderLight</item>
+        <item name="borderFocus">@color/md_theme_light_borderFocus</item>
+
+        <item name="success">@color/md_theme_light_success</item>
+        <item name="warning">@color/md_theme_light_warning</item>
+        <item name="error">@color/md_theme_light_error</item>
+        <item name="info">@color/md_theme_light_info</item>
+
+        <item name="elevationOverlayColor">@color/md_theme_light_appBackground</item>
+
+        <!-- APLICAÇÃO GLOBAL dos estilos de input -->
+        <item name="textInputStyle">@style/AppTextInput</item>
+        <item name="android:editTextStyle">@style/AppTextInputEdit</item>
+
+    </style>
+
+</resources>
