@@ -44,7 +44,8 @@
                     android:id="@+id/rbCpf"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:buttonTint="?attr/colorSecondary"
+                    app:buttonTint="@color/radio_button_tint"
+                    app:useMaterialThemeColors="false"
                     android:checked="true"
                     android:text="Pessoa Física (CPF)"
                     android:textColor="?attr/colorOnBackground" />
@@ -54,7 +55,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:buttonTint="?attr/colorSecondary"
+                    app:buttonTint="@color/radio_button_tint"
+                    app:useMaterialThemeColors="false"
                     android:text="Pessoa Jurídica (CNPJ)"
                     android:textColor="?attr/colorOnBackground" />
             </RadioGroup>

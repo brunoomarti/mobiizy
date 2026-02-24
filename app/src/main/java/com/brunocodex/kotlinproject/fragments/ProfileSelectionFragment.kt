@@ -59,14 +59,14 @@ class ProfileSelectionFragment : Fragment(R.layout.fragment_profile_selection) {
     }
 
     private fun applyCardState(card: MaterialCardView, selected: Boolean) {
-        val strokeSelected = MaterialColors.getColor(card, R.attr.borderFocus)
+        val strokeSelected = MaterialColors.getColor(card, com.google.android.material.R.attr.colorSecondary)
         val strokeDefault = MaterialColors.getColor(card, R.attr.borderLight)
         val bgDefault = MaterialColors.getColor(card, R.attr.formBackground)
-        val bgSelected = MaterialColors.getColor(card, R.attr.backgroundMuted)
+        val bgSelected = MaterialColors.layer(bgDefault, strokeSelected, 0.18f)
 
-        card.strokeWidth = if (selected) 3 else 1
+        card.strokeWidth = if (selected) 2 else 1
         card.strokeColor = if (selected) strokeSelected else strokeDefault
-        card.cardElevation = if (selected) 6f else 2f
+        card.cardElevation = if (selected) 1f else 1f
         card.setCardBackgroundColor(if (selected) bgSelected else bgDefault)
     }
 }

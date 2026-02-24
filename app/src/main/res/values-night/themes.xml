@@ -4,10 +4,10 @@
 
         <!-- Material core (use suas cores corretas) -->
         <item name="colorPrimary">@color/md_theme_dark_primary</item>
-        <item name="colorOnPrimary">@color/black</item>
+        <item name="colorOnPrimary">@color/white</item>
 
         <item name="colorSecondary">@color/md_theme_dark_secondary</item>
-        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSecondary">@color/black</item>
 
         <item name="colorTertiary">@color/md_theme_dark_accent</item>
         <item name="colorOnTertiary">@color/black</item>
@@ -43,7 +43,7 @@
         <!-- Seus attrs custom (mantém suas cores) -->
         <item name="appBackground">@color/md_theme_dark_appBackground</item>
         <item name="formBackground">@color/md_theme_dark_formBackground</item>
-        <item name="backgroundMuted">@color/md_theme_dark_backgroundMuted</item>
+        <item name="backgroundMuted">@color/md_theme_dark_appBackground</item>
 
         <item name="textPrimary">@color/md_theme_dark_textPrimary</item>
         <item name="textSecondary">@color/md_theme_dark_textSecondary</item>

@@ -7,7 +7,7 @@
         <item name="colorOnPrimary">@color/white</item>
 
         <item name="colorSecondary">@color/md_theme_light_secondary</item>
-        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorOnSecondary">@color/black</item>
 
         <item name="colorTertiary">@color/md_theme_light_accent</item>
         <item name="colorOnTertiary">@color/white</item>
@@ -37,8 +37,7 @@
         <!-- Ripple/press -->
         <item name="colorControlHighlight">@color/md_theme_light_backgroundMuted</item>
 
-        <!-- Cor de "ativado/focado" (use o azul vivo, não o navy) -->
-        <item name="colorControlActivated">?attr/colorPrimary</item>
+        <item name="colorControlActivated">?attr/colorSecondary</item>
 
         <!-- Seus attrs custom (mantém suas cores) -->
         <item name="appBackground">@color/md_theme_light_appBackground</item>

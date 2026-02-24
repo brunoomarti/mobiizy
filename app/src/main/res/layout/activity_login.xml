@@ -36,7 +36,7 @@
             app:cardBackgroundColor="?attr/formBackground"
             app:cardCornerRadius="16dp"
             app:cardElevation="8dp"
-            android:outlineSpotShadowColor="#5D353535"
+            android:outlineSpotShadowColor="?attr/colorOutline"
             app:strokeWidth="1dp"
             app:strokeColor="?attr/colorOutline">
 
