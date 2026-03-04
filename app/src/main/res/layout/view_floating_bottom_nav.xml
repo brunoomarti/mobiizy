@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottomNavRoot"
+    android:layout_width="wrap_content"
+    android:layout_height="70dp"
+    android:contentDescription="@string/nav_menu"
+    app:cardBackgroundColor="?attr/colorSurface"
+    app:cardCornerRadius="40dp"
+    app:cardElevation="3dp"
+    app:cardUseCompatPadding="false"
+    app:strokeWidth="0dp">
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingHorizontal="4dp">
+
+        <View
+            android:id="@+id/navSelectionIndicator"
+            android:layout_width="62dp"
+            android:layout_height="62dp"
+            android:layout_gravity="start|center_vertical"
+            android:background="@drawable/bg_bottom_nav_item_selected" />
+
+        <LinearLayout
+            android:id="@+id/navItemsContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <include
+                android:id="@+id/navHomeItem"
+                layout="@layout/item_floating_bottom_nav" />
+
+            <include
+                android:id="@+id/navGarageItem"
+                layout="@layout/item_floating_bottom_nav" />
+
+            <include
+                android:id="@+id/navTripsItem"
+                layout="@layout/item_floating_bottom_nav" />
+
+            <include
+                android:id="@+id/navWalletItem"
+                layout="@layout/item_floating_bottom_nav" />
+
+            <include
+                android:id="@+id/navProfileItem"
+                layout="@layout/item_floating_bottom_nav" />
+        </LinearLayout>
+    </FrameLayout>
+
+</com.google.android.material.card.MaterialCardView>

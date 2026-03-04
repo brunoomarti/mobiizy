@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.ProviderVehicleRegisterActivity">
+
+    <LinearLayout
+        android:id="@+id/dots_indicator"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/app_padding_horizontal"
+        android:paddingTop="32dp"
+        android:paddingEnd="@dimen/app_padding_horizontal"
+        android:paddingBottom="18dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <FrameLayout
+            android:id="@+id/step1"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/step_current" />
+
+        <View
+            android:id="@+id/line1"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/line_pending" />
+
+        <FrameLayout
+            android:id="@+id/step2"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/step_pending" />
+
+        <View
+            android:id="@+id/line2"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/line_pending" />
+
+        <FrameLayout
+            android:id="@+id/step3"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/step_pending" />
+
+        <View
+            android:id="@+id/line3"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/line_pending" />
+
+        <FrameLayout
+            android:id="@+id/step4"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/step_pending" />
+
+        <View
+            android:id="@+id/line4"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/line_pending" />
+
+        <FrameLayout
+            android:id="@+id/step5"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/step_pending" />
+
+        <View
+            android:id="@+id/line5"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/line_pending" />
+
+        <FrameLayout
+            android:id="@+id/step6"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/step_pending" />
+
+        <View
+            android:id="@+id/line6"
+            android:layout_width="0dp"
+            android:layout_height="2dp"
+            android:layout_marginHorizontal="4dp"
+            android:layout_weight="1"
+            android:background="@drawable/line_pending" />
+
+        <FrameLayout
+            android:id="@+id/step7"
+            android:layout_width="14dp"
+            android:layout_height="14dp"
+            android:background="@drawable/step_pending" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/step_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/app_padding_horizontal"
+        android:paddingTop="8dp"
+        android:paddingEnd="@dimen/app_padding_horizontal"
+        android:paddingBottom="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/dots_indicator">
+
+        <TextView
+            android:id="@+id/tvStepTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/vehicle_register_step_initial"
+            android:textColor="@color/md_theme_light_textMuted"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackgroundBorderless"
+            android:text="@string/vehicle_register_cancel"
+            android:textColor="@color/md_theme_light_textSecondary"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toTopOf="@id/step_actions"
+        app:layout_constraintTop_toBottomOf="@id/step_header" />
+
+    <LinearLayout
+        android:id="@+id/step_actions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/app_padding_horizontal"
+        android:paddingTop="28dp"
+        android:paddingEnd="@dimen/app_padding_horizontal"
+        android:paddingBottom="18dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="@string/register_back" />
+
+        <Space
+            android:layout_width="12dp"
+            android:layout_height="1dp" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1">
+
+            <Button
+                android:id="@+id/btnNext"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/register_next" />
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progressBtnNext"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:elevation="8dp"
+                android:indeterminate="true"
+                android:translationZ="8dp"
+                android:visibility="gone"
+                app:indicatorColor="@android:color/white"
+                app:indicatorSize="20dp"
+                app:indicatorInset="0dp"
+                app:trackColor="#4DFFFFFF"
+                app:trackThickness="2dp" />
+        </FrameLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
