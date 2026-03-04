@@ -3,6 +3,7 @@ package com.brunocodex.kotlinproject.activities
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.brunocodex.kotlinproject.navigation.ProfileNavigation
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -16,30 +17,33 @@ class AuthGateActivity : AppCompatActivity() {
 
         val user = auth.currentUser
 
-        // 1) Não logado
         if (user == null) {
             goTo(LoginActivity::class.java)
             return
         }
 
-        // 2) Usuário anônimo (rascunho de cadastro)
         if (user.isAnonymous) {
             goTo(RegisterActivity::class.java)
             return
         }
 
-        // 3) Usuário real -> verifica se perfil foi concluído
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
                 val profileCompleted = doc.getBoolean("profileCompleted") == true
-                if (profileCompleted) {
-                    goTo(MainActivity::class.java)
-                } else {
+                val profileType = ProfileNavigation.parseProfileType(doc.getString("profileType"))
+
+                if (!profileCompleted || profileType == null) {
                     goTo(RegisterActivity::class.java)
+                    return@addOnSuccessListener
                 }
+
+                ProfileNavigation.goToHome(
+                    activity = this,
+                    profileType = profileType,
+                    clearTask = true
+                )
             }
             .addOnFailureListener {
-                // fallback simples
                 goTo(LoginActivity::class.java)
             }
     }

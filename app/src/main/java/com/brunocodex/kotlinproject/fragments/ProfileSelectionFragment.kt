@@ -21,9 +21,9 @@ class ProfileSelectionFragment : Fragment(R.layout.fragment_profile_selection) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<TextView>(R.id.stepHeadline).text = "Como voce quer usar o app?"
+        view.findViewById<TextView>(R.id.stepHeadline).text = getString(R.string.profile_selection_step_headline)
         view.findViewById<TextView>(R.id.stepSubtitle).text =
-            "Escolha um perfil para personalizar sua experiencia no app."
+            getString(R.string.profile_selection_step_subtitle)
 
         cardRent = view.findViewById(R.id.cardRent)
         cardProvide = view.findViewById(R.id.cardProvide)

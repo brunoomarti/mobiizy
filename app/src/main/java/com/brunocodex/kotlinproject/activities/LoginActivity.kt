@@ -1,50 +1,52 @@
 package com.brunocodex.kotlinproject.activities
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.credentials.Credential
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.lifecycle.lifecycleScope
 import com.brunocodex.kotlinproject.R
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
-import com.google.android.gms.common.api.ApiException
+import com.brunocodex.kotlinproject.navigation.ProfileNavigation
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import java.io.IOException
+import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
 
     private val auth by lazy { FirebaseAuth.getInstance() }
     private val db by lazy { FirebaseFirestore.getInstance() }
+    private val credentialManager by lazy { CredentialManager.create(this) }
 
     private lateinit var emailInput: TextInputEditText
     private lateinit var passwordInput: TextInputEditText
-    private lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var loginButton: MaterialButton
+    private lateinit var loginLoading: ProgressBar
+    private var isLoginInProgress: Boolean = false
     private val googleWebClientId by lazy { getString(R.string.default_web_client_id).trim() }
 
-    private val googleSignInLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val data = result.data ?: return@registerForActivityResult
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                handleGoogleAccount(account)
-            } catch (e: ApiException) {
-                val statusName = GoogleSignInStatusCodes.getStatusCodeString(e.statusCode)
-                val details = e.message?.takeIf { it.isNotBlank() } ?: "sem detalhes"
-                Toast.makeText(
-                    this,
-                    "Falha no login Google (code=${e.statusCode}, status=$statusName): $details",
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
+    companion object {
+        private const val TAG = "LoginActivity"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,14 +54,8 @@ class LoginActivity : AppCompatActivity() {
 
         emailInput = findViewById(R.id.emailInput)
         passwordInput = findViewById(R.id.passwordInput)
-
-        val gsoBuilder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-        if (googleWebClientId.isNotBlank()) {
-            gsoBuilder.requestIdToken(googleWebClientId)
-        }
-        val gso = gsoBuilder.build()
-        googleSignInClient = GoogleSignIn.getClient(this, gso)
+        loginButton = findViewById(R.id.loginButton)
+        loginLoading = findViewById(R.id.loginLoading)
     }
 
     override fun onStart() {
@@ -72,21 +68,34 @@ class LoginActivity : AppCompatActivity() {
     }
 
     fun signIn(view: View) {
+        if (isLoginInProgress) return
+
         val email = emailInput.text?.toString()?.trim().orEmpty()
         val password = passwordInput.text?.toString().orEmpty()
 
         if (email.isBlank() || password.isBlank()) {
-            Toast.makeText(this, "Preencha e-mail e senha", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.login_error_fill_email_password), Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!hasInternetConnection()) {
+            Toast.makeText(this, getString(R.string.error_no_internet_check), Toast.LENGTH_LONG).show()
             return
         }
 
+        setLoginLoading(true)
         auth.signInWithEmailAndPassword(email, password)
             .addOnSuccessListener { result ->
-                val uid = result.user?.uid ?: return@addOnSuccessListener
+                val uid = result.user?.uid
+                if (uid == null) {
+                    setLoginLoading(false)
+                    Toast.makeText(this, getString(R.string.login_error_user_not_identified), Toast.LENGTH_LONG).show()
+                    return@addOnSuccessListener
+                }
                 routeAfterAuth(uid, false)
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao entrar: ${e.message}", Toast.LENGTH_LONG).show()
+                setLoginLoading(false)
+                Toast.makeText(this, humanizeAuthError(e), Toast.LENGTH_LONG).show()
             }
     }
 
@@ -100,12 +109,21 @@ class LoginActivity : AppCompatActivity() {
         db.collection("users").document(uid).get()
             .addOnSuccessListener { doc ->
                 val profileCompleted = doc.getBoolean("profileCompleted") == true
-                val target = if (profileCompleted) MainActivity::class.java else RegisterActivity::class.java
-                startActivity(Intent(this, target))
-                finish()
+                val profileType = ProfileNavigation.parseProfileType(doc.getString("profileType"))
+
+                if (!profileCompleted || profileType == null) {
+                    startActivity(Intent(this, RegisterActivity::class.java))
+                    finish()
+                    return@addOnSuccessListener
+                }
+
+                ProfileNavigation.goToHome(
+                    activity = this,
+                    profileType = profileType,
+                    clearTask = true
+                )
             }
             .addOnFailureListener {
-                // fallback
                 startActivity(Intent(this, MainActivity::class.java))
                 finish()
             }
@@ -119,45 +137,139 @@ class LoginActivity : AppCompatActivity() {
         if (googleWebClientId.isBlank()) {
             Toast.makeText(
                 this,
-                "Configure default_web_client_id no google-services.json para habilitar login Google.",
+                getString(R.string.login_error_configure_google_client_id),
                 Toast.LENGTH_LONG
             ).show()
             return
         }
-        googleSignInLauncher.launch(googleSignInClient.signInIntent)
-    }
-
-    private fun handleGoogleAccount(account: GoogleSignInAccount) {
-        val idToken = account.idToken
-        if (idToken.isNullOrBlank()) {
-            Toast.makeText(this, "Nao foi possivel obter token do Google.", Toast.LENGTH_LONG).show()
+        if (!hasInternetConnection()) {
+            Toast.makeText(this, getString(R.string.error_no_internet_check), Toast.LENGTH_LONG).show()
             return
         }
 
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        auth.signInWithCredential(credential)
+        lifecycleScope.launch {
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setServerClientId(googleWebClientId)
+                .setFilterByAuthorizedAccounts(false)
+                .setAutoSelectEnabled(false)
+                .build()
+
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
+
+            try {
+                val result = credentialManager.getCredential(
+                    context = this@LoginActivity,
+                    request = request
+                )
+                handleGoogleCredential(result.credential)
+            } catch (e: GetCredentialException) {
+                Toast.makeText(
+                    this@LoginActivity,
+                    humanizeCredentialError(e),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private fun handleGoogleCredential(credential: Credential) {
+        if (credential !is CustomCredential ||
+            credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
+            Toast.makeText(this, getString(R.string.login_error_google_credential_invalid), Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val idToken = try {
+            GoogleIdTokenCredential.createFrom(credential.data).idToken
+        } catch (e: GoogleIdTokenParsingException) {
+            Toast.makeText(this, getString(R.string.login_error_google_token_read), Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(firebaseCredential)
             .addOnSuccessListener { result ->
                 val uid = result.user?.uid ?: return@addOnSuccessListener
                 routeAfterAuth(uid, false)
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao autenticar Google: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, humanizeAuthError(e), Toast.LENGTH_LONG).show()
             }
     }
 
     fun forgotPassword(view: View) {
         val email = emailInput.text?.toString()?.trim().orEmpty()
         if (email.isBlank()) {
-            Toast.makeText(this, "Digite seu e-mail para recuperar a senha", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.login_prompt_recovery_email), Toast.LENGTH_SHORT).show()
+            return
+        }
+        if (!hasInternetConnection()) {
+            Toast.makeText(this, getString(R.string.error_no_internet_check), Toast.LENGTH_LONG).show()
             return
         }
 
         auth.sendPasswordResetEmail(email)
             .addOnSuccessListener {
-                Toast.makeText(this, "E-mail de recuperação enviado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.login_success_recovery_email_sent), Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, humanizeAuthError(e), Toast.LENGTH_LONG).show()
             }
+    }
+
+    private fun hasInternetConnection(): Boolean {
+        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    private fun humanizeCredentialError(e: GetCredentialException): String {
+        val msg = e.message.orEmpty()
+        Log.w(TAG, "CredentialManager error: $msg", e)
+        return when {
+            msg.contains("network", ignoreCase = true) -> getString(R.string.error_no_internet_try_again)
+            msg.contains("canceled", ignoreCase = true) -> getString(R.string.login_error_google_cancelled)
+            msg.contains("No credentials available", ignoreCase = true) ->
+                getString(R.string.login_error_google_no_accounts)
+            else -> getString(R.string.login_error_google_failed)
+        }
+    }
+
+    private fun humanizeAuthError(e: Exception): String {
+        val authCode = (e as? FirebaseAuthException)?.errorCode
+        val firestoreCode = (e as? FirebaseFirestoreException)?.code?.name
+
+        Log.e(TAG, "Auth error authCode=$authCode firestoreCode=$firestoreCode message=${e.message}", e)
+
+        if (e is IOException) {
+            return getString(R.string.error_no_internet_check)
+        }
+
+        return when (authCode) {
+            "ERROR_INVALID_EMAIL" -> getString(R.string.error_invalid_email)
+            "ERROR_USER_NOT_FOUND" -> getString(R.string.error_user_not_found)
+            "ERROR_WRONG_PASSWORD" -> getString(R.string.error_wrong_password)
+            "ERROR_INVALID_CREDENTIAL" -> getString(R.string.error_invalid_credentials)
+            "ERROR_INVALID_LOGIN_CREDENTIAL" -> getString(R.string.error_email_or_password_incorrect)
+            "ERROR_USER_DISABLED" -> getString(R.string.error_account_disabled)
+            "ERROR_TOO_MANY_REQUESTS" -> getString(R.string.error_too_many_attempts)
+            "ERROR_NETWORK_REQUEST_FAILED" -> getString(R.string.error_no_internet_check)
+            else -> when (firestoreCode) {
+                "UNAVAILABLE" -> getString(R.string.error_no_internet_now)
+                else -> getString(R.string.login_error_generic)
+            }
+        }
+    }
+
+    private fun setLoginLoading(loading: Boolean) {
+        isLoginInProgress = loading
+        loginButton.isEnabled = !loading
+        loginButton.text = if (loading) "" else getString(R.string.login)
+        loginLoading.visibility = if (loading) View.VISIBLE else View.GONE
     }
 }

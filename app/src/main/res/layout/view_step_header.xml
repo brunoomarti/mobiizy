@@ -16,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="Informações básicas"
+        android:text="@string/step_header_default_title"
         android:textSize="22sp"
         android:textStyle="bold"
         android:textColor="?attr/colorOnBackground" />
@@ -26,7 +26,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="Vamos começar! Preencha seus dados para criar sua conta."
+        android:text="@string/step_header_default_subtitle"
         android:textSize="14sp"
         android:textColor="?attr/colorOnSurfaceVariant" />
 

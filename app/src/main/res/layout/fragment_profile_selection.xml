@@ -63,7 +63,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:gravity="center"
-                            android:text="A"
+                            android:text="@string/profile_choice_rent_letter"
                             android:textStyle="bold"
                             android:textColor="?attr/textPrimary" />
                     </com.google.android.material.card.MaterialCardView>
@@ -78,7 +78,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Quero alugar um carro"
+                            android:text="@string/profile_choice_rent_title"
                             android:textStyle="bold"
                             android:textColor="?attr/textPrimary"
                             android:textSize="16sp" />
@@ -87,7 +87,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Encontre veiculos para usar quando precisar."
+                            android:text="@string/profile_choice_rent_subtitle"
                             android:textColor="?attr/textSecondary"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -98,7 +98,7 @@
                         android:background="?attr/backgroundMuted"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="5dp"
-                        android:text="ALUGAR"
+                        android:text="@string/profile_choice_rent_badge"
                         android:textAllCaps="true"
                         android:textColor="?attr/textSecondary"
                         android:textSize="10sp"
@@ -138,7 +138,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:gravity="center"
-                            android:text="D"
+                            android:text="@string/profile_choice_provide_letter"
                             android:textStyle="bold"
                             android:textColor="?attr/textPrimary" />
                     </com.google.android.material.card.MaterialCardView>
@@ -153,7 +153,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Quero disponibilizar meu carro"
+                            android:text="@string/profile_choice_provide_title"
                             android:textStyle="bold"
                             android:textColor="?attr/textPrimary"
                             android:textSize="16sp" />
@@ -162,7 +162,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:text="Cadastre seu veiculo e gere renda extra."
+                            android:text="@string/profile_choice_provide_subtitle"
                             android:textColor="?attr/textSecondary"
                             android:textSize="13sp" />
                     </LinearLayout>
@@ -173,7 +173,7 @@
                         android:background="?attr/backgroundMuted"
                         android:paddingHorizontal="10dp"
                         android:paddingVertical="5dp"
-                        android:text="DISPONIBILIZAR"
+                        android:text="@string/profile_choice_provide_badge"
                         android:textAllCaps="true"
                         android:textColor="?attr/textSecondary"
                         android:textSize="10sp"

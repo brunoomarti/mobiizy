@@ -74,13 +74,13 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
 
             when (val row = getItem(position)) {
                 is DropRow.Loading -> {
-                    rowText.text = "Carregando..."
+                    rowText.text = ctx.getString(R.string.address_dropdown_loading)
                     rowText.alpha = 0.9f
                     rowProgress.visibility = View.VISIBLE
                 }
 
                 is DropRow.Empty -> {
-                    rowText.text = "Nenhum resultado"
+                    rowText.text = ctx.getString(R.string.address_dropdown_empty)
                     rowText.alpha = 0.6f
                     rowProgress.visibility = View.GONE
                 }
@@ -126,8 +126,8 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
         setupDataSaving(cepInput, streetInput, numberInput, neighborhoodInput, cityInput, stateInput)
 
         tvHeaderStep = view.findViewById(R.id.tvStepTitle)
-        view.findViewById<TextView>(R.id.stepHeadline).text = "Seu endereço"
-        view.findViewById<TextView>(R.id.stepSubtitle).text = "Só mais um passo. Isso ajuda no contrato e na segurança da locação."
+        view.findViewById<TextView>(R.id.stepHeadline).text = getString(R.string.address_step_headline)
+        view.findViewById<TextView>(R.id.stepSubtitle).text = getString(R.string.address_step_subtitle)
 
         val dropAdapter = AddressDropAdapter(requireContext(), layoutInflater)
         addressInput.setAdapter(dropAdapter)
@@ -280,12 +280,12 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
         for (i in last.indices) {
             val c = last[i]
             val options = when (c.lowercaseChar()) {
-                'a' -> charArrayOf('�', '�', '�', '�')
-                'e' -> charArrayOf('�', '�')
-                'i' -> charArrayOf('�')
-                'o' -> charArrayOf('�', '�', '�')
-                'u' -> charArrayOf('�')
-                'c' -> charArrayOf('�')
+                'a' -> charArrayOf('á', 'à', 'â', 'ã')
+                'e' -> charArrayOf('é', 'ê')
+                'i' -> charArrayOf('í')
+                'o' -> charArrayOf('ó', 'ô', 'õ')
+                'u' -> charArrayOf('ú')
+                'c' -> charArrayOf('ç')
                 else -> null
             } ?: continue
 
@@ -377,16 +377,16 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
     private fun toUf(state: String): String {
         val s = state.trim().lowercase()
         val map = mapOf(
-            "acre" to "AC", "alagoas" to "AL", "amapá" to "AP", "amapa" to "AP",
-            "amazonas" to "AM", "bahia" to "BA", "ceará" to "CE", "ceara" to "CE",
-            "distrito federal" to "DF", "espírito santo" to "ES", "espirito santo" to "ES",
-            "goiás" to "GO", "goias" to "GO", "maranhão" to "MA", "maranhao" to "MA",
+            "acre" to "AC", "alagoas" to "AL", "amapÃ¡" to "AP", "amapa" to "AP",
+            "amazonas" to "AM", "bahia" to "BA", "cearÃ¡" to "CE", "ceara" to "CE",
+            "distrito federal" to "DF", "espÃ­rito santo" to "ES", "espirito santo" to "ES",
+            "goiÃ¡s" to "GO", "goias" to "GO", "maranhÃ£o" to "MA", "maranhao" to "MA",
             "mato grosso" to "MT", "mato grosso do sul" to "MS", "minas gerais" to "MG",
-            "pará" to "PA", "para" to "PA", "paraíba" to "PB", "paraiba" to "PB",
-            "paraná" to "PR", "parana" to "PR", "pernambuco" to "PE", "piauí" to "PI",
+            "parÃ¡" to "PA", "para" to "PA", "paraÃ­ba" to "PB", "paraiba" to "PB",
+            "paranÃ¡" to "PR", "parana" to "PR", "pernambuco" to "PE", "piauÃ­" to "PI",
             "piaui" to "PI", "rio de janeiro" to "RJ", "rio grande do norte" to "RN",
-            "rio grande do sul" to "RS", "rondônia" to "RO", "rondonia" to "RO",
-            "roraima" to "RR", "santa catarina" to "SC", "são paulo" to "SP",
+            "rio grande do sul" to "RS", "rondÃ´nia" to "RO", "rondonia" to "RO",
+            "roraima" to "RR", "santa catarina" to "SC", "sÃ£o paulo" to "SP",
             "sao paulo" to "SP", "sergipe" to "SE", "tocantins" to "TO"
         )
         return map[s] ?: state.take(2).uppercase()

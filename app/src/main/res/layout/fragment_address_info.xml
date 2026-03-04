@@ -15,7 +15,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- SCROLL só do conteúdo -->
+    <!-- SCROLL sÃ³ do conteÃºdo -->
     <ScrollView
         android:id="@+id/scrollContent"
         android:layout_width="0dp"
@@ -26,7 +26,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Filho único do ScrollView -->
+        <!-- Filho Ãºnico do ScrollView -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -38,7 +38,7 @@
                 style="@style/AppTextInputDropdown"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Pesquisar endereço">
+                android:hint="@string/hint_search_address">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/addressInput"
@@ -55,7 +55,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:tag="required"
-                android:hint="Rua">
+                android:hint="@string/hint_street">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/streetInput"
@@ -63,14 +63,14 @@
                     android:layout_height="wrap_content" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Número -->
+            <!-- NÃºmero -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/numberLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:tag="required"
-                android:hint="Número">
+                android:hint="@string/hint_number">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/numberInput"
@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:tag="required"
-                android:hint="Bairro">
+                android:hint="@string/hint_neighborhood">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/neighborhoodInput"
@@ -101,7 +101,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:tag="required"
-                android:hint="Cidade">
+                android:hint="@string/hint_city">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/cityInput"
@@ -116,7 +116,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:tag="required"
-                android:hint="UF">
+                android:hint="@string/hint_state_uf">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/stateInput"
@@ -133,7 +133,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
                 android:tag="required"
-                android:hint="CEP">
+                android:hint="@string/hint_zip_code">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/cepInput"

@@ -98,7 +98,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Etapa 1 de 4"
+            android:text="@string/register_step_initial"
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="@color/md_theme_light_textMuted" />
@@ -107,7 +107,7 @@
             android:id="@+id/btnCancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Sair do cadastro"
+            android:text="@string/register_cancel"
             android:textSize="13sp"
             android:clickable="true"
             android:focusable="true"
@@ -142,7 +142,7 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Voltar" />
+            android:text="@string/register_back" />
 
         <Space
             android:layout_width="12dp"
@@ -153,7 +153,7 @@
             android:layout_width="0dp"
             android:layout_height="48dp"
             android:layout_weight="1"
-            android:text="Avançar" />
+            android:text="@string/register_next" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

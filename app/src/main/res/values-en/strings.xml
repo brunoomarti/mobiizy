@@ -1,16 +1,15 @@
 <resources>
     <string name="app_name">kotlinproject</string>
 
-    <!-- LoginActivity -->
+    <!-- Login -->
     <string name="login">Login</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="login_subtitle">Access your account to continue</string>
     <string name="or_divider">or</string>
-    <string name="forgot_password">Forgot Password?</string>
+    <string name="forgot_password">Forgot password?</string>
     <string name="continue_with_google">Continue with Google</string>
-    <string name="google_web_client_id">810169926219-5pbhfk5rtiupff4ea1s88p4ecpttu5ti.apps.googleusercontent.com
-    </string>
+    <string name="google_web_client_id">810169926219-5pbhfk5rtiupff4ea1s88p4ecpttu5ti.apps.googleusercontent.com</string>
     <string name="dont_have_an_account_register">Don\'t have an account? Register</string>
     <string name="login_successful">Login successful.</string>
     <string name="authentication_failed">Authentication failed.</string>
@@ -18,9 +17,411 @@
     <string name="password_reset_email_sent">Password reset email sent.</string>
     <string name="failed_to_send_password_reset_email">Failed to send password reset email.</string>
     <string name="please_enter_your_email">Please enter your email.</string>
-    <string name="mobiizy_logo">Mobiizy Logo</string>
+    <string name="mobiizy_logo">Mobiizy logo</string>
     <string name="app_logo">App logo</string>
 
-    <!-- MainActivity -->
-    <string name="hello_world">Hello World!</string>
+    <!-- Login errors/messages -->
+    <string name="login_error_fill_email_password">Fill in email and password.</string>
+    <string name="login_error_user_not_identified">Could not identify the user.</string>
+    <string name="login_error_configure_google_client_id">Configure default_web_client_id in google-services.json to enable Google login.</string>
+    <string name="login_error_google_credential_invalid">Invalid Google credential.</string>
+    <string name="login_error_google_token_read">Could not read Google token.</string>
+    <string name="login_prompt_recovery_email">Enter your email to recover your password.</string>
+    <string name="login_success_recovery_email_sent">Recovery email sent.</string>
+    <string name="login_error_google_cancelled">Google login cancelled.</string>
+    <string name="login_error_google_no_accounts">No Google account available on this device.</string>
+    <string name="login_error_google_failed">Google login failed. Try again.</string>
+    <string name="login_error_generic">Could not complete login. Try again.</string>
+
+    <!-- Generic errors -->
+    <string name="error_no_internet_check">No internet connection. Check your connection and try again.</string>
+    <string name="error_no_internet_try_again">No internet connection. Try again.</string>
+    <string name="error_no_internet_now">No internet at the moment. Try again.</string>
+    <string name="error_invalid_email">Invalid email.</string>
+    <string name="error_invalid_email_lower">invalid email.</string>
+    <string name="error_user_not_found">User not found.</string>
+    <string name="error_wrong_password">Incorrect password.</string>
+    <string name="error_invalid_credentials">Invalid credentials.</string>
+    <string name="error_email_or_password_incorrect">Incorrect email or password.</string>
+    <string name="error_account_disabled">Account disabled.</string>
+    <string name="error_too_many_attempts">Too many attempts. Please wait and try again.</string>
+    <string name="error_enter_valid_email">Enter a valid email.</string>
+    <string name="error_passwords_do_not_match">Passwords do not match.</string>
+    <string name="error_invalid_cpf">Invalid CPF.</string>
+    <string name="error_invalid_cnpj">Invalid CNPJ.</string>
+    <string name="error_provide_valid_cpf">Enter a valid CPF.</string>
+    <string name="error_provide_valid_cnpj">Enter a valid CNPJ.</string>
+    <string name="error_min_chars">Minimum %1$s characters</string>
+    <string name="error_required">Required</string>
+
+    <!-- Validation utility -->
+    <string name="validation_name_required">Name is required</string>
+    <string name="validation_email_required">Email is required</string>
+    <string name="validation_email_invalid">Please enter a valid email</string>
+    <string name="validation_password_required">Password is required</string>
+    <string name="validation_password_min_6">Password must be at least 6 characters</string>
+
+    <!-- Main -->
+    <string name="hello_world">Hello world!</string>
+    <string name="main_logout_test">Logout (test)</string>
+
+    <!-- Register -->
+    <string name="register_step_initial">Step 1 of 4</string>
+    <string name="register_step_of_total">Step %1$d of %2$d</string>
+    <string name="register_cancel">Exit registration</string>
+    <string name="register_back">Back</string>
+    <string name="register_next">Next</string>
+    <string name="register_finish">Finish</string>
+    <string name="register_cancel_dialog_title">Cancel registration?</string>
+    <string name="register_cancel_dialog_message_with_draft">If you leave now, your draft will be kept and you can continue later.</string>
+    <string name="register_cancel_dialog_message_without_draft">Do you want to go back to login?</string>
+    <string name="register_cancel_dialog_action_continue">Keep registering</string>
+    <string name="register_cancel_dialog_action_back_to_login">Back to login</string>
+    <string name="register_cancel_dialog_action_discard_draft">Discard draft</string>
+    <string name="register_error_fill_email_to_finish">Fill in email to finish.</string>
+    <string name="register_error_fill_password_to_finish">Fill in password to finish.</string>
+    <string name="register_error_finish_failed">Error finishing registration.</string>
+    <string name="register_error_create_account_with_reason">Error creating account: %1$s</string>
+    <string name="register_error_finish_with_reason">Error finishing registration: %1$s</string>
+    <string name="register_error_save_profile_with_reason">Error saving profile: %1$s</string>
+    <string name="register_error_email_already_in_use">this email is already in use.</string>
+    <string name="register_error_weak_password">weak password. Use at least 6 characters.</string>
+    <string name="register_error_operation_not_allowed">email/password registration is disabled in Firebase.</string>
+    <string name="register_error_network_failure">network failure. Check your connection.</string>
+    <string name="register_error_internal_firebase">internal Firebase error (check project configuration).</string>
+    <string name="register_error_app_not_authorized">app not authorized. Check package name and SHA in Firebase.</string>
+    <string name="register_error_unknown">unknown error.</string>
+    <string name="register_error_with_code">%1$s [code: %2$s]</string>
+
+    <!-- Form hints -->
+    <string name="hint_search_address">Search address</string>
+    <string name="hint_street">Street</string>
+    <string name="hint_number">Number</string>
+    <string name="hint_neighborhood">Neighborhood</string>
+    <string name="hint_city">City</string>
+    <string name="hint_state_uf">State</string>
+    <string name="hint_zip_code">ZIP code</string>
+    <string name="hint_full_name">Full name</string>
+    <string name="hint_legal_name">Legal name</string>
+    <string name="hint_cpf">CPF</string>
+    <string name="hint_cnpj">CNPJ</string>
+    <string name="hint_birth_date">Birth date</string>
+    <string name="hint_opening_date">Opening date</string>
+    <string name="hint_phone_whatsapp">Phone (WhatsApp)</string>
+    <string name="hint_confirm_password">Confirm your password</string>
+    <string name="person_type_cpf">Individual (CPF)</string>
+    <string name="person_type_cnpj">Company (CNPJ)</string>
+    <string name="helper_prefilled_google_account">Pre-filled from Google account</string>
+
+    <!-- Step headers -->
+    <string name="step_header_default_title">Basic information</string>
+    <string name="step_header_default_subtitle">Let\'s get started! Fill in your data to create your account.</string>
+    <string name="basic_info_step_headline">Basic information</string>
+    <string name="basic_info_step_subtitle">Let\'s start! These details help protect your account and speed up rentals.</string>
+    <string name="address_step_headline">Your address</string>
+    <string name="address_step_subtitle">Just one more step. This helps with contract and rental security.</string>
+    <string name="credentials_step_headline">Account access</string>
+    <string name="credentials_step_subtitle">Almost there! Set your access to log in and track your rentals.</string>
+    <string name="profile_selection_step_headline">How do you want to use the app?</string>
+    <string name="profile_selection_step_subtitle">Choose a profile to personalize your app experience.</string>
+
+    <!-- Address dropdown -->
+    <string name="address_dropdown_loading">Loading...</string>
+    <string name="address_dropdown_empty">No results</string>
+
+    <!-- Profile selection cards -->
+    <string name="profile_choice_rent_letter">R</string>
+    <string name="profile_choice_rent_title">I want to rent a car</string>
+    <string name="profile_choice_rent_subtitle">Find vehicles to use whenever you need.</string>
+    <string name="profile_choice_rent_badge">RENT</string>
+    <string name="profile_choice_provide_letter">P</string>
+    <string name="profile_choice_provide_title">I want to list my car</string>
+    <string name="profile_choice_provide_subtitle">List your vehicle and earn extra income.</string>
+    <string name="profile_choice_provide_badge">LIST</string>
+
+    <!-- Floating Nav -->
+    <string name="nav_menu">Bottom navigation menu</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_garage">Garage</string>
+    <string name="nav_trips">Trips</string>
+    <string name="nav_wallet">Wallet</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_provider_vehicles">Vehicles</string>
+    <string name="nav_provider_rentals">Rentals</string>
+    <string name="nav_provider_earnings">Earnings</string>
+    <string name="nav_renter_discover">Discover</string>
+    <string name="nav_renter_rentals">Rentals</string>
+    <string name="action_logout">Logout</string>
+    <string name="feature_coming_soon">Feature coming soon.</string>
+
+    <!-- Home fragments -->
+    <string name="profile_fragment_title">Account and preferences</string>
+    <string name="profile_fragment_subtitle">Update personal data, account security, and app settings.</string>
+    <string name="provider_home_fragment_title">Operations summary</string>
+    <string name="provider_home_fragment_subtitle">Track fleet performance, active bookings, and key alerts.</string>
+    <string name="provider_vehicles_fragment_title">Vehicle management</string>
+    <string name="provider_vehicles_fragment_subtitle">Register cars, adjust availability, and review listing details.</string>
+    <string name="provider_rentals_fragment_title">Rental flow</string>
+    <string name="provider_rentals_fragment_subtitle">Manage requests, check-in, check-out, and rental history.</string>
+    <string name="provider_earnings_fragment_title">Financial dashboard</string>
+    <string name="provider_earnings_fragment_subtitle">View available balance, pending transfers, and payout history.</string>
+    <string name="renter_home_fragment_title">Suggestions for you</string>
+    <string name="renter_home_fragment_subtitle">See featured offers, new vehicles, and opportunities near your area.</string>
+    <string name="renter_discover_fragment_title">Discover vehicles</string>
+    <string name="renter_discover_fragment_subtitle">Search by city, price range, category, and rental period.</string>
+    <string name="renter_rentals_fragment_title">Your rentals</string>
+    <string name="renter_rentals_fragment_subtitle">Track active bookings, contract history, and return status.</string>
+    <string name="renter_wallet_fragment_title">Wallet and payments</string>
+    <string name="renter_wallet_fragment_subtitle">Manage payment methods, refunds, and statements.</string>
+
+    <!-- Legacy home layouts -->
+    <string name="legacy_provider_home_title">Home - Provider</string>
+    <string name="legacy_provider_card_title">Manage fleet and listings</string>
+    <string name="legacy_provider_card_subtitle">Screen focused on vehicle registration, availability, and pricing.</string>
+    <string name="legacy_renter_home_title">Home - Renter</string>
+    <string name="legacy_renter_card_title">Find available cars</string>
+    <string name="legacy_renter_card_subtitle">Screen focused on finding, filtering, and booking cars.</string>
+
+    <!-- Provider vehicle register -->
+    <string name="provider_vehicles_add_vehicle">Add new vehicle</string>
+    <string name="provider_vehicles_my_list_title">Your registered vehicles</string>
+    <string name="provider_vehicles_empty_state">No saved or draft vehicles yet.</string>
+    <string name="provider_vehicles_unknown_vehicle">Unidentified vehicle</string>
+    <string name="provider_vehicles_plate">Plate: %1$s</string>
+    <string name="provider_vehicles_updated_at">Updated at %1$s</string>
+    <string name="provider_vehicles_status_draft">Draft</string>
+    <string name="provider_vehicles_status_published">Published</string>
+    <string name="provider_vehicles_continue_draft">Continue registration</string>
+    <string name="provider_vehicles_sync_pending">Online sync pending</string>
+
+    <string name="vehicle_register_step_initial">Step 1 of 7</string>
+    <string name="vehicle_register_step_of_total">Step %1$d of %2$d</string>
+    <string name="vehicle_register_cancel">Exit listing</string>
+    <string name="vehicle_register_save_draft">Save draft</string>
+    <string name="vehicle_register_publish">Publish listing</string>
+    <string name="vehicle_register_draft_saved">Draft saved successfully.</string>
+    <string name="vehicle_register_draft_saved_pending_sync">Draft saved locally. Online sync pending.</string>
+    <string name="vehicle_register_publish_success">Listing published successfully.</string>
+    <string name="vehicle_register_publish_saved_pending_sync">Listing saved locally. Online sync pending.</string>
+    <string name="vehicle_register_save_failed">Could not save the vehicle right now. Try again.</string>
+    <string name="vehicle_register_cancel_dialog_title">Leave vehicle registration?</string>
+    <string name="vehicle_register_cancel_dialog_message_with_draft">If you leave now, we will keep your draft so you can continue later.</string>
+    <string name="vehicle_register_cancel_dialog_message_without_draft">Do you want to leave this screen?</string>
+    <string name="vehicle_register_cancel_dialog_action_continue">Keep editing</string>
+    <string name="vehicle_register_cancel_dialog_action_save_and_exit">Save and leave</string>
+    <string name="vehicle_register_cancel_dialog_action_discard">Discard and leave</string>
+
+    <string name="vehicle_step1_headline">Vehicle and availability</string>
+    <string name="vehicle_step1_subtitle">Choose vehicle type and whether the listing should go live now or stay as draft.</string>
+    <string name="vehicle_step1_vehicle_type_title">Vehicle type</string>
+    <string name="vehicle_option_car">Car</string>
+    <string name="vehicle_option_motorcycle">Motorcycle</string>
+    <string name="vehicle_step1_availability_title">Availability</string>
+    <string name="vehicle_option_availability_immediate">Immediate</string>
+    <string name="vehicle_option_availability_draft">I will finish later (draft)</string>
+    <string name="vehicle_step1_availability_helper">Tip: you can save as draft at any time and continue later.</string>
+
+    <string name="vehicle_step2_headline">Vehicle identification</string>
+    <string name="vehicle_step2_subtitle">Fill in the key details to identify your vehicle in the listing.</string>
+    <string name="vehicle_field_brand">Brand</string>
+    <string name="vehicle_field_model">Model</string>
+    <string name="vehicle_field_manufacture_year">Manufacturing year</string>
+    <string name="vehicle_field_model_year">Model year</string>
+    <string name="vehicle_field_trim_optional">Trim/Version (optional)</string>
+    <string name="vehicle_field_plate">Plate</string>
+    <string name="vehicle_field_renavam_or_chassis">Renavam or Chassis</string>
+    <string name="vehicle_field_color">Color</string>
+    <string name="vehicle_field_body_type">Body type</string>
+    <string name="vehicle_field_fuel">Fuel type</string>
+    <string name="vehicle_field_transmission">Transmission</string>
+    <string name="vehicle_field_doors">Number of doors</string>
+    <string name="vehicle_field_seats">Number of seats</string>
+    <string name="vehicle_field_highlight_tags">Highlight tags</string>
+    <string name="vehicle_field_highlight_tags_hint">Select at least 3 tags to improve search.</string>
+    <string name="vehicle_error_select_minimum_three_tags">Select at least 3 tags.</string>
+
+    <string-array name="vehicle_highlight_tags">
+        <item>Economy</item>
+        <item>Family</item>
+        <item>Work</item>
+        <item>Travel</item>
+        <item>Luxury</item>
+        <item>Compact</item>
+        <item>SUV</item>
+        <item>Executive</item>
+        <item>Urban</item>
+        <item>Adventure</item>
+    </string-array>
+
+    <string-array name="vehicle_body_types">
+        <item>Hatchback</item>
+        <item>Sedan</item>
+        <item>SUV</item>
+        <item>Pickup</item>
+        <item>Van</item>
+        <item>Crossover</item>
+        <item>Coupe</item>
+        <item>Convertible</item>
+    </string-array>
+
+    <string-array name="vehicle_fuel_types">
+        <item>Gasoline</item>
+        <item>Ethanol</item>
+        <item>Flex</item>
+        <item>Diesel</item>
+        <item>Hybrid</item>
+        <item>Electric</item>
+    </string-array>
+
+    <string-array name="vehicle_transmission_types">
+        <item>Manual</item>
+        <item>Automatic</item>
+        <item>CVT</item>
+    </string-array>
+
+    <string name="vehicle_step3_headline">Photos and media</string>
+    <string name="vehicle_step3_subtitle">Mark the photos you already have and inform the total amount.</string>
+    <string name="vehicle_step3_required_photos_title">Required photos</string>
+    <string name="vehicle_step3_required_photos_hint">Upload one photo for each required item below.</string>
+    <string name="vehicle_photo_front">Front</string>
+    <string name="vehicle_photo_rear">Rear</string>
+    <string name="vehicle_photo_left_side">Left side</string>
+    <string name="vehicle_photo_right_side">Right side</string>
+    <string name="vehicle_photo_dashboard">Interior (dashboard)</string>
+    <string name="vehicle_photo_trunk">Trunk</string>
+    <string name="vehicle_moto_photo_panel">Motorcycle dashboard</string>
+    <string name="vehicle_moto_photo_engine">Engine</string>
+    <string name="vehicle_moto_photo_exhaust">Exhaust</string>
+    <string name="vehicle_error_required_photo_set">All 6 required photos must be uploaded.</string>
+    <string name="vehicle_step3_recommended_photos_title">Recommended photos</string>
+    <string name="vehicle_step3_recommended_photos_hint">These photos improve listing trust.</string>
+    <string name="vehicle_photo_tires_wheels">Tires/Wheels</string>
+    <string name="vehicle_photo_finishing_details">Finishing details</string>
+    <string name="vehicle_photo_accessories">Accessories</string>
+    <string name="vehicle_error_minimum_six_photos">Enter at least 6 photos.</string>
+    <string name="vehicle_upload_photo_button">Upload photo</string>
+    <string name="vehicle_replace_photo_button">Replace photo</string>
+    <string name="vehicle_view_photo_button">View photo</string>
+    <string name="vehicle_photo_source_dialog_title">Choose how to upload the photo</string>
+    <string name="vehicle_photo_source_camera">Take photo</string>
+    <string name="vehicle_photo_source_gallery">Choose from gallery</string>
+    <string name="vehicle_photo_source_cancel">Cancel</string>
+    <string name="vehicle_close_photo_preview">Close photo preview</string>
+    <string name="vehicle_photo_status_pending">Not uploaded yet</string>
+    <string name="vehicle_photo_status_uploading">Uploading...</string>
+    <string name="vehicle_photo_status_uploaded">Uploaded successfully</string>
+    <string name="vehicle_photo_status_failed">Upload failed</string>
+    <string name="vehicle_uploaded_photos_count">Uploaded photos: %1$d</string>
+    <string name="vehicle_uploaded_photos_count_zero">Uploaded photos: 0</string>
+    <string name="vehicle_error_fill_plate_before_upload">Fill in the plate number on the previous step before uploading photos.</string>
+    <string name="vehicle_error_supabase_not_ready">Supabase is not configured correctly for uploads.</string>
+    <string name="vehicle_error_upload_failed">Could not upload the file. Try again.</string>
+    <string name="vehicle_error_upload_failed_network">Connection failed while uploading. Check your internet and try again.</string>
+    <string name="vehicle_error_upload_failed_permission">Upload blocked by Supabase permissions. Review bucket policies.</string>
+    <string name="vehicle_error_open_photo_failed">Could not open the uploaded photo.</string>
+
+    <string name="vehicle_step4_headline">Condition and details</string>
+    <string name="vehicle_step4_subtitle">Provide condition, mileage, items, and daily price.</string>
+    <string name="vehicle_field_mileage">Current mileage</string>
+    <string name="vehicle_field_condition">Overall condition</string>
+    <string name="vehicle_condition_excellent">Excellent</string>
+    <string name="vehicle_condition_good">Good</string>
+    <string name="vehicle_condition_ok">OK</string>
+    <string name="vehicle_condition_needs_attention">Needs attention</string>
+    <string name="vehicle_field_accident_history">Accident history</string>
+    <string name="vehicle_field_accident_description">Explain the accident history</string>
+    <string name="vehicle_field_observations">General observations</string>
+    <string name="vehicle_field_daily_price">Daily price</string>
+    <string name="vehicle_field_safety_items">Safety items</string>
+    <string name="vehicle_field_comfort_items">Comfort and extras</string>
+
+    <string-array name="vehicle_safety_items">
+        <item>Airbag</item>
+        <item>ABS</item>
+        <item>Stability control</item>
+        <item>Disc brakes</item>
+        <item>Isofix</item>
+        <item>Alarm</item>
+    </string-array>
+
+    <string-array name="vehicle_comfort_items">
+        <item>Air conditioning</item>
+        <item>Power steering</item>
+        <item>Multimedia system</item>
+        <item>Rear camera</item>
+        <item>Parking sensor</item>
+        <item>Leather seats</item>
+    </string-array>
+
+    <string name="vehicle_step5_headline">Documents and rules</string>
+    <string name="vehicle_step5_subtitle">Set document status, insurance, and owner rules.</string>
+    <string name="vehicle_field_docs_up_to_date">Documents up to date?</string>
+    <string name="vehicle_field_ipva_licensing_ok">Tax/registration up to date?</string>
+    <string name="vehicle_field_insurance">Has insurance?</string>
+    <string name="vehicle_field_insurance_type_optional">Insurance type (optional)</string>
+    <string name="vehicle_section_owner_rules">Owner rules</string>
+    <string name="vehicle_field_allow_pet">Allow pets?</string>
+    <string name="vehicle_field_allow_smoking">Allow smoking?</string>
+    <string name="vehicle_field_allow_trip">Allow long trips?</string>
+    <string name="vehicle_error_select_trip_type">Select at least one trip type.</string>
+    <string name="vehicle_field_min_driver_age">Minimum driver age</string>
+    <string name="vehicle_field_min_cnh_years">Minimum license years</string>
+
+    <string-array name="vehicle_trip_types">
+        <item>Intercity</item>
+        <item>Interstate</item>
+    </string-array>
+
+    <string name="vehicle_step6_headline">Location and pickup/delivery</string>
+    <string name="vehicle_step6_subtitle">Set pickup point, delivery options, and day-by-day schedule.</string>
+    <string name="vehicle_field_city_state">City/State</string>
+    <string name="vehicle_field_neighborhood_region">Neighborhood/Area</string>
+    <string name="vehicle_field_pickup_point">Pickup point (approximate)</string>
+    <string name="vehicle_field_delivery_options">Delivery options</string>
+    <string name="vehicle_delivery_pickup_on_location">Pickup on location</string>
+    <string name="vehicle_delivery_by_fee">Delivery with fee</string>
+    <string name="vehicle_error_select_delivery_option">Select at least one pickup/delivery option.</string>
+    <string name="vehicle_field_delivery_radius">Delivery radius (km)</string>
+    <string name="vehicle_field_delivery_fee">Delivery fee</string>
+    <string name="vehicle_field_available_schedule">Available schedule by day</string>
+    <string name="vehicle_field_available_schedule_hint">Enable each day you want and fill start/end times.</string>
+    <string name="vehicle_error_fill_one_schedule">Configure at least one day with complete schedule.</string>
+    <string name="vehicle_schedule_available">Available</string>
+    <string name="vehicle_schedule_start">Start</string>
+    <string name="vehicle_schedule_end">End</string>
+    <string name="vehicle_day_mon">Monday</string>
+    <string name="vehicle_day_tue">Tuesday</string>
+    <string name="vehicle_day_wed">Wednesday</string>
+    <string name="vehicle_day_thu">Thursday</string>
+    <string name="vehicle_day_fri">Friday</string>
+    <string name="vehicle_day_sat">Saturday</string>
+    <string name="vehicle_day_sun">Sunday</string>
+
+    <string name="vehicle_step7_headline">Review and publish</string>
+    <string name="vehicle_step7_subtitle">Review all details and publish when everything is ready.</string>
+    <string name="vehicle_step7_checklist_title">Final checklist</string>
+    <string name="vehicle_checklist_photos_ok">Photos OK</string>
+    <string name="vehicle_checklist_price_defined">Price defined</string>
+    <string name="vehicle_checklist_rules_defined">Rules defined</string>
+    <string name="vehicle_checklist_location_defined">Location defined</string>
+    <string name="vehicle_error_complete_checklist_before_publish">Complete the checklist before publishing.</string>
+    <string name="vehicle_step7_edit_any_step">Edit any step</string>
+    <string name="vehicle_edit_step_1">Edit step 1</string>
+    <string name="vehicle_edit_step_2">Edit step 2</string>
+    <string name="vehicle_edit_step_3">Edit step 3</string>
+    <string name="vehicle_edit_step_4">Edit step 4</string>
+    <string name="vehicle_edit_step_5">Edit step 5</string>
+    <string name="vehicle_edit_step_6">Edit step 6</string>
+
+    <string name="vehicle_summary_not_informed">Not informed</string>
+    <string name="vehicle_summary_type_and_availability">Type: %1$s | Availability: %2$s</string>
+    <string name="vehicle_summary_identification">Vehicle: %1$s %2$s | Year built/model: %3$s/%4$s</string>
+    <string name="vehicle_summary_photos">Photos: %1$d | Tags: %2$s</string>
+    <string name="vehicle_summary_price_and_condition">Daily: %1$s | Condition: %2$s</string>
+    <string name="vehicle_summary_rules">Rules: Pets %1$s | Smoking %2$s | Trips %3$s</string>
+    <string name="vehicle_summary_location">Location: %1$s - %2$s</string>
+
+    <!-- Commons -->
+    <string name="common_yes">Yes</string>
+    <string name="common_no">No</string>
 </resources>

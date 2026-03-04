@@ -18,6 +18,7 @@ import androidx.viewpager2.widget.ViewPager2
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.adapters.ViewPagerAdapter
 import com.brunocodex.kotlinproject.fragments.ProfileSelectionFragment
+import com.brunocodex.kotlinproject.navigation.ProfileNavigation
 import com.brunocodex.kotlinproject.utils.StepHeaderBindable
 import com.brunocodex.kotlinproject.utils.StepValidatable
 import com.brunocodex.kotlinproject.viewmodels.RegisterViewModel
@@ -238,18 +239,18 @@ class RegisterActivity : AppCompatActivity() {
         val hasTypedSomething = userHasProgress()
 
         AlertDialog.Builder(this)
-            .setTitle("Cancelar cadastro?")
+            .setTitle(R.string.register_cancel_dialog_title)
             .setMessage(
                 if (hasTypedSomething)
-                    "Se você sair agora, o rascunho será mantido e você pode continuar depois."
+                    getString(R.string.register_cancel_dialog_message_with_draft)
                 else
-                    "Você quer voltar para o login?"
+                    getString(R.string.register_cancel_dialog_message_without_draft)
             )
-            .setNegativeButton("Continuar cadastrando", null)
-            .setPositiveButton("Voltar para login") { _, _ ->
+            .setNegativeButton(R.string.register_cancel_dialog_action_continue, null)
+            .setPositiveButton(R.string.register_cancel_dialog_action_back_to_login) { _, _ ->
                 goToLogin(clearAnonymous = false) // mantém rascunho
             }
-            .setNeutralButton("Descartar rascunho") { _, _ ->
+            .setNeutralButton(R.string.register_cancel_dialog_action_discard_draft) { _, _ ->
                 discardDraftAndGoToLogin()
             }
             .show()
@@ -309,11 +310,11 @@ class RegisterActivity : AppCompatActivity() {
         val needPassword = currentUser == null || currentUser.isAnonymous
 
         if (email.isBlank()) {
-            Toast.makeText(this, "Preencha e-mail para finalizar", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.register_error_fill_email_to_finish), Toast.LENGTH_LONG).show()
             return
         }
         if (needPassword && password.isBlank()) {
-            Toast.makeText(this, "Preencha senha para finalizar", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, getString(R.string.register_error_fill_password_to_finish), Toast.LENGTH_LONG).show()
             return
         }
 
@@ -327,13 +328,17 @@ class RegisterActivity : AppCompatActivity() {
                 .addOnSuccessListener { result ->
                     val uid = result.user?.uid
                     if (uid == null) {
-                        Toast.makeText(this, "Erro ao finalizar cadastro.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, getString(R.string.register_error_finish_failed), Toast.LENGTH_LONG).show()
                         return@addOnSuccessListener
                     }
                     persistFinalProfile(uid)
                 }
                 .addOnFailureListener { e ->
-                    Toast.makeText(this, "Erro ao criar conta: ${humanizeAuthError(e)}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this,
+                        getString(R.string.register_error_create_account_with_reason, humanizeAuthError(e)),
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             return
         }
@@ -345,13 +350,17 @@ class RegisterActivity : AppCompatActivity() {
                 .addOnSuccessListener { result ->
                     val uid = result.user?.uid
                     if (uid == null) {
-                        Toast.makeText(this, "Erro ao finalizar cadastro.", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, getString(R.string.register_error_finish_failed), Toast.LENGTH_LONG).show()
                         return@addOnSuccessListener
                     }
                     persistFinalProfile(uid)
                 }
                 .addOnFailureListener { e ->
-                    Toast.makeText(this, "Erro ao finalizar cadastro: ${humanizeAuthError(e)}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this,
+                        getString(R.string.register_error_finish_with_reason, humanizeAuthError(e)),
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
         } else {
             // Caso o usuario ja seja real (ex.: fluxo de perfil incompleto)
@@ -400,11 +409,25 @@ class RegisterActivity : AppCompatActivity() {
                 // remove rascunho, mas mesmo se falhar, segue fluxo
                 db.collection("register_drafts").document(uid).delete()
 
-                startActivity(Intent(this, MainActivity::class.java))
-                finishAffinity()
+                val profileType = registerViewModel.profileType
+                if (profileType == null) {
+                    startActivity(Intent(this, LoginActivity::class.java))
+                    finishAffinity()
+                    return@addOnSuccessListener
+                }
+
+                ProfileNavigation.goToHome(
+                    activity = this,
+                    profileType = profileType,
+                    clearTask = true
+                )
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Erro ao salvar perfil: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    this,
+                    getString(R.string.register_error_save_profile_with_reason, e.message.orEmpty()),
+                    Toast.LENGTH_LONG
+                ).show()
             }
     }
 
@@ -467,17 +490,17 @@ class RegisterActivity : AppCompatActivity() {
         Log.e(TAG, "Firebase Auth error code=$code message=${e.message}", e)
 
         val message = when (code) {
-            "ERROR_INVALID_EMAIL" -> "e-mail invalido."
-            "ERROR_EMAIL_ALREADY_IN_USE" -> "esse e-mail ja esta em uso."
-            "ERROR_WEAK_PASSWORD" -> "senha fraca. Use pelo menos 6 caracteres."
-            "ERROR_OPERATION_NOT_ALLOWED" -> "cadastro por e-mail/senha esta desativado no Firebase."
-            "ERROR_NETWORK_REQUEST_FAILED" -> "falha de rede. Verifique sua conexao."
-            "ERROR_INTERNAL_ERROR" -> "erro interno do Firebase (verifique configuracao do projeto)."
-            "ERROR_APP_NOT_AUTHORIZED" -> "app nao autorizado. Confira package name e SHA no Firebase."
-            else -> e.message ?: "erro desconhecido."
+            "ERROR_INVALID_EMAIL" -> getString(R.string.error_invalid_email_lower)
+            "ERROR_EMAIL_ALREADY_IN_USE" -> getString(R.string.register_error_email_already_in_use)
+            "ERROR_WEAK_PASSWORD" -> getString(R.string.register_error_weak_password)
+            "ERROR_OPERATION_NOT_ALLOWED" -> getString(R.string.register_error_operation_not_allowed)
+            "ERROR_NETWORK_REQUEST_FAILED" -> getString(R.string.register_error_network_failure)
+            "ERROR_INTERNAL_ERROR" -> getString(R.string.register_error_internal_firebase)
+            "ERROR_APP_NOT_AUTHORIZED" -> getString(R.string.register_error_app_not_authorized)
+            else -> e.message ?: getString(R.string.register_error_unknown)
         }
 
-        return "$message [codigo: $code]"
+        return getString(R.string.register_error_with_code, message, code)
     }
 
     /**
@@ -553,10 +576,14 @@ class RegisterActivity : AppCompatActivity() {
         val lastIndex = (viewPager.adapter?.itemCount ?: 1) - 1
 
         btnBack.isEnabled = currentIndex > 0
-        btnNext.text = if (currentIndex == lastIndex) "Finalizar" else "Avançar"
+        btnNext.text = if (currentIndex == lastIndex) {
+            getString(R.string.register_finish)
+        } else {
+            getString(R.string.register_next)
+        }
 
         val total = viewPager.adapter?.itemCount ?: 1
-        tvStepTitle.text = "Etapa ${currentIndex + 1} de $total"
+        tvStepTitle.text = getString(R.string.register_step_of_total, currentIndex + 1, total)
     }
 
     private fun notifyCurrentStepToFragment(position: Int) {
@@ -565,3 +592,5 @@ class RegisterActivity : AppCompatActivity() {
         (frag as? StepHeaderBindable)?.onStepChanged(position, total)
     }
 }
+
+

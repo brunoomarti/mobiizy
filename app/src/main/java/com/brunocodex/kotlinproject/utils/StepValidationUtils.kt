@@ -1,14 +1,16 @@
 package com.brunocodex.kotlinproject.utils
 
+import android.content.Context
 import android.util.Patterns
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
-import com.google.android.material.textfield.TextInputLayout
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import androidx.core.content.ContextCompat
+import com.brunocodex.kotlinproject.R
+import com.google.android.material.textfield.TextInputLayout
 
 object StepValidationUtils {
 
@@ -23,7 +25,7 @@ object StepValidationUtils {
         var ok = true
 
         walk(root) { v ->
-            // Preferência: TextInputLayout (melhor UI pro erro)
+            // PreferÃªncia: TextInputLayout (melhor UI pro erro)
             if (v is TextInputLayout && v.tag is String) {
                 val tags = parseTags(v.tag as String)
                 if ("required" in tags) {
@@ -32,7 +34,7 @@ object StepValidationUtils {
 
                     if (!fieldOk) {
                         ok = false
-                        if (showErrors) v.error = errorMessage(tags)
+                        if (showErrors) v.error = errorMessage(v.context, tags)
                     } else {
                         v.error = null
                     }
@@ -48,7 +50,7 @@ object StepValidationUtils {
 
                     if (!fieldOk) {
                         ok = false
-                        if (showErrors) v.error = errorMessage(tags)
+                        if (showErrors) v.error = errorMessage(v.context, tags)
                     } else {
                         v.error = null
                     }
@@ -80,14 +82,14 @@ object StepValidationUtils {
         return true
     }
 
-    private fun errorMessage(tags: Set<String>): String {
+    private fun errorMessage(context: Context, tags: Set<String>): String {
         return when {
-            "email" in tags -> "Digite um e-mail válido"
+            "email" in tags -> context.getString(R.string.error_enter_valid_email)
             tags.any { it.startsWith("min:") } -> {
                 val min = tags.first { it.startsWith("min:") }.removePrefix("min:")
-                "Mínimo de $min caracteres"
+                context.getString(R.string.error_min_chars, min)
             }
-            else -> "Obrigatório"
+            else -> context.getString(R.string.error_required)
         }
     }
 

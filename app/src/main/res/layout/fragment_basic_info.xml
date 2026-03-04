@@ -14,7 +14,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- SCROLL só do conteúdo -->
+    <!-- SCROLL sÃ³ do conteÃºdo -->
     <ScrollView
         android:id="@+id/basicInfoScroll"
         android:layout_width="0dp"
@@ -47,7 +47,7 @@
                     app:buttonTint="@color/radio_button_tint"
                     app:useMaterialThemeColors="false"
                     android:checked="true"
-                    android:text="Pessoa Física (CPF)"
+                    android:text="@string/person_type_cpf"
                     android:textColor="?attr/colorOnBackground" />
 
                 <com.google.android.material.radiobutton.MaterialRadioButton
@@ -57,11 +57,11 @@
                     android:layout_marginStart="16dp"
                     app:buttonTint="@color/radio_button_tint"
                     app:useMaterialThemeColors="false"
-                    android:text="Pessoa Jurídica (CNPJ)"
+                    android:text="@string/person_type_cnpj"
                     android:textColor="?attr/colorOnBackground" />
             </RadioGroup>
 
-            <!-- Nome completo / Razão Social -->
+            <!-- Nome completo / RazÃ£o Social -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/nameLayout"
                 android:layout_width="match_parent"
@@ -73,7 +73,7 @@
                     android:id="@+id/nameInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Nome completo"
+                    android:hint="@string/hint_full_name"
                     android:inputType="textPersonName"
                     android:maxLines="1" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -90,7 +90,7 @@
                     android:id="@+id/docInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="CPF"
+                    android:hint="@string/hint_cpf"
                     android:inputType="number"
                     android:maxLength="14"
                     android:maxLines="1" />
@@ -108,7 +108,7 @@
                     android:id="@+id/dateInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Data de nascimento"
+                    android:hint="@string/hint_birth_date"
                     android:inputType="number"
                     android:maxLength="10"
                     android:maxLines="1" />
@@ -126,7 +126,7 @@
                     android:id="@+id/phoneInput"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Telefone (WhatsApp)"
+                    android:hint="@string/hint_phone_whatsapp"
                     android:inputType="phone"
                     android:maxLength="15"
                     android:maxLines="1" />

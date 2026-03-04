@@ -23,9 +23,9 @@ class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), St
         super.onViewCreated(view, savedInstanceState)
 
         tvHeaderStep = view.findViewById(R.id.tvStepTitle)
-        view.findViewById<TextView>(R.id.stepHeadline).text = "Acesso a conta"
+        view.findViewById<TextView>(R.id.stepHeadline).text = getString(R.string.credentials_step_headline)
         view.findViewById<TextView>(R.id.stepSubtitle).text =
-            "Quase la! Configure seu acesso para entrar e acompanhar suas locacoes."
+            getString(R.string.credentials_step_subtitle)
 
         val emailLayout = view.findViewById<TextInputLayout>(R.id.emailLayout)
         val passwordLayout = view.findViewById<TextInputLayout>(R.id.passwordLayout)
@@ -75,7 +75,7 @@ class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), St
             email?.isFocusable = false
             email?.isFocusableInTouchMode = false
             email?.isClickable = false
-            emailLayout.helperText = "Preenchido pela conta Google"
+            emailLayout.helperText = getString(R.string.helper_prefilled_google_account)
         } else {
             email?.isEnabled = true
             email?.isFocusable = true
@@ -112,7 +112,7 @@ class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), St
             return
         }
 
-        confirm.error = if (p != c) "As senhas nao conferem" else null
+        confirm.error = if (p != c) getString(R.string.error_passwords_do_not_match) else null
     }
 
     override fun validateStep(showErrors: Boolean): Boolean {
@@ -123,7 +123,7 @@ class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), St
 
         var ok = emailValue.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()
         if (showErrors && !ok) {
-            email?.error = "Digite um e-mail valido"
+            email?.error = getString(R.string.error_enter_valid_email)
         } else {
             email?.error = null
         }
@@ -144,7 +144,7 @@ class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), St
             val match = p.isNotBlank() && p == c
             if (!match) {
                 ok = false
-                if (showErrors) confirm.error = "As senhas nao conferem"
+                if (showErrors) confirm.error = getString(R.string.error_passwords_do_not_match)
             } else {
                 confirm.error = null
             }

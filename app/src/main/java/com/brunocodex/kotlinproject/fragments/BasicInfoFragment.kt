@@ -51,9 +51,9 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
         super.onViewCreated(view, savedInstanceState)
 
         tvHeaderStep = view.findViewById(R.id.tvStepTitle)
-        view.findViewById<TextView>(R.id.stepHeadline).text = "Informações básicas"
+        view.findViewById<TextView>(R.id.stepHeadline).text = getString(R.string.basic_info_step_headline)
         view.findViewById<TextView>(R.id.stepSubtitle).text =
-            "Bora começar! Esses dados ajudam a proteger sua conta e agilizar a locação."
+            getString(R.string.basic_info_step_subtitle)
 
         bindViews(view)
 
@@ -65,7 +65,7 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
         val savedDocDigits = registerViewModel.cpf.orEmpty().filter { it.isDigit() }
         val initialType = if (savedDocDigits.length > 11) PersonType.CNPJ else PersonType.CPF
 
-        // Marca o rádio correto
+        // Marca o rÃ¡dio correto
         if (initialType == PersonType.CNPJ) {
             rbCnpj.isChecked = true
         } else {
@@ -118,7 +118,7 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
             nameInput.isFocusable = false
             nameInput.isFocusableInTouchMode = false
             nameInput.isClickable = false
-            nameLayout.helperText = "Preenchido pela conta Google"
+            nameLayout.helperText = getString(R.string.helper_prefilled_google_account)
         } else {
             nameInput.isEnabled = true
             nameInput.isFocusable = true
@@ -143,15 +143,15 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
 
         // Ajusta hints
         if (type == PersonType.CPF) {
-            nameLayout.hint = "Nome completo"
-            dateLayout.hint = "Data de nascimento"
-            docLayout.hint = "CPF"
+            nameLayout.hint = getString(R.string.hint_full_name)
+            dateLayout.hint = getString(R.string.hint_birth_date)
+            docLayout.hint = getString(R.string.hint_cpf)
             docInput.setText("")
             docInput.filters = arrayOf(android.text.InputFilter.LengthFilter(14)) // ###.###.###-##
         } else {
-            nameLayout.hint = "Razão social"
-            dateLayout.hint = "Data de abertura"
-            docLayout.hint = "CNPJ"
+            nameLayout.hint = getString(R.string.hint_legal_name)
+            dateLayout.hint = getString(R.string.hint_opening_date)
+            docLayout.hint = getString(R.string.hint_cnpj)
             docInput.setText("")
             docInput.filters = arrayOf(android.text.InputFilter.LengthFilter(18)) // ##.###.###/####-##
         }
@@ -159,7 +159,7 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
         // Remove erro visual ao trocar tipo
         clearError(docLayout)
 
-        // Reaplica watcher de máscara do doc conforme tipo (fixo)
+        // Reaplica watcher de mÃ¡scara do doc conforme tipo (fixo)
         docWatcher?.let { docInput.removeTextChangedListener(it) }
         docWatcher = if (type == PersonType.CPF) {
             FixedMaskWatcher(docInput, "###.###.###-##")
@@ -168,7 +168,7 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
         }
         docInput.addTextChangedListener(docWatcher)
 
-        // valida doc ao digitar (real, mas só quando completo)
+        // valida doc ao digitar (real, mas sÃ³ quando completo)
         docInput.doAfterTextChanged { validateDocLive() }
     }
 
@@ -201,7 +201,7 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
     }
 
     /**
-     * Validação real em tempo real:
+     * ValidaÃ§Ã£o real em tempo real:
      * - enquanto incompleto: neutro (sem erro)
      * - quando completo: valida DV de CPF ou CNPJ
      */
@@ -215,14 +215,14 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
 
         val expected = if (personType == PersonType.CPF) 11 else 14
         if (digits.length < expected) {
-            // enquanto digita, não mostramos erro
+            // enquanto digita, nÃ£o mostramos erro
             clearError(docLayout)
             return
         }
 
         val ok = if (personType == PersonType.CPF) isValidCPF(digits) else isValidCNPJ(digits)
         if (!ok) {
-            docLayout.error = if (personType == PersonType.CPF) "CPF inválido" else "CNPJ inválido"
+            docLayout.error = if (personType == PersonType.CPF) getString(R.string.error_invalid_cpf) else getString(R.string.error_invalid_cnpj)
             docLayout.isErrorEnabled = true
         } else {
             clearError(docLayout)
@@ -243,9 +243,9 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
         if (showErrors) {
             if (!docOk) {
                 docLayout.error = if (personType == PersonType.CPF)
-                    "Informe um CPF válido"
+                    getString(R.string.error_provide_valid_cpf)
                 else
-                    "Informe um CNPJ válido"
+                    getString(R.string.error_provide_valid_cnpj)
                 docLayout.isErrorEnabled = true
             } else {
                 clearError(docLayout)
@@ -256,7 +256,7 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
     }
 
     // -----------------------------
-    // Validação REAL CPF
+    // ValidaÃ§Ã£o REAL CPF
     // -----------------------------
     private fun isValidCPF(cpf: String): Boolean {
         if (cpf.length != 11) return false
@@ -282,7 +282,7 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
     }
 
     // -----------------------------
-    // Validação REAL CNPJ
+    // ValidaÃ§Ã£o REAL CNPJ
     // -----------------------------
     private fun isValidCNPJ(cnpj: String): Boolean {
         if (cnpj.length != 14) return false
@@ -311,12 +311,12 @@ class BasicInfoFragment : Fragment(R.layout.fragment_basic_info), StepValidatabl
     }
 
     // -----------------------------
-    // Watchers (máscaras)
+    // Watchers (mÃ¡scaras)
     // -----------------------------
 
     /**
-     * Máscara fixa (CPF OU CNPJ definido pelo rádio).
-     * Não tenta "adivinhar" nada.
+     * MÃ¡scara fixa (CPF OU CNPJ definido pelo rÃ¡dio).
+     * NÃ£o tenta "adivinhar" nada.
      */
     private class FixedMaskWatcher(
         private val editText: TextInputEditText,
