@@ -142,9 +142,10 @@
     <!-- Floating Nav -->
     <string name="nav_menu">Bottom navigation menu</string>
     <string name="nav_home">Home</string>
+    <string name="dashboard_title_greeting">Hello, %1$s!</string>
+    <string name="dashboard_user_fallback_name">user</string>
     <string name="nav_garage">Garage</string>
     <string name="nav_trips">Trips</string>
-    <string name="nav_wallet">Wallet</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_provider_vehicles">Vehicles</string>
     <string name="nav_provider_rentals">Rentals</string>
@@ -157,22 +158,23 @@
     <!-- Home fragments -->
     <string name="profile_fragment_title">Account and preferences</string>
     <string name="profile_fragment_subtitle">Update personal data, account security, and app settings.</string>
-    <string name="provider_home_fragment_title">Operations summary</string>
-    <string name="provider_home_fragment_subtitle">Track fleet performance, active bookings, and key alerts.</string>
+    <string name="provider_home_fragment_title">Your host dashboard</string>
+    <string name="provider_home_fragment_subtitle">List cars, track bookings, and keep your fleet earning.</string>
     <string name="provider_vehicles_fragment_title">Vehicle management</string>
     <string name="provider_vehicles_fragment_subtitle">Register cars, adjust availability, and review listing details.</string>
     <string name="provider_rentals_fragment_title">Rental flow</string>
     <string name="provider_rentals_fragment_subtitle">Manage requests, check-in, check-out, and rental history.</string>
     <string name="provider_earnings_fragment_title">Financial dashboard</string>
     <string name="provider_earnings_fragment_subtitle">View available balance, pending transfers, and payout history.</string>
-    <string name="renter_home_fragment_title">Suggestions for you</string>
-    <string name="renter_home_fragment_subtitle">See featured offers, new vehicles, and opportunities near your area.</string>
+    <string name="renter_home_fragment_title">Welcome back!</string>
+    <string name="renter_home_fragment_subtitle">Which car would you like to rent today?</string>
+    <string name="renter_map_card_title">Map near you</string>
+    <string name="renter_map_card_subtitle">Tap to open full screen</string>
+    <string name="renter_map_close">Close map</string>
     <string name="renter_discover_fragment_title">Discover vehicles</string>
     <string name="renter_discover_fragment_subtitle">Search by city, price range, category, and rental period.</string>
     <string name="renter_rentals_fragment_title">Your rentals</string>
     <string name="renter_rentals_fragment_subtitle">Track active bookings, contract history, and return status.</string>
-    <string name="renter_wallet_fragment_title">Wallet and payments</string>
-    <string name="renter_wallet_fragment_subtitle">Manage payment methods, refunds, and statements.</string>
 
     <!-- Legacy home layouts -->
     <string name="legacy_provider_home_title">Home - Provider</string>
@@ -193,6 +195,11 @@
     <string name="provider_vehicles_status_published">Published</string>
     <string name="provider_vehicles_continue_draft">Continue registration</string>
     <string name="provider_vehicles_sync_pending">Online sync pending</string>
+    <string name="provider_vehicle_details_back">Back</string>
+    <string name="provider_vehicle_details_title">General car information</string>
+    <string name="provider_vehicle_details_subtitle">Review listing data and use the button below to edit.</string>
+    <string name="provider_vehicle_details_edit_listing">Edit listing</string>
+    <string name="provider_vehicle_details_line">%1$s: %2$s</string>
 
     <string name="vehicle_register_step_initial">Step 1 of 7</string>
     <string name="vehicle_register_step_of_total">Step %1$d of %2$d</string>
@@ -380,7 +387,16 @@
     <string name="vehicle_field_delivery_options">Delivery options</string>
     <string name="vehicle_delivery_pickup_on_location">Pickup on location</string>
     <string name="vehicle_delivery_by_fee">Delivery with fee</string>
+    <string name="vehicle_pickup_address_mode_title">How will pickup work?</string>
+    <string name="vehicle_pickup_option_profile_address">Pickup at my profile address</string>
+    <string name="vehicle_pickup_option_specific_address">Pickup at a specific address</string>
+    <string name="vehicle_pickup_profile_address_label">Profile address</string>
+    <string name="vehicle_pickup_profile_address_confirm">I confirm this is the correct pickup address</string>
+    <string name="vehicle_pickup_profile_address_unavailable">Profile address unavailable. Update your profile or choose a specific address.</string>
     <string name="vehicle_error_select_delivery_option">Select at least one pickup/delivery option.</string>
+    <string name="vehicle_error_select_pickup_mode">Select how pickup will be handled.</string>
+    <string name="vehicle_error_confirm_profile_address">Confirm that the profile address is correct.</string>
+    <string name="vehicle_error_profile_address_incomplete">A complete profile address was not found.</string>
     <string name="vehicle_field_delivery_radius">Delivery radius (km)</string>
     <string name="vehicle_field_delivery_fee">Delivery fee</string>
     <string name="vehicle_field_available_schedule">Available schedule by day</string>

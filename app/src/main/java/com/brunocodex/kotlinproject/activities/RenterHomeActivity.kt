@@ -1,12 +1,12 @@
 package com.brunocodex.kotlinproject.activities
 
 import android.os.Bundle
+import android.view.View
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.fragments.ProfileFragment
 import com.brunocodex.kotlinproject.fragments.RenterDiscoverFragment
 import com.brunocodex.kotlinproject.fragments.RenterHomeFragment
 import com.brunocodex.kotlinproject.fragments.RenterRentalsFragment
-import com.brunocodex.kotlinproject.fragments.RenterWalletFragment
 
 class RenterHomeActivity : BaseHomeActivity() {
 
@@ -16,6 +16,8 @@ class RenterHomeActivity : BaseHomeActivity() {
             rootViewId = R.id.main,
             savedInstanceState = savedInstanceState
         )
+
+        findViewById<View>(R.id.navWalletItem)?.visibility = View.GONE
     }
 
     override fun defaultNavItemId(): Int = R.id.navHomeItem
@@ -26,6 +28,8 @@ class RenterHomeActivity : BaseHomeActivity() {
                 itemId = R.id.navHomeItem,
                 tag = "renter_home",
                 title = getString(R.string.nav_home),
+                subtitle = getString(R.string.renter_home_fragment_subtitle),
+                usePersonalGreetingTitle = true,
                 iconName = "home",
                 contentDescription = getString(R.string.nav_home)
             ) {
@@ -48,15 +52,6 @@ class RenterHomeActivity : BaseHomeActivity() {
                 contentDescription = getString(R.string.nav_renter_rentals)
             ) {
                 RenterRentalsFragment()
-            },
-            NavDestination(
-                itemId = R.id.navWalletItem,
-                tag = "renter_wallet",
-                title = getString(R.string.nav_wallet),
-                iconName = "account_balance_wallet",
-                contentDescription = getString(R.string.nav_wallet)
-            ) {
-                RenterWalletFragment()
             },
             NavDestination(
                 itemId = R.id.navProfileItem,

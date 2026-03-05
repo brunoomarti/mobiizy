@@ -3,7 +3,6 @@ package com.brunocodex.kotlinproject.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
@@ -18,19 +17,19 @@ data class ProviderVehicleCardUi(
     val plateLabel: String,
     val updatedAtLabel: String,
     val statusLabel: String,
-    val isDraft: Boolean,
+    val status: String,
     val hasPendingSync: Boolean,
     val pendingSyncLabel: String
 )
 
 class ProviderVehiclesAdapter(
-    private val onContinueDraft: (ProviderVehicleCardUi) -> Unit
+    private val onCardClick: (ProviderVehicleCardUi) -> Unit
 ) : ListAdapter<ProviderVehicleCardUi, ProviderVehiclesAdapter.ProviderVehicleViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProviderVehicleViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_provider_vehicle_card, parent, false)
-        return ProviderVehicleViewHolder(view, onContinueDraft)
+        return ProviderVehicleViewHolder(view, onCardClick)
     }
 
     override fun onBindViewHolder(holder: ProviderVehicleViewHolder, position: Int) {
@@ -39,7 +38,7 @@ class ProviderVehiclesAdapter(
 
     class ProviderVehicleViewHolder(
         itemView: View,
-        private val onContinueDraft: (ProviderVehicleCardUi) -> Unit
+        private val onCardClick: (ProviderVehicleCardUi) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
 
         private val tvVehicleTitle: TextView = itemView.findViewById(R.id.tvVehicleTitle)
@@ -47,8 +46,6 @@ class ProviderVehiclesAdapter(
         private val tvVehicleUpdatedAt: TextView = itemView.findViewById(R.id.tvVehicleUpdatedAt)
         private val tvVehicleStatus: TextView = itemView.findViewById(R.id.tvVehicleStatus)
         private val tvSyncPending: TextView = itemView.findViewById(R.id.tvSyncPending)
-        private val btnContinueDraft: Button = itemView.findViewById(R.id.btnContinueDraft)
-
         fun bind(item: ProviderVehicleCardUi) {
             tvVehicleTitle.text = item.title
             tvVehiclePlate.text = item.plateLabel
@@ -56,8 +53,7 @@ class ProviderVehiclesAdapter(
             tvVehicleStatus.text = item.statusLabel
             tvSyncPending.text = item.pendingSyncLabel
             tvSyncPending.isVisible = item.hasPendingSync
-            btnContinueDraft.isVisible = item.isDraft
-            btnContinueDraft.setOnClickListener { onContinueDraft(item) }
+            itemView.setOnClickListener { onCardClick(item) }
         }
     }
 

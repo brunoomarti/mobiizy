@@ -142,9 +142,10 @@
     <!-- Floating Nav -->
     <string name="nav_menu">Menu de navegacao inferior</string>
     <string name="nav_home">Home</string>
+    <string name="dashboard_title_greeting">Olá, %1$s!</string>
+    <string name="dashboard_user_fallback_name">usuario</string>
     <string name="nav_garage">Garagem</string>
     <string name="nav_trips">Viagens</string>
-    <string name="nav_wallet">Carteira</string>
     <string name="nav_profile">Perfil</string>
     <string name="nav_provider_vehicles">Veiculos</string>
     <string name="nav_provider_rentals">Alugueis</string>
@@ -157,22 +158,23 @@
     <!-- Home fragments -->
     <string name="profile_fragment_title">Conta e preferencias</string>
     <string name="profile_fragment_subtitle">Atualize dados pessoais, seguranca da conta e configuracoes do aplicativo.</string>
-    <string name="provider_home_fragment_title">Resumo da sua operacao</string>
-    <string name="provider_home_fragment_subtitle">Acompanhe desempenho da frota, reservas ativas e alertas importantes.</string>
+    <string name="provider_home_fragment_title">Seu painel de proprietario</string>
+    <string name="provider_home_fragment_subtitle">Publique carros, acompanhe reservas e mantenha sua frota rendendo.</string>
     <string name="provider_vehicles_fragment_title">Gestao de veiculos</string>
     <string name="provider_vehicles_fragment_subtitle">Cadastre carros, ajuste disponibilidade e revise informacoes de cada anuncio.</string>
     <string name="provider_rentals_fragment_title">Fluxo de alugueis</string>
     <string name="provider_rentals_fragment_subtitle">Gerencie solicitacoes, check-in, check-out e historico de corridas.</string>
     <string name="provider_earnings_fragment_title">Painel financeiro</string>
     <string name="provider_earnings_fragment_subtitle">Visualize saldo disponivel, repasses pendentes e historico de recebimentos.</string>
-    <string name="renter_home_fragment_title">Sugestoes para voce</string>
-    <string name="renter_home_fragment_subtitle">Veja ofertas em destaque, novos veiculos e oportunidades perto da sua regiao.</string>
+    <string name="renter_home_fragment_title">Bem-vindo(a) de volta!</string>
+    <string name="renter_home_fragment_subtitle">Qual carro deseja alugar hoje?</string>
+    <string name="renter_map_card_title">Mapa perto de voce</string>
+    <string name="renter_map_card_subtitle">Toque para abrir em tela cheia</string>
+    <string name="renter_map_close">Fechar mapa</string>
     <string name="renter_discover_fragment_title">Descobrir veiculos</string>
     <string name="renter_discover_fragment_subtitle">Busque por cidade, faixa de preco, categoria e periodo do aluguel.</string>
     <string name="renter_rentals_fragment_title">Seus alugueis</string>
     <string name="renter_rentals_fragment_subtitle">Acompanhe reservas ativas, historico de contratos e status de devolucao.</string>
-    <string name="renter_wallet_fragment_title">Carteira e pagamentos</string>
-    <string name="renter_wallet_fragment_subtitle">Gerencie metodos de pagamento, acompanhe estorno e consulte extratos.</string>
 
     <!-- Legacy home layouts -->
     <string name="legacy_provider_home_title">Home - Proprietario</string>
@@ -193,6 +195,11 @@
     <string name="provider_vehicles_status_published">Publicado</string>
     <string name="provider_vehicles_continue_draft">Continuar cadastro</string>
     <string name="provider_vehicles_sync_pending">Sincronizacao online pendente</string>
+    <string name="provider_vehicle_details_back">Voltar</string>
+    <string name="provider_vehicle_details_title">Informacoes gerais do carro</string>
+    <string name="provider_vehicle_details_subtitle">Confira os dados do anuncio e use o botao abaixo para editar.</string>
+    <string name="provider_vehicle_details_edit_listing">Editar anuncio</string>
+    <string name="provider_vehicle_details_line">%1$s: %2$s</string>
 
     <string name="vehicle_register_step_initial">Etapa 1 de 7</string>
     <string name="vehicle_register_step_of_total">Etapa %1$d de %2$d</string>
@@ -380,7 +387,16 @@
     <string name="vehicle_field_delivery_options">Opcoes de entrega</string>
     <string name="vehicle_delivery_pickup_on_location">Retirada no local</string>
     <string name="vehicle_delivery_by_fee">Entrega por taxa</string>
+    <string name="vehicle_pickup_address_mode_title">Como sera a retirada?</string>
+    <string name="vehicle_pickup_option_profile_address">Retirar no meu endereco (perfil)</string>
+    <string name="vehicle_pickup_option_specific_address">Retirar em um endereco especifico</string>
+    <string name="vehicle_pickup_profile_address_label">Endereco do perfil</string>
+    <string name="vehicle_pickup_profile_address_confirm">Confirmo que este e o endereco correto para retirada</string>
+    <string name="vehicle_pickup_profile_address_unavailable">Endereco do perfil indisponivel. Atualize seu cadastro ou selecione endereco especifico.</string>
     <string name="vehicle_error_select_delivery_option">Escolha pelo menos uma opcao de entrega/retirada.</string>
+    <string name="vehicle_error_select_pickup_mode">Selecione como a retirada sera feita.</string>
+    <string name="vehicle_error_confirm_profile_address">Confirme que o endereco do perfil esta correto.</string>
+    <string name="vehicle_error_profile_address_incomplete">Nao encontramos um endereco completo no seu perfil.</string>
     <string name="vehicle_field_delivery_radius">Raio da entrega (km)</string>
     <string name="vehicle_field_delivery_fee">Valor da entrega (R$)</string>
     <string name="vehicle_field_available_schedule">Horarios disponiveis por dia</string>

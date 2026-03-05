@@ -43,6 +43,9 @@ class VehicleRegisterViewModel : ViewModel() {
         const val DAY_FRI = "fri"
         const val DAY_SAT = "sat"
         const val DAY_SUN = "sun"
+
+        const val PICKUP_ADDRESS_MODE_PROFILE = "profile"
+        const val PICKUP_ADDRESS_MODE_SPECIFIC = "specific"
     }
 
     var currentStep: Int = 0
@@ -101,6 +104,17 @@ class VehicleRegisterViewModel : ViewModel() {
     var deliveryByFee: Boolean = false
     var deliveryRadiusKm: String? = null
     var deliveryFee: String? = null
+    var pickupAddressMode: String? = null
+    var pickupProfileAddressConfirmed: Boolean = false
+    var pickupSearchQuery: String? = null
+    var pickupStreet: String? = null
+    var pickupNumber: String? = null
+    var pickupNeighborhood: String? = null
+    var pickupCity: String? = null
+    var pickupState: String? = null
+    var pickupCep: String? = null
+    var pickupLatitude: Double? = null
+    var pickupLongitude: Double? = null
     val weeklySchedule: LinkedHashMap<String, DaySchedule> = linkedMapOf(
         DAY_MON to DaySchedule(),
         DAY_TUE to DaySchedule(),
@@ -115,6 +129,7 @@ class VehicleRegisterViewModel : ViewModel() {
         return !brand.isNullOrBlank() ||
             !model.isNullOrBlank() ||
             !cityState.isNullOrBlank() ||
+            !pickupStreet.isNullOrBlank() ||
             !dailyPrice.isNullOrBlank() ||
             uploadedPhotoUrls.isNotEmpty() ||
             highlightTags.isNotEmpty() ||
@@ -134,9 +149,62 @@ class VehicleRegisterViewModel : ViewModel() {
     }
 
     fun isLocationChecklistOk(): Boolean {
-        return !cityState.isNullOrBlank() &&
-            !neighborhood.isNullOrBlank() &&
-            !pickupPoint.isNullOrBlank()
+        refreshLegacyStep6Fields()
+
+        val deliveryOptionOk = pickupOnLocation || deliveryByFee
+        val pickupConfigOk = when {
+            !pickupOnLocation -> true
+            pickupAddressMode == PICKUP_ADDRESS_MODE_PROFILE ->
+                pickupProfileAddressConfirmed && hasCompletePickupAddress()
+            pickupAddressMode == PICKUP_ADDRESS_MODE_SPECIFIC -> hasCompletePickupAddress()
+            else -> false
+        }
+        val deliveryByFeeOk = !deliveryByFee ||
+            (!deliveryRadiusKm.isNullOrBlank() && !deliveryFee.isNullOrBlank())
+
+        return deliveryOptionOk && pickupConfigOk && deliveryByFeeOk
+    }
+
+    fun hasCompletePickupAddress(): Boolean {
+        return !pickupStreet.isNullOrBlank() &&
+            !pickupNumber.isNullOrBlank() &&
+            !pickupNeighborhood.isNullOrBlank() &&
+            !pickupCity.isNullOrBlank() &&
+            !pickupState.isNullOrBlank() &&
+            !pickupCep.isNullOrBlank()
+    }
+
+    fun refreshLegacyStep6Fields() {
+        if (!pickupOnLocation) {
+            cityState = null
+            neighborhood = null
+            pickupPoint = null
+            return
+        }
+
+        val street = pickupStreet?.trim().orEmpty()
+        val number = pickupNumber?.trim().orEmpty()
+        val hood = pickupNeighborhood?.trim().orEmpty()
+        val city = pickupCity?.trim().orEmpty()
+        val state = pickupState?.trim().orEmpty()
+
+        val hasAnyPickupPiece = listOf(street, number, hood, city, state).any { it.isNotBlank() }
+        if (!hasAnyPickupPiece) {
+            cityState = null
+            neighborhood = null
+            pickupPoint = null
+            return
+        }
+
+        pickupPoint = listOf(street, number)
+            .filter { it.isNotBlank() }
+            .joinToString(", ")
+            .ifBlank { null }
+        neighborhood = hood.ifBlank { null }
+        cityState = listOf(city, state)
+            .filter { it.isNotBlank() }
+            .joinToString("/")
+            .ifBlank { null }
     }
 
     fun requiredPhotoKeys(): List<String> {
@@ -170,6 +238,8 @@ class VehicleRegisterViewModel : ViewModel() {
     fun photoCount(): Int = uploadedPhotoUrls.values.count { it.isNotBlank() }
 
     fun toDraftJson(): JSONObject {
+        refreshLegacyStep6Fields()
+
         val json = JSONObject()
 
         json.put("currentStep", currentStep)
@@ -225,6 +295,17 @@ class VehicleRegisterViewModel : ViewModel() {
         json.put("deliveryByFee", deliveryByFee)
         json.put("deliveryRadiusKm", deliveryRadiusKm)
         json.put("deliveryFee", deliveryFee)
+        json.put("pickupAddressMode", pickupAddressMode)
+        json.put("pickupProfileAddressConfirmed", pickupProfileAddressConfirmed)
+        json.put("pickupSearchQuery", pickupSearchQuery)
+        json.put("pickupStreet", pickupStreet)
+        json.put("pickupNumber", pickupNumber)
+        json.put("pickupNeighborhood", pickupNeighborhood)
+        json.put("pickupCity", pickupCity)
+        json.put("pickupState", pickupState)
+        json.put("pickupCep", pickupCep)
+        json.put("pickupLatitude", pickupLatitude)
+        json.put("pickupLongitude", pickupLongitude)
 
         val scheduleJson = JSONObject()
         weeklySchedule.forEach { (day, schedule) ->
@@ -300,6 +381,19 @@ class VehicleRegisterViewModel : ViewModel() {
         deliveryByFee = json.optBoolean("deliveryByFee", false)
         deliveryRadiusKm = json.optNullableString("deliveryRadiusKm")
         deliveryFee = json.optNullableString("deliveryFee")
+        pickupAddressMode = json.optNullableString("pickupAddressMode")
+        pickupProfileAddressConfirmed = json.optBoolean("pickupProfileAddressConfirmed", false)
+        pickupSearchQuery = json.optNullableString("pickupSearchQuery")
+        pickupStreet = json.optNullableString("pickupStreet")
+        pickupNumber = json.optNullableString("pickupNumber")
+        pickupNeighborhood = json.optNullableString("pickupNeighborhood")
+        pickupCity = json.optNullableString("pickupCity")
+        pickupState = json.optNullableString("pickupState")
+        pickupCep = json.optNullableString("pickupCep")
+        pickupLatitude = json.optNullableDouble("pickupLatitude")
+        pickupLongitude = json.optNullableDouble("pickupLongitude")
+
+        migrateLegacyPickupAddressIfNeeded()
 
         val scheduleJson = json.optJSONObject("weeklySchedule") ?: JSONObject()
         weeklySchedule.forEach { (day, schedule) ->
@@ -308,6 +402,52 @@ class VehicleRegisterViewModel : ViewModel() {
             schedule.startTime = item.optString("startTime", "")
             schedule.endTime = item.optString("endTime", "")
         }
+    }
+
+    private fun migrateLegacyPickupAddressIfNeeded() {
+        if (pickupAddressMode.isNullOrBlank() && pickupOnLocation) {
+            val hasNewAddressData = !pickupStreet.isNullOrBlank() ||
+                !pickupNumber.isNullOrBlank() ||
+                !pickupNeighborhood.isNullOrBlank() ||
+                !pickupCity.isNullOrBlank() ||
+                !pickupState.isNullOrBlank() ||
+                !pickupCep.isNullOrBlank()
+
+            if (hasNewAddressData) {
+                pickupAddressMode = PICKUP_ADDRESS_MODE_SPECIFIC
+            } else {
+                val hasLegacyAddress = !pickupPoint.isNullOrBlank() ||
+                    !neighborhood.isNullOrBlank() ||
+                    !cityState.isNullOrBlank()
+                if (hasLegacyAddress) {
+                    pickupAddressMode = PICKUP_ADDRESS_MODE_SPECIFIC
+                    pickupStreet = pickupStreet ?: pickupPoint
+                    pickupNeighborhood = pickupNeighborhood ?: neighborhood
+                    val parsed = parseLegacyCityState(cityState)
+                    pickupCity = pickupCity ?: parsed.first
+                    pickupState = pickupState ?: parsed.second
+                }
+            }
+        }
+
+        refreshLegacyStep6Fields()
+    }
+
+    private fun parseLegacyCityState(raw: String?): Pair<String?, String?> {
+        val value = raw?.trim().orEmpty()
+        if (value.isBlank()) return null to null
+
+        val slash = value.split("/").map { it.trim() }.filter { it.isNotBlank() }
+        if (slash.size >= 2) {
+            return slash.dropLast(1).joinToString(" ").ifBlank { null } to slash.last().ifBlank { null }
+        }
+
+        val dash = value.split("-").map { it.trim() }.filter { it.isNotBlank() }
+        if (dash.size >= 2) {
+            return dash.dropLast(1).joinToString(" ").ifBlank { null } to dash.last().ifBlank { null }
+        }
+
+        return value to null
     }
 
     private fun JSONObject.optNullableString(key: String): String? {
@@ -327,6 +467,15 @@ class VehicleRegisterViewModel : ViewModel() {
         for (i in 0 until length()) {
             val value = optString(i).trim()
             if (value.isNotEmpty()) target.add(value)
+        }
+    }
+
+    private fun JSONObject.optNullableDouble(key: String): Double? {
+        if (isNull(key)) return null
+        return when (val value = opt(key)) {
+            is Number -> value.toDouble()
+            is String -> value.toDoubleOrNull()
+            else -> null
         }
     }
 }

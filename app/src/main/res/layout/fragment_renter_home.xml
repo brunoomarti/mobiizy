@@ -6,36 +6,42 @@
     android:orientation="vertical">
 
     <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardRenterMapPreview"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="180dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
         app:strokeColor="?attr/borderLight"
         app:strokeWidth="1dp">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="18dp">
+            android:layout_height="match_parent">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/renter_home_fragment_title"
-                android:textColor="?attr/textPrimary"
-                android:textSize="21sp"
-                android:textStyle="bold" />
+            <FrameLayout
+                android:id="@+id/renterHomeMapContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/renter_home_fragment_subtitle"
-                android:textColor="?attr/textSecondary"
-                android:textSize="15sp" />
-        </LinearLayout>
+                <com.google.android.gms.maps.MapView
+                    android:id="@+id/renterHomeMapView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
 
+            </FrameLayout>
+
+            <View
+                android:id="@+id/mapCardTouchOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:clickable="true"
+                android:focusable="true" />
+
+        </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
 
 </LinearLayout>

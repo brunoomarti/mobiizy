@@ -2,7 +2,7 @@
 <resources>
     <!-- Light Mode Palette -->
     <color name="md_theme_light_primary">#05091F</color>
-    <color name="md_theme_light_secondary">#FFEB1B</color>
+    <color name="md_theme_light_secondary">#F4E31E</color>
     <color name="md_theme_light_accent">#2437A8</color>
 
     <color name="md_theme_light_appBackground">#F2F3F5</color>

@@ -4,6 +4,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="10dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
     app:cardCornerRadius="14dp"
     app:cardElevation="1dp"
     app:strokeColor="?attr/borderLight"
@@ -60,14 +63,6 @@
             android:layout_marginTop="6dp"
             android:textColor="?attr/textSecondary"
             android:textSize="12sp"
-            android:visibility="gone" />
-
-        <Button
-            android:id="@+id/btnContinueDraft"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:text="@string/provider_vehicles_continue_draft"
             android:visibility="gone" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

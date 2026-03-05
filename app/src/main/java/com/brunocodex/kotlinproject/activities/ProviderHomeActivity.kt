@@ -26,6 +26,8 @@ class ProviderHomeActivity : BaseHomeActivity() {
                 itemId = R.id.navHomeItem,
                 tag = "provider_home",
                 title = getString(R.string.nav_home),
+                subtitle = getString(R.string.provider_home_fragment_subtitle),
+                usePersonalGreetingTitle = true,
                 iconName = "home",
                 contentDescription = getString(R.string.nav_home)
             ) {

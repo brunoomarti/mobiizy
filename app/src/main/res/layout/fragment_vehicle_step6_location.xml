@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingStart="@dimen/app_padding_horizontal"
@@ -29,51 +30,9 @@
             android:orientation="vertical"
             android:paddingBottom="16dp">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/cityStateLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:tag="required">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/cityStateInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/vehicle_field_city_state" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/neighborhoodLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:tag="required">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/neighborhoodInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/vehicle_field_neighborhood_region" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/pickupPointLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:tag="required">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/pickupPointInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/vehicle_field_pickup_point" />
-            </com.google.android.material.textfield.TextInputLayout>
-
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:text="@string/vehicle_field_delivery_options"
                 android:textColor="?attr/textPrimary"
                 android:textStyle="bold" />
@@ -99,6 +58,202 @@
                 android:textColor="?attr/error"
                 android:textSize="12sp"
                 android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/pickupOptionsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vehicle_pickup_address_mode_title"
+                    android:textColor="?attr/textPrimary"
+                    android:textStyle="bold" />
+
+                <RadioGroup
+                    android:id="@+id/rgPickupAddressMode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.radiobutton.MaterialRadioButton
+                        android:id="@+id/rbPickupProfileAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vehicle_pickup_option_profile_address"
+                        app:buttonTint="@color/radio_button_tint"
+                        app:useMaterialThemeColors="false" />
+
+                    <com.google.android.material.radiobutton.MaterialRadioButton
+                        android:id="@+id/rbPickupSpecificAddress"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vehicle_pickup_option_specific_address"
+                        app:buttonTint="@color/radio_button_tint"
+                        app:useMaterialThemeColors="false" />
+                </RadioGroup>
+
+                <TextView
+                    android:id="@+id/tvPickupAddressModeError"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vehicle_error_select_pickup_mode"
+                    android:textColor="?attr/error"
+                    android:textSize="12sp"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/pickupProfileAddressContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vehicle_pickup_profile_address_label"
+                        android:textColor="?attr/textPrimary"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvPickupProfileAddressValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="?attr/textSecondary"
+                        android:textSize="14sp"
+                        tools:text="Rua Exemplo, 123 - Centro, Sao Paulo/SP - 01000-000" />
+
+                    <com.google.android.material.checkbox.MaterialCheckBox
+                        android:id="@+id/cbPickupProfileAddressConfirm"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/vehicle_pickup_profile_address_confirm" />
+
+                    <TextView
+                        android:id="@+id/tvPickupProfileAddressError"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vehicle_error_confirm_profile_address"
+                        android:textColor="?attr/error"
+                        android:textSize="12sp"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/pickupSpecificAddressContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pickupAddressSearchLayout"
+                        style="@style/AppTextInputDropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/hint_search_address">
+
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/pickupAddressSearchInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:imeOptions="actionNext"
+                            android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pickupStreetLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_street">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pickupStreetInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pickupNumberLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_number">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pickupNumberInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pickupNeighborhoodLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_neighborhood">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pickupNeighborhoodInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pickupCityLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_city">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pickupCityInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pickupStateLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_state_uf">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pickupStateInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textCapCharacters"
+                            android:maxLength="2" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pickupCepLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:hint="@string/hint_zip_code">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/pickupCepInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/deliveryFeeContainer"

@@ -24,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import com.brunocodex.kotlinproject.R
 import com.google.android.material.color.MaterialColors
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 
 abstract class BaseHomeActivity : AppCompatActivity() {
@@ -32,6 +33,8 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         val itemId: Int,
         val tag: String,
         val title: String,
+        val subtitle: String? = null,
+        val usePersonalGreetingTitle: Boolean = false,
         val iconName: String,
         val contentDescription: String,
         val fragmentFactory: () -> Fragment
@@ -39,6 +42,7 @@ abstract class BaseHomeActivity : AppCompatActivity() {
 
     private val prefs by lazy { getSharedPreferences("app_prefs", MODE_PRIVATE) }
     private val credentialManager by lazy { CredentialManager.create(this) }
+    private val db by lazy { FirebaseFirestore.getInstance() }
 
     private var selectedItemId: Int = View.NO_ID
     private var destinationByItemId: Map<Int, NavDestination> = emptyMap()
@@ -47,10 +51,23 @@ abstract class BaseHomeActivity : AppCompatActivity() {
     private var navSelectionIndicator: View? = null
     private var navItemsContainer: View? = null
     private var dashboardTitleView: TextView? = null
+    private var dashboardSubtitleView: TextView? = null
+    private var currentUserFirstName: String? = null
 
     private val permissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-            prefs.edit().putBoolean(KEY_PERMISSIONS_PROMPTED, true).apply()
+            val denied = it.filterValues { granted -> !granted }.keys
+            if (denied.isEmpty()) {
+                prefs.edit().putBoolean(KEY_PERMISSIONS_PROMPTED, true).apply()
+                return@registerForActivityResult
+            }
+
+            val shouldReRequest = denied.any { permission ->
+                shouldShowRequestPermissionRationale(permission)
+            }
+            prefs.edit()
+                .putBoolean(KEY_PERMISSIONS_PROMPTED, !shouldReRequest)
+                .apply()
         }
 
     protected fun initializeBaseHome(contentLayoutRes: Int, rootViewId: Int, savedInstanceState: Bundle?) {
@@ -58,16 +75,30 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(contentLayoutRes)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(rootViewId)) { v, insets ->
+        val rootView = findViewById<View>(rootViewId)
+        val initialPaddingLeft = rootView.paddingLeft
+        val initialPaddingTop = rootView.paddingTop
+        val initialPaddingRight = rootView.paddingRight
+        val initialPaddingBottom = rootView.paddingBottom
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            v.setPadding(
+                initialPaddingLeft + systemBars.left,
+                initialPaddingTop + systemBars.top,
+                initialPaddingRight + systemBars.right,
+                initialPaddingBottom + systemBars.bottom
+            )
             insets
         }
 
         dashboardTitleView = findViewById(R.id.tvDashboardTitle)
+        dashboardSubtitleView = findViewById(R.id.tvDashboardSubtitle)
+        seedFirstNameFromFirebaseAuth()
         anchorBottomNavToScreenBottom()
         setupBottomNav()
         restoreInitialDestination(savedInstanceState)
+        loadFirstNameFromUserProfile()
         maybeRequestRuntimePermissions()
     }
 
@@ -111,8 +142,13 @@ abstract class BaseHomeActivity : AppCompatActivity() {
     }
 
     private fun restoreInitialDestination(savedInstanceState: Bundle?) {
-        val initialItemId = savedInstanceState?.getInt(KEY_SELECTED_NAV_ITEM)
+        val preferredItemId = savedInstanceState?.getInt(KEY_SELECTED_NAV_ITEM)
             ?: defaultNavItemId()
+        val initialItemId = if (destinationByItemId.containsKey(preferredItemId)) {
+            preferredItemId
+        } else {
+            defaultNavItemId()
+        }
 
         openDestination(initialItemId, forceReplace = supportFragmentManager.findFragmentById(R.id.dashboardFragmentContainer) == null)
     }
@@ -158,10 +194,67 @@ abstract class BaseHomeActivity : AppCompatActivity() {
 
         val shouldAnimateIndicator = selectedItemId != View.NO_ID && !forceReplace
         selectedItemId = itemId
-        dashboardTitleView?.text = destination.title
+        dashboardTitleView?.text = resolveDashboardTitle(destination)
+        updateDashboardSubtitle(destination.subtitle)
         navItems.keys.forEach { id -> bindNavItemState(id, selected = id == itemId) }
         moveSelectionIndicator(itemId, animate = shouldAnimateIndicator)
         onNavItemSelected(itemId)
+    }
+
+    private fun resolveDashboardTitle(destination: NavDestination): String {
+        if (!destination.usePersonalGreetingTitle) return destination.title
+        return getString(R.string.dashboard_title_greeting, resolveUserFirstName())
+    }
+
+    private fun updateDashboardSubtitle(subtitle: String?) {
+        val subtitleView = dashboardSubtitleView ?: return
+        val text = subtitle?.trim().orEmpty()
+        if (text.isBlank()) {
+            subtitleView.text = ""
+            subtitleView.visibility = View.GONE
+            return
+        }
+
+        subtitleView.text = text
+        subtitleView.visibility = View.VISIBLE
+    }
+
+    private fun seedFirstNameFromFirebaseAuth() {
+        val user = FirebaseAuth.getInstance().currentUser ?: return
+        currentUserFirstName = extractFirstName(user.displayName)
+            ?: extractFirstName(user.email?.substringBefore("@"))
+    }
+
+    private fun loadFirstNameFromUserProfile() {
+        val user = FirebaseAuth.getInstance().currentUser ?: return
+        db.collection("users").document(user.uid).get()
+            .addOnSuccessListener { doc ->
+                val profileFirstName = extractFirstName(doc.getString("name")) ?: return@addOnSuccessListener
+                currentUserFirstName = profileFirstName
+                refreshGreetingHeaderIfNeeded()
+            }
+    }
+
+    private fun refreshGreetingHeaderIfNeeded() {
+        val currentDestination = destinationByItemId[selectedItemId] ?: return
+        if (!currentDestination.usePersonalGreetingTitle) return
+        dashboardTitleView?.text = resolveDashboardTitle(currentDestination)
+    }
+
+    private fun resolveUserFirstName(): String {
+        return currentUserFirstName ?: getString(R.string.dashboard_user_fallback_name)
+    }
+
+    private fun extractFirstName(rawName: String?): String? {
+        val cleaned = rawName?.trim().orEmpty()
+        if (cleaned.isBlank()) return null
+
+        return cleaned
+            .replace(Regex("[._-]+"), " ")
+            .split(Regex("\\s+"))
+            .firstOrNull()
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
     }
 
     private fun bindNavItemState(itemId: Int, selected: Boolean) {
