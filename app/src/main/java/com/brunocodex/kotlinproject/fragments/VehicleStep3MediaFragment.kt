@@ -62,6 +62,7 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
     )
 
     private val slotUiMap: LinkedHashMap<String, SlotUi> = linkedMapOf()
+    private val uploadingSlotKeys: MutableSet<String> = linkedSetOf()
     private var selectedPhotoSlot: String? = null
     private var selectedCameraSlot: String? = null
 
@@ -70,6 +71,10 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
     private lateinit var tvRequiredPhotosError: TextView
     private lateinit var tvPhotoCountError: TextView
     private lateinit var tvUploadedPhotosCount: TextView
+    private lateinit var stepSubtitle: TextView
+    private lateinit var tvRequiredPhotosHint: TextView
+    private lateinit var tvRecommendedPhotosHint: TextView
+    private var lastRenderedVehicleType: String? = null
 
     private val photoPicker = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         val slotKey = selectedPhotoSlot
@@ -95,14 +100,51 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
 
         view.findViewById<TextView>(R.id.stepHeadline).text =
             getString(R.string.vehicle_step3_headline)
-        view.findViewById<TextView>(R.id.stepSubtitle).text =
-            getString(R.string.vehicle_step3_subtitle)
+        stepSubtitle = view.findViewById(R.id.stepSubtitle)
+        tvRequiredPhotosHint = view.findViewById(R.id.tvRequiredPhotosHint)
+        tvRecommendedPhotosHint = view.findViewById(R.id.tvRecommendedPhotosHint)
 
         requiredUploadsContainer = view.findViewById(R.id.requiredUploadsContainer)
         recommendedUploadsContainer = view.findViewById(R.id.recommendedUploadsContainer)
         tvRequiredPhotosError = view.findViewById(R.id.tvRequiredPhotosError)
         tvPhotoCountError = view.findViewById(R.id.tvPhotoCountError)
         tvUploadedPhotosCount = view.findViewById(R.id.tvUploadedPhotosCount)
+
+        refreshVehicleTypeDependentUi(force = true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshVehicleTypeDependentUi()
+    }
+
+    private fun refreshVehicleTypeDependentUi(force: Boolean = false) {
+        val currentType = vehicleViewModel.vehicleType
+        if (!force && currentType == lastRenderedVehicleType) return
+        lastRenderedVehicleType = currentType
+
+        val isMotorcycle = currentType == VehicleRegisterViewModel.TYPE_MOTORCYCLE
+        stepSubtitle.text = getString(
+            if (isMotorcycle) {
+                R.string.vehicle_step3_subtitle_motorcycle
+            } else {
+                R.string.vehicle_step3_subtitle
+            }
+        )
+        tvRequiredPhotosHint.text = getString(
+            if (isMotorcycle) {
+                R.string.vehicle_step3_required_photos_hint_motorcycle
+            } else {
+                R.string.vehicle_step3_required_photos_hint
+            }
+        )
+        tvRecommendedPhotosHint.text = getString(
+            if (isMotorcycle) {
+                R.string.vehicle_step3_recommended_photos_hint_motorcycle
+            } else {
+                R.string.vehicle_step3_recommended_photos_hint
+            }
+        )
 
         inflateUploadSlots()
         renderPhotoSummary()
@@ -197,7 +239,7 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
                 ),
                 MediaSlot(
                     key = VehicleRegisterViewModel.PHOTO_ACCESSORIES,
-                    label = getString(R.string.vehicle_photo_accessories),
+                    label = getString(R.string.vehicle_moto_photo_accessories),
                     required = false
                 )
             )
@@ -295,6 +337,7 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
         slotKey: String,
         mediaProvider: () -> Pair<ByteArray, String>
     ) {
+        if (uploadingSlotKeys.contains(slotKey)) return
         val slotUi = slotUiMap[slotKey] ?: return
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty().ifBlank { "anonymous" }
         val plate = vehicleViewModel.plate?.trim().orEmpty()
@@ -308,9 +351,8 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
             return
         }
 
-        slotUi.button.isEnabled = false
-        slotUi.viewButton.isEnabled = false
-        slotUi.status.text = getString(R.string.vehicle_photo_status_uploading)
+        uploadingSlotKeys += slotKey
+        updatePhotoSlotUi(slotKey)
 
         viewLifecycleOwner.lifecycleScope.launch {
             val uploadResult = runCatching {
@@ -330,8 +372,7 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
                 }
             }
 
-            slotUi.button.isEnabled = true
-            slotUi.viewButton.isEnabled = true
+            uploadingSlotKeys.remove(slotKey)
 
             uploadResult.onSuccess { publicUrl ->
                 vehicleViewModel.uploadedPhotoUrls[slotKey] = publicUrl
@@ -346,10 +387,9 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
                     updatePhotoSlotUi(slotKey)
                     return@onFailure
                 }
+                updatePhotoSlotUi(slotKey)
                 if (previousPhotoUrl.isNullOrBlank()) {
                     slotUi.status.text = getString(R.string.vehicle_photo_status_failed)
-                } else {
-                    updatePhotoSlotUi(slotKey)
                 }
                 Log.e(TAG, "Upload failed for slot=$slotKey plate=$plate", it)
                 val toastMessage = when {
@@ -368,17 +408,20 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
 
     private fun updatePhotoSlotUi(slotKey: String) {
         val slotUi = slotUiMap[slotKey] ?: return
+        val isUploading = uploadingSlotKeys.contains(slotKey)
         val uploaded = vehicleViewModel.uploadedPhotoUrls[slotKey].isNullOrBlank().not()
-        slotUi.status.text = if (uploaded) {
-            getString(R.string.vehicle_photo_status_uploaded)
-        } else {
-            getString(R.string.vehicle_photo_status_pending)
+        slotUi.status.text = when {
+            isUploading -> getString(R.string.vehicle_photo_status_uploading)
+            uploaded -> getString(R.string.vehicle_photo_status_uploaded)
+            else -> getString(R.string.vehicle_photo_status_pending)
         }
-        slotUi.button.text = if (uploaded) {
-            getString(R.string.vehicle_replace_photo_button)
-        } else {
-            getString(R.string.vehicle_upload_photo_button)
+        slotUi.button.text = when {
+            isUploading -> getString(R.string.vehicle_photo_status_uploading)
+            uploaded -> getString(R.string.vehicle_replace_photo_button)
+            else -> getString(R.string.vehicle_upload_photo_button)
         }
+        slotUi.button.isEnabled = !isUploading
+        slotUi.viewButton.isEnabled = uploaded && !isUploading
         slotUi.viewButton.isVisible = uploaded
     }
 

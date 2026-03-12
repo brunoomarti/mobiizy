@@ -40,6 +40,9 @@
         <activity android:name=".activities.ProviderVehicleRegisterActivity" android:exported="false" />
         <activity android:name=".activities.ProviderVehicleDetailsActivity" android:exported="false" />
         <activity android:name=".activities.SettingsActivity" android:exported="false" />
+        <activity
+            android:name="com.canhub.cropper.CropImageActivity"
+            android:theme="@style/Theme.Kotlinproject.Cropper" />
     </application>
 
 </manifest>

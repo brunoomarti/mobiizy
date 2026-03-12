@@ -35,18 +35,16 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.GroundOverlay
-import com.google.android.gms.maps.model.GroundOverlayOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.android.gms.maps.model.Marker
+import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.tasks.CancellationTokenSource
 import com.google.android.material.color.MaterialColors
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.pow
+import java.util.function.Consumer
 import kotlin.math.roundToInt
 
 class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCallback {
@@ -69,8 +67,8 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
     private var hasShownLocationDisabledMessage = false
     private var nearbyVehiclesRepository: NearbyVehiclesRepository? = null
     private var nearbyVehiclesFetchJob: Job? = null
-    private val nearbyVehicleOverlays = mutableListOf<GroundOverlay>()
-    private var carBalloonDescriptor: BitmapDescriptor? = null
+    private val nearbyVehicleMarkers = mutableListOf<Marker>()
+    private val balloonDescriptorByIconName = mutableMapOf<String, BitmapDescriptor>()
 
     private val backPressCallback = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() {
@@ -93,8 +91,9 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        collapsedMapContainer = view.findViewById(R.id.renterHomeMapContainer)
-        mapView = view.findViewById(R.id.renterHomeMapView)
+        // Mapa temporariamente desativado na home do renter.
+        // collapsedMapContainer = view.findViewById(R.id.renterHomeMapContainer)
+        // mapView = view.findViewById(R.id.renterHomeMapView)
 
         fullscreenOverlay = activity?.findViewById(R.id.fullscreenMapOverlay)
         fullscreenMapContainer = activity?.findViewById(R.id.fullscreenMapContainer)
@@ -102,11 +101,13 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         nearbyVehiclesRepository = NearbyVehiclesRepository(requireContext().applicationContext)
 
-        mapView?.onCreate(mapViewSavedState)
-        mapView?.getMapAsync(this)
+        // Mapa temporariamente desativado na home do renter.
+        // mapView?.onCreate(mapViewSavedState)
+        // mapView?.getMapAsync(this)
 
-        view.findViewById<View>(R.id.cardRenterMapPreview).setOnClickListener { expandMap() }
-        view.findViewById<View>(R.id.mapCardTouchOverlay).setOnClickListener { expandMap() }
+        // Mapa temporariamente desativado na home do renter.
+        // view.findViewById<View>(R.id.cardRenterMapPreview).setOnClickListener { expandMap() }
+        // view.findViewById<View>(R.id.mapCardTouchOverlay).setOnClickListener { expandMap() }
         closeFullscreenButton?.setOnClickListener { collapseMap(animated = true) }
 
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backPressCallback)
@@ -115,9 +116,6 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
         applyMapVisualStyle(map)
-        map.setOnCameraMoveListener {
-            updateNearbyBalloonDimensionsForCurrentCamera(map)
-        }
         applyMapUiState()
         ensureLocationReady(shouldRequestPermission = true)
     }
@@ -173,9 +171,9 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         synchronized(NEARBY_SESSION_LOCK) {
             isLoadingNearbyVehiclesInSession = false
         }
-        clearNearbyVehicleOverlays()
+        clearNearbyVehicleMarkers()
         nearbyVehiclesRepository = null
-        carBalloonDescriptor = null
+        balloonDescriptorByIconName.clear()
         currentLocationTokenSource?.cancel()
         currentLocationTokenSource = null
         fusedLocationClient = null
@@ -459,18 +457,17 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
             else -> null
         } ?: return
 
-        LocationManagerCompat.getCurrentLocation(
-            manager,
+        manager.getCurrentLocation(
             provider,
             null,
-            ContextCompat.getMainExecutor(requireContext())
-        ) { location ->
-            if (location == null) {
-                Log.w(TAG, "LocationManager fallback also returned null location.")
-                return@getCurrentLocation
-            }
-            applyFreshLocation(location)
-        }
+            ContextCompat.getMainExecutor(requireContext()),
+            Consumer { location: Location? ->
+                if (location == null) {
+                    Log.w(TAG, "LocationManager fallback also returned null location.")
+                    return@Consumer
+                }
+                applyFreshLocation(location)
+            })
     }
 
     private fun applyFreshLocation(location: Location) {
@@ -676,72 +673,43 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         map: GoogleMap,
         vehicles: List<NearbyVehiclesRepository.NearbyVehicle>
     ) {
-        clearNearbyVehicleOverlays()
+        clearNearbyVehicleMarkers()
         if (vehicles.isEmpty()) return
 
-        val descriptor = carBalloonDescriptor ?: buildCarBalloonDescriptor().also {
-            carBalloonDescriptor = it
-        } ?: return
-
         vehicles.forEach { vehicle ->
+            val iconName = markerIconNameForVehicleType(vehicle.vehicleType)
+            val descriptor = balloonDescriptorByIconName[iconName]
+                ?: buildVehicleBalloonDescriptor(iconName)?.also {
+                    balloonDescriptorByIconName[iconName] = it
+                }
+                ?: return@forEach
             val position = LatLng(vehicle.pickupLatitude, vehicle.pickupLongitude)
-            val dimensions = calculateBalloonDimensionsMeters(
-                map = map,
-                latitude = position.latitude
-            )
-            val overlay = map.addGroundOverlay(
-                GroundOverlayOptions()
-                    .image(descriptor)
-                    .position(
-                        position,
-                        dimensions.first,
-                        dimensions.second
-                    )
+            val marker = map.addMarker(
+                MarkerOptions()
+                    .position(position)
+                    .icon(descriptor)
                     .anchor(0.5f, 1f)
                     .zIndex(VEHICLE_BALLOON_Z_INDEX)
+                    .flat(false)
             )
-            overlay?.let(nearbyVehicleOverlays::add)
-        }
-
-        updateNearbyBalloonDimensionsForCurrentCamera(map)
-    }
-
-    private fun clearNearbyVehicleOverlays() {
-        nearbyVehicleOverlays.forEach { it.remove() }
-        nearbyVehicleOverlays.clear()
-    }
-
-    private fun updateNearbyBalloonDimensionsForCurrentCamera(map: GoogleMap? = null) {
-        val effectiveMap = map ?: googleMap ?: return
-        if (nearbyVehicleOverlays.isEmpty()) return
-
-        nearbyVehicleOverlays.forEach { overlay ->
-            val position = overlay.position
-            val dimensions = calculateBalloonDimensionsMeters(
-                map = effectiveMap,
-                latitude = position.latitude
-            )
-            overlay.setDimensions(dimensions.first, dimensions.second)
+            marker?.let(nearbyVehicleMarkers::add)
         }
     }
 
-    private fun calculateBalloonDimensionsMeters(
-        map: GoogleMap,
-        latitude: Double
-    ): Pair<Float, Float> {
-        val zoom = map.cameraPosition?.zoom ?: DEFAULT_ZOOM
-        val density = resources.displayMetrics.density
-        val widthPx = (BALLOON_BITMAP_WIDTH_DP * density).coerceAtLeast(1f)
-        val heightPx = (BALLOON_BITMAP_HEIGHT_DP * density).coerceAtLeast(1f)
-        val metersPerPixel = (156543.03392 * cos(latitude * PI / 180.0) / 2.0.pow(zoom.toDouble()))
-            .coerceAtLeast(0.01)
-
-        val widthMeters = (widthPx * metersPerPixel).toFloat().coerceAtLeast(1f)
-        val heightMeters = (heightPx * metersPerPixel).toFloat().coerceAtLeast(1f)
-        return widthMeters to heightMeters
+    private fun clearNearbyVehicleMarkers() {
+        nearbyVehicleMarkers.forEach { it.remove() }
+        nearbyVehicleMarkers.clear()
     }
 
-    private fun buildCarBalloonDescriptor(): BitmapDescriptor? {
+    private fun markerIconNameForVehicleType(vehicleType: String?): String {
+        return if (vehicleType.equals(VEHICLE_TYPE_MOTORCYCLE, ignoreCase = true)) {
+            MAP_BALLOON_ICON_MOTORCYCLE
+        } else {
+            MAP_BALLOON_ICON_CAR
+        }
+    }
+
+    private fun buildVehicleBalloonDescriptor(iconName: String): BitmapDescriptor? {
         val context = context ?: return null
         val density = resources.displayMetrics.density
 
@@ -810,7 +778,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         }
 
         val iconCenterY = (bubbleBottom / 2f) - ((iconPaint.descent() + iconPaint.ascent()) / 2f)
-        canvas.drawText("directions_car", bubbleCenterX, iconCenterY, iconPaint)
+        canvas.drawText(iconName, bubbleCenterX, iconCenterY, iconPaint)
 
         return BitmapDescriptorFactory.fromBitmap(bitmap)
     }
@@ -848,17 +816,20 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         private const val NEARBY_SESSION_CACHE_TTL_MS = 10L * 60L * 1000L
         private const val NEARBY_EMPTY_CACHE_TTL_MS = 20_000L
         private const val NEARBY_SESSION_CACHE_CENTER_DELTA_METERS = 1200f
-        private const val VEHICLE_BALLOON_Z_INDEX = 15f
-        private const val BALLOON_BITMAP_WIDTH_DP = 25f
-        private const val BALLOON_BITMAP_HEIGHT_DP = 32f
+        private const val VEHICLE_BALLOON_Z_INDEX = 30f
+        private const val BALLOON_BITMAP_WIDTH_DP = 28f
+        private const val BALLOON_BITMAP_HEIGHT_DP = 36f
         private const val BALLOON_CORNER_RADIUS_DP = 7f
         private const val BALLOON_POINTER_HEIGHT_DP = 6f
         private const val BALLOON_POINTER_HALF_WIDTH_DP = 5f
         private const val BALLOON_STROKE_DP = 1f
         private const val BALLOON_ICON_SIZE_SP = 12f
+        private const val MAP_BALLOON_ICON_CAR = "directions_car"
+        private const val MAP_BALLOON_ICON_MOTORCYCLE = "two_wheeler"
+        private const val VEHICLE_TYPE_MOTORCYCLE = "motorcycle"
         private val DEFAULT_LOCATION = LatLng(-23.55052, -46.63331)
         private const val DEFAULT_ZOOM = 11f
-        private const val USER_ZOOM = 14f
+        private const val USER_ZOOM = 16f
         private const val TAG = "RenterHomeFragment"
     }
 }

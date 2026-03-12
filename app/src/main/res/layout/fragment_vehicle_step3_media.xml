@@ -30,6 +30,7 @@
             android:paddingBottom="16dp">
 
             <TextView
+                android:id="@+id/tvRequiredPhotosTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/vehicle_step3_required_photos_title"
@@ -37,6 +38,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvRequiredPhotosHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -64,6 +66,7 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/tvRecommendedPhotosTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
@@ -72,6 +75,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvRecommendedPhotosHint"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

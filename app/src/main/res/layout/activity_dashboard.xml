@@ -10,45 +10,121 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:paddingVertical="30dp"
-        android:paddingHorizontal="20dp">
+        android:paddingTop="30dp"
+        android:paddingHorizontal="@dimen/app_padding_horizontal">
 
-        <TextView
-            android:id="@+id/tvDashboardTitle"
+        <LinearLayout
+            android:id="@+id/dashboardHeaderTextContainer"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="?attr/textPrimary"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="12dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toStartOf="@id/dashboardHomeAvatarCard"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="@string/nav_home" />
+            app:layout_goneMarginEnd="0dp">
 
-        <TextView
-            android:id="@+id/tvDashboardSubtitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            <TextView
+                android:id="@+id/tvDashboardTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/textPrimary"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                tools:text="@string/nav_home" />
+
+            <TextView
+                android:id="@+id/tvDashboardSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="?attr/textSecondary"
+                android:textSize="16sp"
+                android:visibility="gone"
+                tools:text="@string/renter_home_fragment_subtitle"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/dashboardHomeAvatarCard"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_marginTop="2dp"
-            android:textColor="?attr/textSecondary"
-            android:textSize="16sp"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvDashboardTitle"
-            tools:text="@string/renter_home_fragment_subtitle"
-            tools:visibility="visible" />
+            app:layout_constraintBottom_toBottomOf="@id/dashboardHeaderTextContainer"
+            app:layout_constraintTop_toTopOf="@id/dashboardHeaderTextContainer"
+            tools:visibility="visible">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:cardCornerRadius="30dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/borderLight"
+                app:strokeWidth="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <androidx.appcompat.widget.AppCompatImageView
+                        android:id="@+id/ivDashboardHomeAvatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:contentDescription="@string/dashboard_home_avatar_content_description"
+                        android:scaleType="centerCrop"
+                        android:visibility="gone"
+                        tools:src="@drawable/car_sedan"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/tvDashboardHomeAvatarFallback"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fontFamily="@font/material_symbols_rounded"
+                        android:gravity="center"
+                        android:text="person"
+                        android:textColor="?attr/textSecondary"
+                        android:textSize="26sp" />
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/dashboardHomeAvatarSyncBadge"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="2dp"
+                android:contentDescription="@string/profile_photo_pending_sync_content_description"
+                android:visibility="gone"
+                app:cardBackgroundColor="@android:color/white"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="3dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fontFamily="@font/material_symbols_rounded"
+                    android:gravity="center"
+                    android:text="cloud_off"
+                    android:textColor="?attr/textSecondary"
+                    android:textSize="11sp" />
+            </com.google.android.material.card.MaterialCardView>
+        </FrameLayout>
 
         <androidx.fragment.app.FragmentContainerView
             android:id="@+id/dashboardFragmentContainer"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginTop="26dp"
-            android:layout_marginBottom="100dp"
+            android:layout_marginTop="32dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvDashboardSubtitle" />
+            app:layout_constraintTop_toBottomOf="@id/dashboardHeaderTextContainer" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -93,6 +169,14 @@
 
         </com.google.android.material.card.MaterialCardView>
     </FrameLayout>
+
+    <View
+        android:id="@+id/bottomNavScrim"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_gravity="bottom"
+        android:background="@drawable/bg_bottom_nav_scrim"
+        android:importantForAccessibility="no" />
 
     <include
         android:id="@+id/floatingBottomNav"

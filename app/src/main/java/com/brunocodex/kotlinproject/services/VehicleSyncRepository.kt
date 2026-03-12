@@ -241,6 +241,8 @@ class VehicleSyncRepository(context: Context) {
             true
         } else {
             val payloadObject = runCatching { JSONObject(row.payloadJson) }.getOrElse { JSONObject() }
+            val vehicleType = normalizeVehicleType(payloadObject.optString("vehicleType"))
+            payloadObject.put("vehicleType", vehicleType)
             val pickupCoordinates = resolvePickupCoordinates(payloadObject)
             if (pickupCoordinates != null) {
                 payloadObject.put("pickupLatitude", pickupCoordinates.first)
@@ -253,6 +255,7 @@ class VehicleSyncRepository(context: Context) {
                 "ownerId" to row.ownerId,
                 "plate" to row.plate,
                 "status" to row.status,
+                "vehicleType" to vehicleType,
                 "deleted" to false,
                 "payloadJson" to effectivePayloadJson,
                 "updatedAtClient" to row.updatedAt,
@@ -271,6 +274,7 @@ class VehicleSyncRepository(context: Context) {
                     "vehicleId" to row.vehicleId,
                     "ownerId" to row.ownerId,
                     "status" to row.status,
+                    "vehicleType" to vehicleType,
                     "pickupLatitude" to pickupCoordinates.first,
                     "pickupLongitude" to pickupCoordinates.second,
                     "pickupGeohash" to geoHash,
@@ -555,5 +559,12 @@ class VehicleSyncRepository(context: Context) {
             .replace("\\s+".toRegex(), "_")
             .replace("[^a-zA-Z0-9_-]".toRegex(), "")
             .ifBlank { "value" }
+    }
+
+    private fun normalizeVehicleType(raw: String?): String {
+        return when (raw?.trim()?.lowercase()) {
+            "motorcycle", "moto" -> "motorcycle"
+            else -> "car"
+        }
     }
 }

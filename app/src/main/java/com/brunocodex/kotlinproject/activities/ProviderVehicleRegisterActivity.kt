@@ -19,6 +19,7 @@ import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.adapters.VehicleRegisterPagerAdapter
 import com.brunocodex.kotlinproject.services.SQLiteConfiguration
 import com.brunocodex.kotlinproject.services.VehicleSyncRepository
+import com.brunocodex.kotlinproject.utils.LocalVehicleDraftStore
 import com.brunocodex.kotlinproject.utils.StepHeaderBindable
 import com.brunocodex.kotlinproject.utils.StepValidatable
 import com.brunocodex.kotlinproject.utils.VehicleStepNavigator
@@ -31,10 +32,10 @@ import org.json.JSONObject
 class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigator {
 
     private val vehicleViewModel: VehicleRegisterViewModel by viewModels()
-    private val draftPrefs by lazy { getSharedPreferences("vehicle_register_draft_prefs", MODE_PRIVATE) }
     private val vehicleSyncRepository by lazy { VehicleSyncRepository(this) }
     private val firebaseAuth by lazy { FirebaseAuth.getInstance() }
     private var shouldSaveDraft = true
+    private var currentLocalDraftId: String? = null
 
     private enum class StepState { PENDING, CURRENT, DONE, ALERT }
 
@@ -49,8 +50,8 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
     private var isSubmitting = false
 
     companion object {
-        private const val LOCAL_DRAFT_KEY = "provider_vehicle_register_draft"
         const val EXTRA_INITIAL_DRAFT_JSON = "extra_initial_draft_json"
+        const val EXTRA_INITIAL_LOCAL_DRAFT_ID = "extra_initial_local_draft_id"
         private const val TAG = "ProviderVehicleRegister"
     }
 
@@ -77,7 +78,9 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
 
     override fun onStop() {
         super.onStop()
-        if (shouldSaveDraft) saveDraftProgress()
+        if (shouldSaveDraft && vehicleViewModel.hasAnyProgress()) {
+            saveDraftProgress()
+        }
     }
 
     override fun goToStep(stepIndex: Int) {
@@ -248,7 +251,8 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
 
             result.onSuccess { sync ->
                 if (draftMode) {
-                    saveDraftProgress()
+                    shouldSaveDraft = false
+                    clearLocalDraft()
                     val message = if (sync.remoteSynced) {
                         getString(R.string.vehicle_register_draft_saved)
                     } else {
@@ -377,17 +381,23 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
         vehicleViewModel.currentStep =
             if (::viewPager.isInitialized) viewPager.currentItem else vehicleViewModel.currentStep
 
-        val json = vehicleViewModel.toDraftJson()
-        draftPrefs.edit().putString(LOCAL_DRAFT_KEY, json.toString()).apply()
-    }
-
-    private fun loadLocalDraft() {
-        val raw = draftPrefs.getString(LOCAL_DRAFT_KEY, null) ?: return
-        runCatching { JSONObject(raw) }
-            .onSuccess { vehicleViewModel.restoreFromJson(it) }
+        val draftId = currentLocalDraftId?.takeIf { it.isNotBlank() } ?: LocalVehicleDraftStore.newDraftId()
+        currentLocalDraftId = draftId
+        LocalVehicleDraftStore.upsert(
+            this,
+            LocalVehicleDraftStore.Entry(
+                id = draftId,
+                payloadJson = vehicleViewModel.toDraftJson().toString(),
+                updatedAt = System.currentTimeMillis()
+            )
+        )
     }
 
     private fun restoreInitialDraftFromIntent() {
+        currentLocalDraftId = intent?.getStringExtra(EXTRA_INITIAL_LOCAL_DRAFT_ID)
+            ?.trim()
+            ?.ifBlank { null }
+
         val raw = intent?.getStringExtra(EXTRA_INITIAL_DRAFT_JSON).orEmpty()
         if (raw.isBlank()) return
 
@@ -419,7 +429,9 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
     }
 
     private fun clearLocalDraft() {
-        draftPrefs.edit().remove(LOCAL_DRAFT_KEY).apply()
+        val draftId = currentLocalDraftId ?: return
+        LocalVehicleDraftStore.remove(this, draftId)
+        currentLocalDraftId = null
     }
 
     private fun syncPendingVehiclesSilently() {

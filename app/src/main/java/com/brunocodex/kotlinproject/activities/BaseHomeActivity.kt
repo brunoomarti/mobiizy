@@ -3,12 +3,14 @@ package com.brunocodex.kotlinproject.activities
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
@@ -22,10 +24,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.brunocodex.kotlinproject.R
+import com.brunocodex.kotlinproject.services.ProfilePhotoLocalStore
+import com.brunocodex.kotlinproject.services.ProfilePhotoSyncScheduler
 import com.google.android.material.color.MaterialColors
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URL
 
 abstract class BaseHomeActivity : AppCompatActivity() {
 
@@ -52,7 +59,14 @@ abstract class BaseHomeActivity : AppCompatActivity() {
     private var navItemsContainer: View? = null
     private var dashboardTitleView: TextView? = null
     private var dashboardSubtitleView: TextView? = null
+    private var dashboardHomeAvatarCard: View? = null
+    private var dashboardHomeAvatarImage: ImageView? = null
+    private var dashboardHomeAvatarFallback: View? = null
+    private var dashboardHomeAvatarSyncBadge: View? = null
     private var currentUserFirstName: String? = null
+    private var currentUserPhotoUrl: String? = null
+    private var avatarLoadRequestToken: Int = 0
+    private var loadedAvatarUrl: String? = null
 
     private val permissionsLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
@@ -94,12 +108,26 @@ abstract class BaseHomeActivity : AppCompatActivity() {
 
         dashboardTitleView = findViewById(R.id.tvDashboardTitle)
         dashboardSubtitleView = findViewById(R.id.tvDashboardSubtitle)
+        dashboardHomeAvatarCard = findViewById(R.id.dashboardHomeAvatarCard)
+        dashboardHomeAvatarImage = findViewById(R.id.ivDashboardHomeAvatar)
+        dashboardHomeAvatarFallback = findViewById(R.id.tvDashboardHomeAvatarFallback)
+        dashboardHomeAvatarSyncBadge = findViewById(R.id.dashboardHomeAvatarSyncBadge)
+        dashboardHomeAvatarCard?.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
         seedFirstNameFromFirebaseAuth()
         anchorBottomNavToScreenBottom()
         setupBottomNav()
         restoreInitialDestination(savedInstanceState)
         loadFirstNameFromUserProfile()
         maybeRequestRuntimePermissions()
+        ProfilePhotoSyncScheduler.enqueueIfPending(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshHomeAvatarIfNeeded()
+        ProfilePhotoSyncScheduler.enqueueIfPending(this)
     }
 
     protected abstract fun buildNavDestinations(): List<NavDestination>
@@ -196,6 +224,7 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         selectedItemId = itemId
         dashboardTitleView?.text = resolveDashboardTitle(destination)
         updateDashboardSubtitle(destination.subtitle)
+        updateHomeAvatar(destination)
         navItems.keys.forEach { id -> bindNavItemState(id, selected = id == itemId) }
         moveSelectionIndicator(itemId, animate = shouldAnimateIndicator)
         onNavItemSelected(itemId)
@@ -223,15 +252,33 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         val user = FirebaseAuth.getInstance().currentUser ?: return
         currentUserFirstName = extractFirstName(user.displayName)
             ?: extractFirstName(user.email?.substringBefore("@"))
+        currentUserPhotoUrl = user.photoUrl
+            ?.toString()
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
     }
 
     private fun loadFirstNameFromUserProfile() {
         val user = FirebaseAuth.getInstance().currentUser ?: return
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
-                val profileFirstName = extractFirstName(doc.getString("name")) ?: return@addOnSuccessListener
-                currentUserFirstName = profileFirstName
-                refreshGreetingHeaderIfNeeded()
+                val profileFirstName = extractFirstName(doc.getString("name"))
+                if (profileFirstName != null) {
+                    currentUserFirstName = profileFirstName
+                    refreshGreetingHeaderIfNeeded()
+                }
+                val profilePhotoUrl = listOf(
+                    "photoUrl",
+                    "photoURL",
+                    "profilePhotoUrl",
+                    "avatarUrl"
+                ).asSequence()
+                    .mapNotNull { key -> doc.getString(key)?.trim() }
+                    .firstOrNull { value -> value.isNotBlank() }
+                if (!profilePhotoUrl.isNullOrBlank()) {
+                    currentUserPhotoUrl = profilePhotoUrl
+                }
+                refreshHomeAvatarIfNeeded()
             }
     }
 
@@ -239,6 +286,94 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         val currentDestination = destinationByItemId[selectedItemId] ?: return
         if (!currentDestination.usePersonalGreetingTitle) return
         dashboardTitleView?.text = resolveDashboardTitle(currentDestination)
+    }
+
+    private fun refreshHomeAvatarIfNeeded() {
+        val currentDestination = destinationByItemId[selectedItemId] ?: return
+        updateHomeAvatar(currentDestination)
+    }
+
+    private fun updateHomeAvatar(destination: NavDestination) {
+        val avatarCard = dashboardHomeAvatarCard ?: return
+        val avatarImage = dashboardHomeAvatarImage ?: return
+        val avatarFallback = dashboardHomeAvatarFallback ?: return
+        val avatarSyncBadge = dashboardHomeAvatarSyncBadge
+
+        if (!destination.usePersonalGreetingTitle) {
+            avatarCard.visibility = View.GONE
+            avatarSyncBadge?.visibility = View.GONE
+            return
+        }
+
+        avatarCard.visibility = View.VISIBLE
+        val localSnapshot = ProfilePhotoLocalStore.getSnapshot(this)
+        val localFile = localSnapshot.localFileOrNull()
+        if (localFile != null) {
+            avatarLoadRequestToken++
+            loadedAvatarUrl = null
+            val bitmap = BitmapFactory.decodeFile(localFile.absolutePath)
+            if (bitmap != null) {
+                avatarImage.setImageBitmap(bitmap)
+                avatarImage.visibility = View.VISIBLE
+                avatarFallback.visibility = View.GONE
+            } else {
+                avatarImage.setImageDrawable(null)
+                avatarImage.visibility = View.GONE
+                avatarFallback.visibility = View.VISIBLE
+            }
+            avatarSyncBadge?.visibility =
+                if (localSnapshot.pendingSync && bitmap != null) View.VISIBLE else View.GONE
+            return
+        }
+        avatarSyncBadge?.visibility = View.GONE
+
+        val photoUrl = currentUserPhotoUrl?.trim().orEmpty()
+        if (photoUrl.isBlank()) {
+            avatarLoadRequestToken++
+            loadedAvatarUrl = null
+            avatarImage.setImageDrawable(null)
+            avatarImage.visibility = View.GONE
+            avatarFallback.visibility = View.VISIBLE
+            return
+        }
+
+        if (loadedAvatarUrl == photoUrl && avatarImage.visibility == View.VISIBLE) {
+            avatarFallback.visibility = View.GONE
+            return
+        }
+
+        val requestToken = ++avatarLoadRequestToken
+        loadedAvatarUrl = null
+        avatarImage.setImageDrawable(null)
+        avatarImage.visibility = View.GONE
+        avatarFallback.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            val bitmap = runCatching {
+                withContext(Dispatchers.IO) {
+                    URL(photoUrl).openConnection().apply {
+                        connectTimeout = 15000
+                        readTimeout = 15000
+                    }.getInputStream().use { input ->
+                        BitmapFactory.decodeStream(input)
+                    }
+                }
+            }.getOrNull()
+
+            if (requestToken != avatarLoadRequestToken) return@launch
+
+            if (bitmap == null) {
+                avatarImage.setImageDrawable(null)
+                avatarImage.visibility = View.GONE
+                avatarFallback.visibility = View.VISIBLE
+                return@launch
+            }
+
+            loadedAvatarUrl = photoUrl
+            avatarImage.setImageBitmap(bitmap)
+            avatarImage.visibility = View.VISIBLE
+            avatarFallback.visibility = View.GONE
+        }
     }
 
     private fun resolveUserFirstName(): String {

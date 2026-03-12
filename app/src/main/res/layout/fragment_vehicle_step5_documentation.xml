@@ -183,6 +183,7 @@
                 android:textStyle="bold" />
 
             <TextView
+                android:id="@+id/tvAllowPetLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -224,6 +225,7 @@
                 android:visibility="gone" />
 
             <TextView
+                android:id="@+id/tvAllowSmokingLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
@@ -325,6 +327,7 @@
                 android:visibility="gone" />
 
             <LinearLayout
+                android:id="@+id/driverRequirementsRow"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"

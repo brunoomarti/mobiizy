@@ -28,6 +28,9 @@ class VehicleStep4ConditionFragment :
     private lateinit var tvConditionError: TextView
     private lateinit var tvAccidentError: TextView
     private lateinit var accidentDescriptionLayout: TextInputLayout
+    private lateinit var chipGroupSafety: ChipGroup
+    private lateinit var chipGroupComfort: ChipGroup
+    private var lastRenderedVehicleType: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -42,6 +45,8 @@ class VehicleStep4ConditionFragment :
         tvConditionError = view.findViewById(R.id.tvConditionError)
         tvAccidentError = view.findViewById(R.id.tvAccidentError)
         accidentDescriptionLayout = view.findViewById(R.id.accidentDescriptionLayout)
+        chipGroupSafety = view.findViewById(R.id.chipGroupSafety)
+        chipGroupComfort = view.findViewById(R.id.chipGroupComfort)
 
         bindText(view, R.id.mileageInput, vehicleViewModel.mileage) { vehicleViewModel.mileage = it }
         bindText(
@@ -62,7 +67,19 @@ class VehicleStep4ConditionFragment :
 
         setupConditionState()
         setupAccidentState()
-        setupItemGroups(view)
+        refreshVehicleTypeDependentUi(force = true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshVehicleTypeDependentUi()
+    }
+
+    private fun refreshVehicleTypeDependentUi(force: Boolean = false) {
+        val currentType = vehicleViewModel.vehicleType
+        if (!force && currentType == lastRenderedVehicleType) return
+        lastRenderedVehicleType = currentType
+        setupItemGroups()
     }
 
     private fun bindText(
@@ -138,19 +155,38 @@ class VehicleStep4ConditionFragment :
         accidentDescriptionLayout.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
-    private fun setupItemGroups(view: View) {
-        val safetyGroup = view.findViewById<ChipGroup>(R.id.chipGroupSafety)
-        val comfortGroup = view.findViewById<ChipGroup>(R.id.chipGroupComfort)
+    private fun setupItemGroups() {
+        val isMotorcycle = vehicleViewModel.vehicleType == VehicleRegisterViewModel.TYPE_MOTORCYCLE
+
+        val safetyOptions = resources.getStringArray(
+            if (isMotorcycle) {
+                R.array.vehicle_safety_items_motorcycle
+            } else {
+                R.array.vehicle_safety_items
+            }
+        )
+        val comfortOptions = resources.getStringArray(
+            if (isMotorcycle) {
+                R.array.vehicle_comfort_items_motorcycle
+            } else {
+                R.array.vehicle_comfort_items
+            }
+        )
+
+        val validSafetyOptions = safetyOptions.toSet()
+        val validComfortOptions = comfortOptions.toSet()
+        vehicleViewModel.safetyItems.retainAll(validSafetyOptions)
+        vehicleViewModel.comfortItems.retainAll(validComfortOptions)
 
         inflateCheckableChips(
-            group = safetyGroup,
-            options = resources.getStringArray(R.array.vehicle_safety_items),
+            group = chipGroupSafety,
+            options = safetyOptions,
             selected = vehicleViewModel.safetyItems
         )
 
         inflateCheckableChips(
-            group = comfortGroup,
-            options = resources.getStringArray(R.array.vehicle_comfort_items),
+            group = chipGroupComfort,
+            options = comfortOptions,
             selected = vehicleViewModel.comfortItems
         )
     }

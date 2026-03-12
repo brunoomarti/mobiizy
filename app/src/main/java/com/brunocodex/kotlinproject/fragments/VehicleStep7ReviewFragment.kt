@@ -79,6 +79,20 @@ class VehicleStep7ReviewFragment : Fragment(R.layout.fragment_vehicle_step7_revi
         }
 
         val summary = buildString {
+            val rulesSummary = if (vehicleViewModel.vehicleType == VehicleRegisterViewModel.TYPE_MOTORCYCLE) {
+                getString(
+                    R.string.vehicle_summary_rules_motorcycle,
+                    boolLabel(vehicleViewModel.allowTrip)
+                )
+            } else {
+                getString(
+                    R.string.vehicle_summary_rules,
+                    boolLabel(vehicleViewModel.allowPet),
+                    boolLabel(vehicleViewModel.allowSmoking),
+                    boolLabel(vehicleViewModel.allowTrip)
+                )
+            }
+
             appendLine(getString(R.string.vehicle_summary_type_and_availability, vehicleType, availability))
             appendLine(
                 getString(
@@ -107,14 +121,7 @@ class VehicleStep7ReviewFragment : Fragment(R.layout.fragment_vehicle_step7_revi
                     conditionLabel(vehicleViewModel.condition)
                 )
             )
-            appendLine(
-                getString(
-                    R.string.vehicle_summary_rules,
-                    boolLabel(vehicleViewModel.allowPet),
-                    boolLabel(vehicleViewModel.allowSmoking),
-                    boolLabel(vehicleViewModel.allowTrip)
-                )
-            )
+            appendLine(rulesSummary)
             append(
                 getString(
                     R.string.vehicle_summary_location,

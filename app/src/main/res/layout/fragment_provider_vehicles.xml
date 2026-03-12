@@ -11,7 +11,8 @@
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp"
         app:strokeColor="?attr/borderLight"
-        app:strokeWidth="1dp">
+        app:strokeWidth="1dp"
+        android:layout_marginBottom="18dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -46,15 +47,6 @@
     </com.google.android.material.card.MaterialCardView>
 
     <TextView
-        android:id="@+id/tvVehiclesListTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:text="@string/provider_vehicles_my_list_title"
-        android:textColor="?attr/textPrimary"
-        android:textStyle="bold" />
-
-    <TextView
         android:id="@+id/tvVehiclesEmpty"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -71,12 +63,75 @@
         android:layout_weight="1"
         android:layout_marginTop="6dp">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvVehicles"
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/scrollVehiclesSections"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingBottom="12dp" />
+            android:paddingBottom="12dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvInProgressListTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/provider_vehicles_in_progress_title"
+                    android:textColor="?attr/textPrimary"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvInProgressEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/provider_vehicles_in_progress_empty"
+                    android:textColor="?attr/textSecondary"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvVehiclesInProgress"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    android:paddingBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tvRegisteredListTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/provider_vehicles_registered_title"
+                    android:textColor="?attr/textPrimary"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvRegisteredEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:text="@string/provider_vehicles_registered_empty"
+                    android:textColor="?attr/textSecondary"
+                    android:textSize="13sp"
+                    android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvVehiclesRegistered"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false" />
+
+            </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
         <LinearLayout
             android:id="@+id/skeletonContainer"

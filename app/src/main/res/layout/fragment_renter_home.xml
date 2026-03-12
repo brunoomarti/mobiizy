@@ -5,6 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <!-- Mapa temporariamente desativado na home do renter.
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardRenterMapPreview"
         android:layout_width="match_parent"
@@ -43,5 +44,6 @@
 
         </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
+    -->
 
 </LinearLayout>

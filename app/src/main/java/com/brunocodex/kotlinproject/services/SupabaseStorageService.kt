@@ -12,6 +12,7 @@ import java.util.Locale
 object SupabaseStorageService {
 
     private const val DEFAULT_BUCKET = "vehicle-media"
+    private const val PROFILE_PHOTO_BUCKET = "profile_photo"
 
     private val isConfigured: Boolean
         get() = BuildConfig.SUPABASE_URL.isNotBlank() && BuildConfig.SUPABASE_ANON_KEY.isNotBlank()
@@ -38,6 +39,8 @@ object SupabaseStorageService {
     }
 
     fun getBucketName(): String = resolvedBucketName
+
+    fun getProfilePhotoBucketName(): String = PROFILE_PHOTO_BUCKET
 
     suspend fun uploadVehiclePhoto(
         localFile: File,
@@ -81,15 +84,30 @@ object SupabaseStorageService {
         upsert: Boolean = true
     ): String {
         ensureConfigured()
-        val cleanPath = sanitizeRemotePath(remotePath)
-
-        client.storage.from(resolvedBucketName).upload(
-            path = cleanPath,
-            data = bytes,
+        return uploadBytesToBucket(
+            bucketName = resolvedBucketName,
+            remotePath = remotePath,
+            bytes = bytes,
             upsert = upsert
         )
+    }
 
-        return client.storage.from(resolvedBucketName).publicUrl(cleanPath)
+    suspend fun uploadProfilePhoto(
+        ownerId: String,
+        bytes: ByteArray,
+        fileExtension: String = "jpg"
+    ): String {
+        ensureConfigured()
+        val cleanOwner = sanitizePathPart(ownerId.ifBlank { "anonymous" })
+        val cleanExtension = sanitizePathPart(fileExtension.lowercase(Locale.ROOT)).ifBlank { "jpg" }
+        val remotePath = "users/$cleanOwner/profile_${System.currentTimeMillis()}.$cleanExtension"
+
+        return uploadBytesToBucket(
+            bucketName = PROFILE_PHOTO_BUCKET,
+            remotePath = remotePath,
+            bytes = bytes,
+            upsert = true
+        )
     }
 
     fun publicUrl(remotePath: String): String {
@@ -120,6 +138,21 @@ object SupabaseStorageService {
         check(isConfigured) {
             "Supabase nao configurado. Defina SUPABASE_URL e SUPABASE_ANON_KEY no local.properties."
         }
+    }
+
+    private suspend fun uploadBytesToBucket(
+        bucketName: String,
+        remotePath: String,
+        bytes: ByteArray,
+        upsert: Boolean
+    ): String {
+        val cleanPath = sanitizeRemotePath(remotePath)
+        client.storage.from(bucketName).upload(
+            path = cleanPath,
+            data = bytes,
+            upsert = upsert
+        )
+        return client.storage.from(bucketName).publicUrl(cleanPath)
     }
 
     private fun sanitizeRemotePath(path: String): String {

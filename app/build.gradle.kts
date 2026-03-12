@@ -130,6 +130,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.firebase:geofire-android-common:3.2.0")
+    implementation("com.vanniktech:android-image-cropper:4.6.0")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 
     implementation(platform("io.github.jan-tennert.supabase:bom:2.2.3"))
     implementation("io.github.jan-tennert.supabase:storage-kt")

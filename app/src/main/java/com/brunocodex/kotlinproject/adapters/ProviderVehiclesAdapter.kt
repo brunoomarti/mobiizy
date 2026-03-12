@@ -3,23 +3,30 @@ package com.brunocodex.kotlinproject.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.brunocodex.kotlinproject.R
+import java.util.Locale
 
 data class ProviderVehicleCardUi(
     val vehicleId: String,
     val payloadJson: String,
     val title: String,
+    val plate: String,
     val plateLabel: String,
+    val updatedAtTimestamp: Long,
     val updatedAtLabel: String,
     val statusLabel: String,
     val status: String,
     val hasPendingSync: Boolean,
-    val pendingSyncLabel: String
+    val pendingSyncLabel: String,
+    val vehicleType: String? = null,
+    val bodyType: String? = null,
+    val localDraftId: String? = null
 )
 
 class ProviderVehiclesAdapter(
@@ -46,6 +53,8 @@ class ProviderVehiclesAdapter(
         private val tvVehicleUpdatedAt: TextView = itemView.findViewById(R.id.tvVehicleUpdatedAt)
         private val tvVehicleStatus: TextView = itemView.findViewById(R.id.tvVehicleStatus)
         private val tvSyncPending: TextView = itemView.findViewById(R.id.tvSyncPending)
+        private val ivVehicleThumb: ImageView = itemView.findViewById(R.id.ivVehicleThumb)
+
         fun bind(item: ProviderVehicleCardUi) {
             tvVehicleTitle.text = item.title
             tvVehiclePlate.text = item.plateLabel
@@ -53,7 +62,53 @@ class ProviderVehiclesAdapter(
             tvVehicleStatus.text = item.statusLabel
             tvSyncPending.text = item.pendingSyncLabel
             tvSyncPending.isVisible = item.hasPendingSync
+            ivVehicleThumb.setImageResource(resolveVehicleImageRes(item))
             itemView.setOnClickListener { onCardClick(item) }
+        }
+
+        private fun resolveVehicleImageRes(item: ProviderVehicleCardUi): Int {
+            val normalizedType = normalizeKey(item.vehicleType)
+            val normalizedBodyType = normalizeKey(item.bodyType)
+
+            if (normalizedType == "motorcycle" || normalizedBodyType in MOTORCYCLE_BODY_TYPES) {
+                return R.drawable.motorcycle
+            }
+
+            return if (normalizedBodyType in SUV_LIKE_BODY_TYPES) {
+                R.drawable.car_suv
+            } else {
+                R.drawable.car_sedan
+            }
+        }
+
+        private fun normalizeKey(raw: String?): String {
+            return raw.orEmpty()
+                .trim()
+                .lowercase(Locale.ROOT)
+                .replace("-", "")
+                .replace("_", "")
+                .replace(" ", "")
+        }
+
+        companion object {
+            private val MOTORCYCLE_BODY_TYPES = setOf(
+                "street",
+                "scooter",
+                "trail",
+                "naked",
+                "sport",
+                "touring",
+                "custom",
+                "bigtrail",
+                "offroad"
+            )
+
+            private val SUV_LIKE_BODY_TYPES = setOf(
+                "suv",
+                "picape",
+                "van",
+                "crossover"
+            )
         }
     }
 

@@ -141,9 +141,16 @@ class VehicleRegisterViewModel : ViewModel() {
     fun isPriceChecklistOk(): Boolean = !dailyPrice.isNullOrBlank()
 
     fun isRulesChecklistOk(): Boolean {
+        val tripOk = allowTrip != null
+        val tripTypesOk = allowTrip != true || allowedTripTypes.isNotEmpty()
+        if (vehicleType == TYPE_MOTORCYCLE) {
+            return tripOk && tripTypesOk
+        }
+
         return allowPet != null &&
             allowSmoking != null &&
-            allowTrip != null &&
+            tripOk &&
+            tripTypesOk &&
             !minimumDriverAge.isNullOrBlank() &&
             !minimumLicenseYears.isNullOrBlank()
     }

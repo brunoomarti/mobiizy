@@ -20,6 +20,10 @@ class ProviderHomeActivity : BaseHomeActivity() {
 
     override fun defaultNavItemId(): Int = R.id.navHomeItem
 
+    fun openVehiclesTabFromHome() {
+        selectNavItem(R.id.navGarageItem)
+    }
+
     override fun buildNavDestinations(): List<NavDestination> {
         return listOf(
             NavDestination(

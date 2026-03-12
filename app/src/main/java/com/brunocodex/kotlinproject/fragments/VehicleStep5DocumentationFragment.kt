@@ -36,17 +36,23 @@ class VehicleStep5DocumentationFragment :
     private lateinit var tvAllowSmokingError: TextView
     private lateinit var tvAllowTripError: TextView
     private lateinit var tvTripTypesError: TextView
+    private lateinit var stepSubtitle: TextView
+    private lateinit var tvAllowPetLabel: TextView
+    private lateinit var tvAllowSmokingLabel: TextView
 
     private lateinit var insuranceTypeLayout: TextInputLayout
+    private lateinit var minDriverAgeLayout: TextInputLayout
+    private lateinit var minCnhYearsLayout: TextInputLayout
     private lateinit var chipGroupTripTypes: ChipGroup
+    private lateinit var driverRequirementsRow: View
+    private var lastRenderedVehicleType: String? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<TextView>(R.id.stepHeadline).text =
             getString(R.string.vehicle_step5_headline)
-        view.findViewById<TextView>(R.id.stepSubtitle).text =
-            getString(R.string.vehicle_step5_subtitle)
+        stepSubtitle = view.findViewById(R.id.stepSubtitle)
 
         rgDocs = view.findViewById(R.id.rgDocsUpToDate)
         rgIpva = view.findViewById(R.id.rgIpva)
@@ -62,9 +68,14 @@ class VehicleStep5DocumentationFragment :
         tvAllowSmokingError = view.findViewById(R.id.tvAllowSmokingError)
         tvAllowTripError = view.findViewById(R.id.tvAllowTripError)
         tvTripTypesError = view.findViewById(R.id.tvTripTypesError)
+        tvAllowPetLabel = view.findViewById(R.id.tvAllowPetLabel)
+        tvAllowSmokingLabel = view.findViewById(R.id.tvAllowSmokingLabel)
 
         insuranceTypeLayout = view.findViewById(R.id.insuranceTypeLayout)
+        minDriverAgeLayout = view.findViewById(R.id.minDriverAgeLayout)
+        minCnhYearsLayout = view.findViewById(R.id.minCnhYearsLayout)
         chipGroupTripTypes = view.findViewById(R.id.chipGroupTripTypes)
+        driverRequirementsRow = view.findViewById(R.id.driverRequirementsRow)
 
         bindText(view, R.id.insuranceTypeInput, vehicleViewModel.insuranceType) {
             vehicleViewModel.insuranceType = it
@@ -80,6 +91,62 @@ class VehicleStep5DocumentationFragment :
         setupTripTypeChips()
         updateInsuranceVisibility(vehicleViewModel.hasInsurance == true)
         updateTripTypeVisibility(vehicleViewModel.allowTrip == true)
+        refreshVehicleTypeDependentUi(force = true)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        refreshVehicleTypeDependentUi()
+    }
+
+    private fun refreshVehicleTypeDependentUi(force: Boolean = false) {
+        val currentType = vehicleViewModel.vehicleType
+        if (!force && currentType == lastRenderedVehicleType) return
+        lastRenderedVehicleType = currentType
+
+        val isMotorcycle = isMotorcycleRegistration()
+        stepSubtitle.text = getString(
+            if (isMotorcycle) {
+                R.string.vehicle_step5_subtitle_motorcycle
+            } else {
+                R.string.vehicle_step5_subtitle
+            }
+        )
+
+        applyOwnerRulesUiByVehicleType(isMotorcycle)
+    }
+
+    private fun applyOwnerRulesUiByVehicleType(isMotorcycle: Boolean) {
+        val showCarOnlyRules = !isMotorcycle
+
+        tvAllowPetLabel.visibility = if (showCarOnlyRules) View.VISIBLE else View.GONE
+        rgAllowPet.visibility = if (showCarOnlyRules) View.VISIBLE else View.GONE
+        tvAllowPetError.visibility = View.GONE
+
+        tvAllowSmokingLabel.visibility = if (showCarOnlyRules) View.VISIBLE else View.GONE
+        rgAllowSmoking.visibility = if (showCarOnlyRules) View.VISIBLE else View.GONE
+        tvAllowSmokingError.visibility = View.GONE
+
+        driverRequirementsRow.visibility = if (showCarOnlyRules) View.VISIBLE else View.GONE
+        minDriverAgeLayout.tag = if (showCarOnlyRules) "required" else null
+        minCnhYearsLayout.tag = if (showCarOnlyRules) "required" else null
+
+        if (isMotorcycle) {
+            vehicleViewModel.allowPet = null
+            vehicleViewModel.allowSmoking = null
+            vehicleViewModel.minimumDriverAge = null
+            vehicleViewModel.minimumLicenseYears = null
+            rgAllowPet.clearCheck()
+            rgAllowSmoking.clearCheck()
+            minDriverAgeLayout.editText?.setText("")
+            minDriverAgeLayout.error = null
+            minCnhYearsLayout.editText?.setText("")
+            minCnhYearsLayout.error = null
+        }
+    }
+
+    private fun isMotorcycleRegistration(): Boolean {
+        return vehicleViewModel.vehicleType == VehicleRegisterViewModel.TYPE_MOTORCYCLE
     }
 
     private fun bindText(
@@ -229,13 +296,14 @@ class VehicleStep5DocumentationFragment :
 
     override fun validateStep(showErrors: Boolean): Boolean {
         val root = view ?: return false
+        val isMotorcycle = isMotorcycleRegistration()
         val textFieldsOk = StepValidationUtils.validateRequiredFields(root, showErrors)
 
         val docsOk = vehicleViewModel.documentsUpToDate != null
         val ipvaOk = vehicleViewModel.ipvaLicensingOk != null
         val insuranceOk = vehicleViewModel.hasInsurance != null
-        val petOk = vehicleViewModel.allowPet != null
-        val smokingOk = vehicleViewModel.allowSmoking != null
+        val petOk = isMotorcycle || vehicleViewModel.allowPet != null
+        val smokingOk = isMotorcycle || vehicleViewModel.allowSmoking != null
         val tripOk = vehicleViewModel.allowTrip != null
         val tripTypeOk = vehicleViewModel.allowTrip != true || vehicleViewModel.allowedTripTypes.isNotEmpty()
 
@@ -243,8 +311,10 @@ class VehicleStep5DocumentationFragment :
             tvDocsError.visibility = if (docsOk) View.GONE else View.VISIBLE
             tvIpvaError.visibility = if (ipvaOk) View.GONE else View.VISIBLE
             tvInsuranceError.visibility = if (insuranceOk) View.GONE else View.VISIBLE
-            tvAllowPetError.visibility = if (petOk) View.GONE else View.VISIBLE
-            tvAllowSmokingError.visibility = if (smokingOk) View.GONE else View.VISIBLE
+            tvAllowPetError.visibility =
+                if (isMotorcycle || petOk) View.GONE else View.VISIBLE
+            tvAllowSmokingError.visibility =
+                if (isMotorcycle || smokingOk) View.GONE else View.VISIBLE
             tvAllowTripError.visibility = if (tripOk) View.GONE else View.VISIBLE
             tvTripTypesError.visibility = if (tripTypeOk) View.GONE else View.VISIBLE
         }

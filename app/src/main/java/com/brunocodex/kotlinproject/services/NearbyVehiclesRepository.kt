@@ -23,6 +23,7 @@ class NearbyVehiclesRepository(context: Context) {
         val ownerId: String,
         val pickupLatitude: Double,
         val pickupLongitude: Double,
+        val vehicleType: String?,
         val distanceMeters: Double
     )
 
@@ -76,6 +77,10 @@ class NearbyVehiclesRepository(context: Context) {
             }
         }
 
+        if (indexedById.isNotEmpty()) {
+            hydrateMissingVehicleTypes(indexedById)
+        }
+
         if (indexedById.isEmpty()) {
             val legacy = fetchNearbyFromLegacyTree(center, radiusMeters)
             return@withContext legacy
@@ -100,14 +105,48 @@ class NearbyVehiclesRepository(context: Context) {
 
         val latitude = snapshot.child("pickupLatitude").toNullableDouble() ?: return null
         val longitude = snapshot.child("pickupLongitude").toNullableDouble() ?: return null
+        val vehicleType = normalizeVehicleType(
+            snapshot.child("vehicleType").getValue(String::class.java)
+        )
 
         return NearbyVehicle(
             vehicleId = vehicleId,
             ownerId = ownerId,
             pickupLatitude = latitude,
             pickupLongitude = longitude,
+            vehicleType = vehicleType,
             distanceMeters = Double.MAX_VALUE
         )
+    }
+
+    private suspend fun hydrateMissingVehicleTypes(
+        indexedById: MutableMap<String, NearbyVehicle>
+    ) {
+        val missingTypeEntries = indexedById.values.filter { it.vehicleType.isNullOrBlank() }
+        if (missingTypeEntries.isEmpty()) return
+
+        missingTypeEntries.forEach { entry ->
+            val snapshot = runCatching {
+                vehiclesRef.child(entry.ownerId).child(entry.vehicleId).get().await()
+            }.getOrNull() ?: return@forEach
+
+            val directType = normalizeVehicleType(snapshot.child("vehicleType").getValue(String::class.java))
+            val payloadType = if (directType != null) {
+                null
+            } else {
+                runCatching {
+                    val payloadRaw = snapshot.child("payloadJson").getValue(String::class.java).orEmpty()
+                    if (payloadRaw.isBlank()) {
+                        null
+                    } else {
+                        normalizeVehicleType(JSONObject(payloadRaw).optNullableString("vehicleType"))
+                    }
+                }.getOrNull()
+            }
+
+            val resolvedType = directType ?: payloadType ?: return@forEach
+            indexedById[entry.vehicleId] = entry.copy(vehicleType = resolvedType)
+        }
     }
 
     private suspend fun fetchNearbyFromLegacyTree(
@@ -131,6 +170,7 @@ class NearbyVehiclesRepository(context: Context) {
                     .ifBlank { return@forEach }
                 val payloadRaw = vehicleNode.child("payloadJson").getValue(String::class.java).orEmpty()
                 val payload = runCatching { JSONObject(payloadRaw) }.getOrNull() ?: return@forEach
+                val vehicleType = normalizeVehicleType(payload.optNullableString("vehicleType"))
 
                 val latitude = payload.optNullableDouble("pickupLatitude")
                     ?: payload.optNullableDouble("pickupLat")
@@ -154,6 +194,7 @@ class NearbyVehiclesRepository(context: Context) {
                         ownerId = ownerId,
                         pickupLatitude = latitude,
                         pickupLongitude = longitude,
+                        vehicleType = vehicleType,
                         distanceMeters = distance
                     )
                 }
@@ -177,6 +218,19 @@ class NearbyVehiclesRepository(context: Context) {
         return when (val raw = opt(key)) {
             is Number -> raw.toDouble()
             is String -> raw.toDoubleOrNull()
+            else -> null
+        }
+    }
+
+    private fun JSONObject.optNullableString(key: String): String? {
+        if (isNull(key)) return null
+        return optString(key).trim().takeIf { it.isNotBlank() }
+    }
+
+    private fun normalizeVehicleType(raw: String?): String? {
+        return when (raw?.trim()?.lowercase()) {
+            "car" -> "car"
+            "motorcycle", "moto" -> "motorcycle"
             else -> null
         }
     }
