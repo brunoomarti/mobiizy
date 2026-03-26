@@ -5,9 +5,7 @@ import android.net.Uri
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
+import com.google.firebase.database.ServerValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -25,7 +23,13 @@ object ProfilePhotoSyncService {
 
     suspend fun syncPendingPhoto(context: Context): SyncResult {
         val appContext = context.applicationContext
-        val snapshot = ProfilePhotoLocalStore.getSnapshot(appContext)
+        val user = FirebaseAuth.getInstance().currentUser
+            ?: return SyncResult.RetryableFailure(
+                IllegalStateException("Usuario nao autenticado para sincronizar foto de perfil.")
+            )
+        val userId = user.uid
+
+        val snapshot = ProfilePhotoLocalStore.getSnapshot(appContext, userId)
         if (!snapshot.pendingSync) return SyncResult.NoPendingPhoto
 
         if (!SupabaseStorageService.isReady()) {
@@ -39,11 +43,6 @@ object ProfilePhotoSyncService {
                 IllegalStateException("Foto local pendente nao encontrada no armazenamento do app.")
             )
 
-        val user = FirebaseAuth.getInstance().currentUser
-            ?: return SyncResult.RetryableFailure(
-                IllegalStateException("Usuario nao autenticado para sincronizar foto de perfil.")
-            )
-
         return runCatching {
             val bytes = withContext(Dispatchers.IO) { localFile.readBytes() }
             val extension = localFile.extension.ifBlank { "jpg" }
@@ -54,18 +53,18 @@ object ProfilePhotoSyncService {
                 fileExtension = extension
             )
 
-            val payload = mapOf(
+            val payload = hashMapOf<String, Any>(
                 "photoUrl" to remoteUrl,
                 "photoURL" to remoteUrl,
                 "profilePhotoUrl" to remoteUrl,
                 "avatarUrl" to remoteUrl,
-                "updatedAt" to FieldValue.serverTimestamp()
+                "updatedAt" to ServerValue.TIMESTAMP
             )
 
-            FirebaseFirestore.getInstance()
-                .collection("users")
-                .document(user.uid)
-                .set(payload, SetOptions.merge())
+            FirebaseConfiguration.getFirebaseDatabase()
+                .child("users")
+                .child(user.uid)
+                .updateChildren(payload)
                 .awaitResult()
 
             runCatching {
@@ -76,7 +75,7 @@ object ProfilePhotoSyncService {
                 ).awaitResult()
             }
 
-            ProfilePhotoLocalStore.markSynced(appContext, remoteUrl)
+            ProfilePhotoLocalStore.markSynced(appContext, userId, remoteUrl)
             remoteUrl
         }.fold(
             onSuccess = { remoteUrl -> SyncResult.Synced(remoteUrl) },
@@ -98,4 +97,3 @@ object ProfilePhotoSyncService {
         }
     }
 }
-

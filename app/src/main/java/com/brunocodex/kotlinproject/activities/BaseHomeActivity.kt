@@ -23,7 +23,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
 import com.brunocodex.kotlinproject.R
+import com.brunocodex.kotlinproject.services.FirebaseConfiguration
 import com.brunocodex.kotlinproject.services.ProfilePhotoLocalStore
 import com.brunocodex.kotlinproject.services.ProfilePhotoSyncScheduler
 import com.google.android.material.color.MaterialColors
@@ -211,13 +213,47 @@ abstract class BaseHomeActivity : AppCompatActivity() {
 
         if (!forceReplace && selectedItemId == itemId) return
 
-        val current = supportFragmentManager.findFragmentById(R.id.dashboardFragmentContainer)
-        val fragment = supportFragmentManager.findFragmentByTag(destination.tag) ?: destination.fragmentFactory()
+        val fragmentManager = supportFragmentManager
+        if (fragmentManager.isStateSaved) return
 
-        if (forceReplace || current?.tag != destination.tag) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.dashboardFragmentContainer, fragment, destination.tag)
-                .commit()
+        val current = destinationByItemId[selectedItemId]
+            ?.let { currentDestination ->
+                fragmentManager.findFragmentByTag(currentDestination.tag)?.takeIf { it.isAdded }
+            }
+        var target = fragmentManager.findFragmentByTag(destination.tag)?.takeIf { it.isAdded }
+        val shouldSwitch = forceReplace ||
+            current?.tag != destination.tag ||
+            target == null ||
+            target.isHidden
+
+        if (shouldSwitch) {
+            fragmentManager.beginTransaction().apply {
+                setReorderingAllowed(true)
+
+                if (forceReplace && target != null) {
+                    remove(target!!)
+                    target = null
+                }
+
+                destinationByItemId.values.forEach { knownDestination ->
+                    if (knownDestination.tag == destination.tag) return@forEach
+                    val fragment = fragmentManager.findFragmentByTag(knownDestination.tag)
+                        ?.takeIf { it.isAdded }
+                        ?: return@forEach
+                    hide(fragment)
+                    setMaxLifecycle(fragment, Lifecycle.State.STARTED)
+                }
+
+                if (target == null) {
+                    target = destination.fragmentFactory()
+                    add(R.id.dashboardFragmentContainer, target!!, destination.tag)
+                } else {
+                    show(target!!)
+                }
+
+                setMaxLifecycle(target!!, Lifecycle.State.RESUMED)
+                setPrimaryNavigationFragment(target)
+            }.commitNow()
         }
 
         val shouldAnimateIndicator = selectedItemId != View.NO_ID && !forceReplace
@@ -260,6 +296,7 @@ abstract class BaseHomeActivity : AppCompatActivity() {
 
     private fun loadFirstNameFromUserProfile() {
         val user = FirebaseAuth.getInstance().currentUser ?: return
+        loadProfilePhotoFromRealtime(user.uid)
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
                 val profileFirstName = extractFirstName(doc.getString("name"))
@@ -267,19 +304,47 @@ abstract class BaseHomeActivity : AppCompatActivity() {
                     currentUserFirstName = profileFirstName
                     refreshGreetingHeaderIfNeeded()
                 }
-                val profilePhotoUrl = listOf(
-                    "photoUrl",
-                    "photoURL",
-                    "profilePhotoUrl",
-                    "avatarUrl"
-                ).asSequence()
-                    .mapNotNull { key -> doc.getString(key)?.trim() }
-                    .firstOrNull { value -> value.isNotBlank() }
-                if (!profilePhotoUrl.isNullOrBlank()) {
-                    currentUserPhotoUrl = profilePhotoUrl
+                val legacyPhotoUrl = firstNonBlank(
+                    doc.getString("photoUrl"),
+                    doc.getString("photoURL"),
+                    doc.getString("profilePhotoUrl"),
+                    doc.getString("avatarUrl")
+                )
+                if (currentUserPhotoUrl.isNullOrBlank() && !legacyPhotoUrl.isNullOrBlank()) {
+                    currentUserPhotoUrl = legacyPhotoUrl
+                    ProfilePhotoLocalStore.storeRemoteUrl(this, user.uid, legacyPhotoUrl)
                 }
                 refreshHomeAvatarIfNeeded()
             }
+    }
+
+    private fun loadProfilePhotoFromRealtime(userId: String) {
+        FirebaseConfiguration.getFirebaseDatabase()
+            .child("users")
+            .child(userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val photoUrl = firstNonBlank(
+                    snapshot.child("photoUrl").getValue(String::class.java),
+                    snapshot.child("photoURL").getValue(String::class.java),
+                    snapshot.child("profilePhotoUrl").getValue(String::class.java),
+                    snapshot.child("avatarUrl").getValue(String::class.java),
+                    currentUserPhotoUrl
+                )
+                currentUserPhotoUrl = photoUrl
+                ProfilePhotoLocalStore.storeRemoteUrl(this, userId, photoUrl)
+                refreshHomeAvatarIfNeeded()
+            }
+            .addOnFailureListener {
+                refreshHomeAvatarIfNeeded()
+            }
+    }
+
+    private fun firstNonBlank(vararg candidates: String?): String? {
+        return candidates
+            .asSequence()
+            .mapNotNull { value -> value?.trim() }
+            .firstOrNull { value -> value.isNotBlank() }
     }
 
     private fun refreshGreetingHeaderIfNeeded() {
@@ -306,7 +371,14 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         }
 
         avatarCard.visibility = View.VISIBLE
-        val localSnapshot = ProfilePhotoLocalStore.getSnapshot(this)
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        val localSnapshot = currentUserId?.let { userId ->
+            ProfilePhotoLocalStore.getSnapshot(this, userId)
+        } ?: ProfilePhotoLocalStore.Snapshot(
+            localPhotoPath = null,
+            remotePhotoUrl = null,
+            pendingSync = false
+        )
         val localFile = localSnapshot.localFileOrNull()
         if (localFile != null) {
             avatarLoadRequestToken++
@@ -327,7 +399,13 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         }
         avatarSyncBadge?.visibility = View.GONE
 
-        val photoUrl = currentUserPhotoUrl?.trim().orEmpty()
+        val photoUrl = currentUserPhotoUrl
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+            ?: localSnapshot.remotePhotoUrl
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+            ?: ""
         if (photoUrl.isBlank()) {
             avatarLoadRequestToken++
             loadedAvatarUrl = null

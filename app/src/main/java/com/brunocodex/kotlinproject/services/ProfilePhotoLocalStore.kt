@@ -20,39 +20,54 @@ object ProfilePhotoLocalStore {
     }
 
     private const val PREFS_NAME = "profile_photo_store"
-    private const val KEY_LOCAL_PATH = "local_path"
-    private const val KEY_REMOTE_URL = "remote_url"
-    private const val KEY_PENDING_SYNC = "pending_sync"
+    private const val KEY_LOCAL_PATH_SUFFIX = "local_path"
+    private const val KEY_REMOTE_URL_SUFFIX = "remote_url"
+    private const val KEY_PENDING_SYNC_SUFFIX = "pending_sync"
     private const val STORAGE_DIR = "profile_photo"
     private const val FILE_BASENAME = "profile_current"
 
-    fun getSnapshot(context: Context): Snapshot {
+    fun getSnapshot(context: Context, userId: String): Snapshot {
+        val cleanUserId = normalizeUserId(userId) ?: return Snapshot(
+            localPhotoPath = null,
+            remotePhotoUrl = null,
+            pendingSync = false
+        )
         val prefs = prefs(context)
-        val path = prefs.getString(KEY_LOCAL_PATH, null)?.trim().orEmpty()
+        val localPathKey = keyForUser(cleanUserId, KEY_LOCAL_PATH_SUFFIX)
+        val remoteUrlKey = keyForUser(cleanUserId, KEY_REMOTE_URL_SUFFIX)
+        val pendingSyncKey = keyForUser(cleanUserId, KEY_PENDING_SYNC_SUFFIX)
+
+        val path = prefs.getString(localPathKey, null)?.trim().orEmpty()
         val file = if (path.isBlank()) null else File(path)
         if (file != null && !file.exists()) {
-            prefs.edit().remove(KEY_LOCAL_PATH).apply()
+            prefs.edit()
+                .remove(localPathKey)
+                .putBoolean(pendingSyncKey, false)
+                .apply()
             return Snapshot(
                 localPhotoPath = null,
-                remotePhotoUrl = prefs.getString(KEY_REMOTE_URL, null),
+                remotePhotoUrl = prefs.getString(remoteUrlKey, null),
                 pendingSync = false
             )
         }
         return Snapshot(
             localPhotoPath = file?.absolutePath,
-            remotePhotoUrl = prefs.getString(KEY_REMOTE_URL, null),
-            pendingSync = prefs.getBoolean(KEY_PENDING_SYNC, false) && file?.exists() == true
+            remotePhotoUrl = prefs.getString(remoteUrlKey, null),
+            pendingSync = prefs.getBoolean(pendingSyncKey, false) && file?.exists() == true
         )
     }
 
     fun saveLocalPhoto(
         context: Context,
+        userId: String,
         photoBytes: ByteArray,
         extension: String
     ): Snapshot {
         val appContext = context.applicationContext
+        val cleanUserId = normalizeUserId(userId)
+            ?: throw IllegalArgumentException("userId invalido para salvar foto de perfil.")
         val cleanExtension = normalizeExtension(extension)
-        val dir = File(appContext.filesDir, STORAGE_DIR)
+        val dir = File(appContext.filesDir, "$STORAGE_DIR/$cleanUserId")
         if (!dir.exists()) dir.mkdirs()
 
         dir.listFiles()?.forEach { file ->
@@ -64,34 +79,42 @@ object ProfilePhotoLocalStore {
         val targetFile = File(dir, "$FILE_BASENAME.$cleanExtension")
         targetFile.writeBytes(photoBytes)
 
-        val currentSnapshot = getSnapshot(appContext)
+        val localPathKey = keyForUser(cleanUserId, KEY_LOCAL_PATH_SUFFIX)
+        val remoteUrlKey = keyForUser(cleanUserId, KEY_REMOTE_URL_SUFFIX)
+        val pendingSyncKey = keyForUser(cleanUserId, KEY_PENDING_SYNC_SUFFIX)
+        val currentSnapshot = getSnapshot(appContext, cleanUserId)
         prefs(appContext).edit()
-            .putString(KEY_LOCAL_PATH, targetFile.absolutePath)
-            .putBoolean(KEY_PENDING_SYNC, true)
-            .putString(KEY_REMOTE_URL, currentSnapshot.remotePhotoUrl)
+            .putString(localPathKey, targetFile.absolutePath)
+            .putBoolean(pendingSyncKey, true)
+            .putString(remoteUrlKey, currentSnapshot.remotePhotoUrl)
             .apply()
 
-        return getSnapshot(appContext)
+        return getSnapshot(appContext, cleanUserId)
     }
 
-    fun markSynced(context: Context, remotePhotoUrl: String) {
+    fun markSynced(context: Context, userId: String, remotePhotoUrl: String) {
         val appContext = context.applicationContext
+        val cleanUserId = normalizeUserId(userId) ?: return
         val cleanUrl = remotePhotoUrl.trim()
+        val remoteUrlKey = keyForUser(cleanUserId, KEY_REMOTE_URL_SUFFIX)
+        val pendingSyncKey = keyForUser(cleanUserId, KEY_PENDING_SYNC_SUFFIX)
         prefs(appContext).edit()
-            .putBoolean(KEY_PENDING_SYNC, false)
-            .putString(KEY_REMOTE_URL, cleanUrl.ifBlank { null })
+            .putBoolean(pendingSyncKey, false)
+            .putString(remoteUrlKey, cleanUrl.ifBlank { null })
             .apply()
     }
 
-    fun storeRemoteUrl(context: Context, remotePhotoUrl: String?) {
+    fun storeRemoteUrl(context: Context, userId: String, remotePhotoUrl: String?) {
         val appContext = context.applicationContext
+        val cleanUserId = normalizeUserId(userId) ?: return
+        val remoteUrlKey = keyForUser(cleanUserId, KEY_REMOTE_URL_SUFFIX)
         prefs(appContext).edit()
-            .putString(KEY_REMOTE_URL, remotePhotoUrl?.trim()?.takeIf { it.isNotBlank() })
+            .putString(remoteUrlKey, remotePhotoUrl?.trim()?.takeIf { it.isNotBlank() })
             .apply()
     }
 
-    fun hasPendingSync(context: Context): Boolean {
-        return getSnapshot(context).pendingSync
+    fun hasPendingSync(context: Context, userId: String): Boolean {
+        return getSnapshot(context, userId).pendingSync
     }
 
     private fun prefs(context: Context) =
@@ -105,5 +128,14 @@ object ProfilePhotoLocalStore {
             else -> "jpg"
         }
     }
-}
 
+    private fun normalizeUserId(raw: String?): String? {
+        val value = raw?.trim().orEmpty()
+        if (value.isBlank()) return null
+        return value.replace("[^a-zA-Z0-9_-]".toRegex(), "_")
+    }
+
+    private fun keyForUser(userId: String, suffix: String): String {
+        return "${userId}_$suffix"
+    }
+}

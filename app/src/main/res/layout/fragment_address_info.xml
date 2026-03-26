@@ -48,6 +48,18 @@
                     android:imeOptions="actionNext" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnUseCurrentLocationAddress"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/register_address_use_current_location"
+                android:textAllCaps="false"
+                app:cornerRadius="12dp"
+                app:strokeColor="?attr/borderLight"
+                app:strokeWidth="1dp" />
+
             <!-- Rua -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/streetLayout"

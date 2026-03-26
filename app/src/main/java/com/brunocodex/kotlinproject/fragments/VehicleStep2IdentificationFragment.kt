@@ -1,9 +1,11 @@
 package com.brunocodex.kotlinproject.fragments
 
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import androidx.annotation.ArrayRes
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -16,6 +18,8 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import java.text.Normalizer
+import java.util.Locale
 
 class VehicleStep2IdentificationFragment :
     Fragment(R.layout.fragment_vehicle_step2_identification),
@@ -113,24 +117,35 @@ class VehicleStep2IdentificationFragment :
     }
 
     private fun applyDropdownOptionsForCurrentType(isMotorcycle: Boolean) {
-        val bodyTypeOptions = resources.getStringArray(
+        val bodyTypeResId =
             if (isMotorcycle) R.array.vehicle_body_types_motorcycle else R.array.vehicle_body_types
-        )
-        val fuelTypeOptions = resources.getStringArray(
+        val fuelTypeResId =
             if (isMotorcycle) R.array.vehicle_fuel_types_motorcycle else R.array.vehicle_fuel_types
-        )
-        val transmissionOptions = resources.getStringArray(
-            if (isMotorcycle) {
-                R.array.vehicle_transmission_types_motorcycle
-            } else {
-                R.array.vehicle_transmission_types
-            }
-        )
+        val transmissionResId = if (isMotorcycle) {
+            R.array.vehicle_transmission_types_motorcycle
+        } else {
+            R.array.vehicle_transmission_types
+        }
 
-        vehicleViewModel.bodyType = keepOnlyIfOptionExists(vehicleViewModel.bodyType, bodyTypeOptions)
-        vehicleViewModel.fuelType = keepOnlyIfOptionExists(vehicleViewModel.fuelType, fuelTypeOptions)
-        vehicleViewModel.transmissionType =
-            keepOnlyIfOptionExists(vehicleViewModel.transmissionType, transmissionOptions)
+        val bodyTypeOptions = resources.getStringArray(bodyTypeResId)
+        val fuelTypeOptions = resources.getStringArray(fuelTypeResId)
+        val transmissionOptions = resources.getStringArray(transmissionResId)
+
+        vehicleViewModel.bodyType = resolveOptionForCurrentLocale(
+            value = vehicleViewModel.bodyType,
+            currentOptions = bodyTypeOptions,
+            optionsResId = bodyTypeResId
+        )
+        vehicleViewModel.fuelType = resolveOptionForCurrentLocale(
+            value = vehicleViewModel.fuelType,
+            currentOptions = fuelTypeOptions,
+            optionsResId = fuelTypeResId
+        )
+        vehicleViewModel.transmissionType = resolveOptionForCurrentLocale(
+            value = vehicleViewModel.transmissionType,
+            currentOptions = transmissionOptions,
+            optionsResId = transmissionResId
+        )
 
         applyDropdownOptions(
             input = bodyTypeInput,
@@ -152,11 +167,16 @@ class VehicleStep2IdentificationFragment :
     }
 
     private fun setupHighlightTags(isMotorcycle: Boolean) {
-        val tags = resources.getStringArray(
+        val tagsResId =
             if (isMotorcycle) R.array.vehicle_highlight_tags_motorcycle else R.array.vehicle_highlight_tags
+        val tags = resources.getStringArray(tagsResId)
+        val localizedTags = resolveTagsForCurrentLocale(
+            selectedTags = vehicleViewModel.highlightTags,
+            currentOptions = tags,
+            optionsResId = tagsResId
         )
-        val validTags = tags.toSet()
-        vehicleViewModel.highlightTags.removeAll { it !in validTags }
+        vehicleViewModel.highlightTags.clear()
+        vehicleViewModel.highlightTags.addAll(localizedTags)
         chipGroupHighlights.removeAllViews()
 
         tags.forEach { tag ->
@@ -212,9 +232,73 @@ class VehicleStep2IdentificationFragment :
         return vehicleViewModel.vehicleType == VehicleRegisterViewModel.TYPE_MOTORCYCLE
     }
 
-    private fun keepOnlyIfOptionExists(value: String?, options: Array<String>): String? {
+    private fun resolveOptionForCurrentLocale(
+        value: String?,
+        currentOptions: Array<String>,
+        @ArrayRes optionsResId: Int
+    ): String? {
         val candidate = value?.trim().orEmpty()
-        return candidate.takeIf { it.isNotBlank() && options.contains(it) }
+        if (candidate.isBlank()) return null
+
+        val currentIndex = findOptionIndex(currentOptions, candidate)
+        if (currentIndex >= 0) return currentOptions[currentIndex]
+
+        val fallbackIndex = listOf("pt-BR", "en")
+            .asSequence()
+            .map { localeTag ->
+                findOptionIndex(
+                    options = getStringArrayForLocale(optionsResId, localeTag),
+                    value = candidate
+                )
+            }
+            .firstOrNull { it >= 0 }
+            ?: -1
+
+        return if (fallbackIndex in currentOptions.indices) {
+            currentOptions[fallbackIndex]
+        } else {
+            candidate
+        }
+    }
+
+    private fun resolveTagsForCurrentLocale(
+        selectedTags: Set<String>,
+        currentOptions: Array<String>,
+        @ArrayRes optionsResId: Int
+    ): LinkedHashSet<String> {
+        val resolved = linkedSetOf<String>()
+        selectedTags.forEach { tag ->
+            val mapped = resolveOptionForCurrentLocale(tag, currentOptions, optionsResId) ?: return@forEach
+            val index = findOptionIndex(currentOptions, mapped)
+            if (index >= 0) {
+                resolved += currentOptions[index]
+            }
+        }
+        return resolved
+    }
+
+    private fun getStringArrayForLocale(@ArrayRes resId: Int, localeTag: String): Array<String> {
+        val configuration = Configuration(resources.configuration)
+        configuration.setLocale(Locale.forLanguageTag(localeTag))
+        val localizedContext = requireContext().createConfigurationContext(configuration)
+        return localizedContext.resources.getStringArray(resId)
+    }
+
+    private fun findOptionIndex(options: Array<String>, value: String): Int {
+        val normalizedValue = normalizeForCompare(value)
+        if (normalizedValue.isBlank()) return -1
+        return options.indexOfFirst { option ->
+            normalizeForCompare(option) == normalizedValue
+        }
+    }
+
+    private fun normalizeForCompare(value: String): String {
+        val normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+        return normalized
+            .replace("\\p{Mn}+".toRegex(), "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
+            .lowercase(Locale.ROOT)
     }
 
     private fun bindText(

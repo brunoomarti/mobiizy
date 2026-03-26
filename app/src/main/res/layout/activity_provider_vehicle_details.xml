@@ -100,6 +100,93 @@
                         android:textSize="14sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardVehiclePhotos"
+                android:layout_width="match_parent"
+                android:layout_height="240dp"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
+                app:strokeColor="?attr/borderLight"
+                app:strokeWidth="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:id="@+id/ivVehiclePhotoCarousel"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="?attr/colorSurface"
+                        android:contentDescription="@string/provider_vehicle_details_photo_content_description"
+                        android:scaleType="centerCrop" />
+
+                    <TextView
+                        android:id="@+id/tvVehiclePhotosEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:padding="20dp"
+                        android:text="@string/provider_vehicle_details_photos_empty"
+                        android:textColor="?attr/textSecondary"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/progressVehiclePhoto"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        app:indicatorColor="?attr/textSecondary" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/btnPrevPhoto"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_photo_nav_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/provider_vehicle_details_photo_previous"
+                        android:focusable="true"
+                        android:fontFamily="@font/material_symbols_rounded"
+                        android:fontFeatureSettings="'liga'"
+                        android:fontVariationSettings="'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24"
+                        android:gravity="center"
+                        android:text="chevron_left"
+                        android:textColor="?attr/textPrimary"
+                        android:textSize="24sp" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/btnNextPhoto"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_photo_nav_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/provider_vehicle_details_photo_next"
+                        android:focusable="true"
+                        android:fontFamily="@font/material_symbols_rounded"
+                        android:fontFeatureSettings="'liga'"
+                        android:fontVariationSettings="'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24"
+                        android:gravity="center"
+                        android:text="chevron_right"
+                        android:textColor="?attr/textPrimary"
+                        android:textSize="24sp" />
+
+                    <LinearLayout
+                        android:id="@+id/photoDotsContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|center_horizontal"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="horizontal" />
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </ScrollView>
 

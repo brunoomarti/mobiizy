@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -14,11 +13,17 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.adapters.ViewPagerAdapter
 import com.brunocodex.kotlinproject.fragments.ProfileSelectionFragment
+import com.brunocodex.kotlinproject.fragments.StepActionsFragment
 import com.brunocodex.kotlinproject.navigation.ProfileNavigation
+import com.brunocodex.kotlinproject.services.ProfilePhotoLocalStore
+import com.brunocodex.kotlinproject.services.ProfilePhotoSyncScheduler
+import com.brunocodex.kotlinproject.services.ProfilePhotoSyncService
+import com.brunocodex.kotlinproject.services.SupabaseStorageService
 import com.brunocodex.kotlinproject.utils.StepHeaderBindable
 import com.brunocodex.kotlinproject.utils.StepValidatable
 import com.brunocodex.kotlinproject.viewmodels.RegisterViewModel
@@ -29,9 +34,11 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class RegisterActivity : AppCompatActivity() {
+class RegisterActivity : AppCompatActivity(), StepActionsFragment.Listener {
 
     private val registerViewModel: RegisterViewModel by viewModels()
 
@@ -48,8 +55,7 @@ class RegisterActivity : AppCompatActivity() {
     private lateinit var steps: List<View>
     private lateinit var lines: List<View>
 
-    private lateinit var btnBack: Button
-    private lateinit var btnNext: Button
+    private lateinit var stepActionsFragment: StepActionsFragment
     private lateinit var tvStepTitle: TextView
 
     private lateinit var stepStates: MutableList<StepState>
@@ -154,8 +160,7 @@ class RegisterActivity : AppCompatActivity() {
             findViewById(R.id.line3)
         )
 
-        btnBack = findViewById(R.id.btnBack)
-        btnNext = findViewById(R.id.btnNext)
+        stepActionsFragment = supportFragmentManager.findFragmentById(R.id.step_actions) as StepActionsFragment
 
         stepStates = MutableList(adapter.itemCount) { StepState.PENDING }
 
@@ -163,59 +168,12 @@ class RegisterActivity : AppCompatActivity() {
         val safeStep = registerViewModel.currentStep.coerceIn(0, (adapter.itemCount - 1).coerceAtLeast(0))
         viewPager.setCurrentItem(safeStep, false)
 
-        btnBack.setOnClickListener {
-            val prev = (viewPager.currentItem - 1).coerceAtLeast(0)
-            registerViewModel.currentStep = prev
-            viewPager.setCurrentItem(prev, true)
-        }
-
-        btnNext.setOnClickListener {
-            val current = viewPager.currentItem
-            val lastIndex = (viewPager.adapter?.itemCount ?: 1) - 1
-
-            // 1) valida step atual antes de sair dele
-            if (!validateStep(current, showErrors = true)) {
-                markAlert(current)
-                renderStepper(current)
-                return@setOnClickListener
-            } else {
-                clearAlert(current)
-            }
-
-            // 2) Se é o último, tenta finalizar (validando tudo)
-            if (current == lastIndex) {
-                val firstInvalid = findFirstInvalidStep()
-                if (firstInvalid != -1) {
-                    markAlert(firstInvalid)
-                    registerViewModel.currentStep = firstInvalid
-                    viewPager.setCurrentItem(firstInvalid, true)
-                    renderStepper(firstInvalid)
-
-                    // Mostra erros no step problemático
-                    validateStep(firstInvalid, showErrors = true)
-                    return@setOnClickListener
-                }
-
-                // ✅ Tudo ok
-                submitForm()
-                return@setOnClickListener
-            }
-
-            // 3) Avança normalmente e salva draft
-            val next = (current + 1).coerceAtMost(lastIndex)
-            registerViewModel.currentStep = next
-            saveDraftProgress()
-            viewPager.setCurrentItem(next, true)
-        }
-
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (viewPager.currentItem == 0) {
                     showCancelDialog()
                 } else {
-                    val prev = (viewPager.currentItem - 1).coerceAtLeast(0)
-                    registerViewModel.currentStep = prev
-                    viewPager.setCurrentItem(prev, true)
+                    onStepBackClicked()
                 }
             }
         })
@@ -233,6 +191,45 @@ class RegisterActivity : AppCompatActivity() {
                 notifyCurrentStepToFragment(position)
             }
         })
+    }
+
+    override fun onStepBackClicked() {
+        val previous = (viewPager.currentItem - 1).coerceAtLeast(0)
+        registerViewModel.currentStep = previous
+        viewPager.setCurrentItem(previous, true)
+    }
+
+    override fun onStepNextClicked() {
+        val current = viewPager.currentItem
+        val lastIndex = (viewPager.adapter?.itemCount ?: 1) - 1
+
+        if (!validateStep(current, showErrors = true)) {
+            markAlert(current)
+            renderStepper(current)
+            return
+        } else {
+            clearAlert(current)
+        }
+
+        if (current == lastIndex) {
+            val firstInvalid = findFirstInvalidStep()
+            if (firstInvalid != -1) {
+                markAlert(firstInvalid)
+                registerViewModel.currentStep = firstInvalid
+                viewPager.setCurrentItem(firstInvalid, true)
+                renderStepper(firstInvalid)
+                validateStep(firstInvalid, showErrors = true)
+                return
+            }
+
+            submitForm()
+            return
+        }
+
+        val next = (current + 1).coerceAtMost(lastIndex)
+        registerViewModel.currentStep = next
+        saveDraftProgress()
+        viewPager.setCurrentItem(next, true)
     }
 
     private fun showCancelDialog() {
@@ -299,6 +296,8 @@ class RegisterActivity : AppCompatActivity() {
                 !registerViewModel.street.isNullOrBlank() ||
                 !registerViewModel.number.isNullOrBlank() ||
                 !registerViewModel.city.isNullOrBlank() ||
+                registerViewModel.pendingProfilePhotoBytes?.isNotEmpty() == true ||
+                !registerViewModel.profilePhotoUrl.isNullOrBlank() ||
                 viewPager.currentItem > 0
     }
 
@@ -376,6 +375,7 @@ class RegisterActivity : AppCompatActivity() {
 
         val providerEmail = user?.email?.trim().orEmpty()
         val providerName = user?.displayName?.trim().orEmpty()
+        val providerPhotoUrl = user?.photoUrl?.toString()?.trim().orEmpty()
 
         registerViewModel.lockEmailFromProvider = isGoogle && providerEmail.isNotBlank()
         registerViewModel.lockNameFromProvider = isGoogle && providerName.isNotBlank()
@@ -385,6 +385,9 @@ class RegisterActivity : AppCompatActivity() {
         }
         if (registerViewModel.lockNameFromProvider) {
             registerViewModel.name = providerName
+        }
+        if (registerViewModel.profilePhotoUrl.isNullOrBlank() && providerPhotoUrl.isNotBlank()) {
+            registerViewModel.profilePhotoUrl = providerPhotoUrl
         }
 
         if (!registerViewModel.passwordRequired) {
@@ -403,24 +406,26 @@ class RegisterActivity : AppCompatActivity() {
         db.collection("users").document(uid)
             .set(userData)
             .addOnSuccessListener {
-                shouldSaveDraft = false
-                clearLocalDraft()
+                syncPendingProfilePhotoIfNeeded(uid) {
+                    shouldSaveDraft = false
+                    clearLocalDraft()
 
-                // remove rascunho, mas mesmo se falhar, segue fluxo
-                db.collection("register_drafts").document(uid).delete()
+                    // remove rascunho, mas mesmo se falhar, segue fluxo
+                    db.collection("register_drafts").document(uid).delete()
 
-                val profileType = registerViewModel.profileType
-                if (profileType == null) {
-                    startActivity(Intent(this, LoginActivity::class.java))
-                    finishAffinity()
-                    return@addOnSuccessListener
+                    val profileType = registerViewModel.profileType
+                    if (profileType == null) {
+                        startActivity(Intent(this, LoginActivity::class.java))
+                        finishAffinity()
+                        return@syncPendingProfilePhotoIfNeeded
+                    }
+
+                    ProfileNavigation.goToHome(
+                        activity = this,
+                        profileType = profileType,
+                        clearTask = true
+                    )
                 }
-
-                ProfileNavigation.goToHome(
-                    activity = this,
-                    profileType = profileType,
-                    clearTask = true
-                )
             }
             .addOnFailureListener { e ->
                 Toast.makeText(
@@ -429,6 +434,98 @@ class RegisterActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+    }
+
+    private fun syncPendingProfilePhotoIfNeeded(uid: String, onDone: () -> Unit) {
+        val photoBytes = registerViewModel.pendingProfilePhotoBytes
+        val photoExtension = registerViewModel.pendingProfilePhotoExtension
+
+        if (photoBytes == null || photoBytes.isEmpty() || photoExtension.isNullOrBlank()) {
+            onDone()
+            return
+        }
+
+        val localSaveResult = runCatching {
+            ProfilePhotoLocalStore.saveLocalPhoto(
+                context = applicationContext,
+                userId = uid,
+                photoBytes = photoBytes,
+                extension = photoExtension
+            )
+        }
+
+        registerViewModel.pendingProfilePhotoBytes = null
+        registerViewModel.pendingProfilePhotoExtension = null
+
+        if (localSaveResult.isFailure) {
+            Toast.makeText(
+                this,
+                R.string.personal_data_photo_upload_failed,
+                Toast.LENGTH_LONG
+            ).show()
+            onDone()
+            return
+        }
+
+        ProfilePhotoSyncScheduler.enqueueIfPending(this)
+
+        lifecycleScope.launch {
+            val syncResult = runCatching {
+                ProfilePhotoSyncService.syncPendingPhoto(this@RegisterActivity)
+            }.getOrElse { throwable ->
+                ProfilePhotoSyncService.SyncResult.RetryableFailure(throwable)
+            }
+
+            when (syncResult) {
+                is ProfilePhotoSyncService.SyncResult.Synced -> {
+                    registerViewModel.profilePhotoUrl = syncResult.remotePhotoUrl
+                    updateProfilePhotoOnFirestore(
+                        uid = uid,
+                        photoUrl = syncResult.remotePhotoUrl,
+                        onDone = onDone
+                    )
+                }
+
+                is ProfilePhotoSyncService.SyncResult.NoPendingPhoto -> {
+                    onDone()
+                }
+
+                is ProfilePhotoSyncService.SyncResult.RetryableFailure -> {
+                    Toast.makeText(
+                        this@RegisterActivity,
+                        R.string.personal_data_photo_saved_local_pending_sync,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    onDone()
+                }
+
+                is ProfilePhotoSyncService.SyncResult.PermanentFailure -> {
+                    val message = if (!SupabaseStorageService.isReady()) {
+                        val missingKeys = SupabaseStorageService.missingConfigurationKeys().joinToString(", ")
+                        val detail = if (missingKeys.isBlank()) "" else " [$missingKeys]"
+                        getString(R.string.personal_data_photo_upload_not_configured) + detail
+                    } else {
+                        getString(R.string.personal_data_photo_sync_unavailable)
+                    }
+                    Toast.makeText(this@RegisterActivity, message, Toast.LENGTH_LONG).show()
+                    onDone()
+                }
+            }
+        }
+    }
+
+    private fun updateProfilePhotoOnFirestore(uid: String, photoUrl: String, onDone: () -> Unit) {
+        val payload = mapOf(
+            "photoUrl" to photoUrl,
+            "photoURL" to photoUrl,
+            "profilePhotoUrl" to photoUrl,
+            "avatarUrl" to photoUrl,
+            "updatedAt" to FieldValue.serverTimestamp()
+        )
+
+        db.collection("users").document(uid)
+            .set(payload, SetOptions.merge())
+            .addOnCompleteListener { onDone() }
     }
 
     private fun saveDraftProgress() {
@@ -575,12 +672,16 @@ class RegisterActivity : AppCompatActivity() {
     private fun updateButtons(currentIndex: Int) {
         val lastIndex = (viewPager.adapter?.itemCount ?: 1) - 1
 
-        btnBack.isEnabled = currentIndex > 0
-        btnNext.text = if (currentIndex == lastIndex) {
-            getString(R.string.register_finish)
-        } else {
-            getString(R.string.register_next)
-        }
+        stepActionsFragment.setLoading(false)
+        stepActionsFragment.setBackEnabled(currentIndex > 0)
+        stepActionsFragment.setNextEnabled(true)
+        stepActionsFragment.setNextText(
+            if (currentIndex == lastIndex) {
+                getString(R.string.register_finish)
+            } else {
+                getString(R.string.register_next)
+            }
+        )
 
         val total = viewPager.adapter?.itemCount ?: 1
         tvStepTitle.text = getString(R.string.register_step_of_total, currentIndex + 1, total)

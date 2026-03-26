@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.activities.BaseHomeActivity
+import com.brunocodex.kotlinproject.activities.LanguageSettingsActivity
 import com.brunocodex.kotlinproject.activities.SettingsActivity
 import com.brunocodex.kotlinproject.services.ProfilePhotoLocalStore
 import com.brunocodex.kotlinproject.services.ProfilePhotoSyncScheduler
@@ -65,16 +66,23 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
         renderProfilePhoto(
             root = root,
-            authPhotoUrl = user?.photoUrl?.toString()
+            authPhotoUrl = user?.photoUrl?.toString(),
+            userId = user?.uid
         )
     }
 
-    private fun renderProfilePhoto(root: View, authPhotoUrl: String?) {
+    private fun renderProfilePhoto(root: View, authPhotoUrl: String?, userId: String?) {
         val photoView = root.findViewById<ImageView>(R.id.ivProfileHeroPhoto)
         val fallbackView = root.findViewById<TextView>(R.id.tvProfileHeroInitial)
         val syncBadgeView = root.findViewById<View>(R.id.profileHeroPhotoSyncBadge)
 
-        val snapshot = ProfilePhotoLocalStore.getSnapshot(requireContext())
+        val snapshot = userId?.let { id ->
+            ProfilePhotoLocalStore.getSnapshot(requireContext(), id)
+        } ?: ProfilePhotoLocalStore.Snapshot(
+            localPhotoPath = null,
+            remotePhotoUrl = null,
+            pendingSync = false
+        )
         val localFile = snapshot.localFileOrNull()
         if (localFile != null) {
             photoLoadToken++
@@ -143,6 +151,9 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
     private fun bindQuickActions(root: View) {
         root.findViewById<View>(R.id.profileActionPersonalData).setOnClickListener {
             startActivity(Intent(requireContext(), SettingsActivity::class.java))
+        }
+        root.findViewById<View>(R.id.profileActionLanguage).setOnClickListener {
+            startActivity(Intent(requireContext(), LanguageSettingsActivity::class.java))
         }
     }
 

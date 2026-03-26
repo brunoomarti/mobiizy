@@ -3,7 +3,6 @@ package com.brunocodex.kotlinproject.activities
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -17,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.adapters.VehicleRegisterPagerAdapter
+import com.brunocodex.kotlinproject.fragments.StepActionsFragment
 import com.brunocodex.kotlinproject.services.SQLiteConfiguration
 import com.brunocodex.kotlinproject.services.VehicleSyncRepository
 import com.brunocodex.kotlinproject.utils.LocalVehicleDraftStore
@@ -25,11 +25,10 @@ import com.brunocodex.kotlinproject.utils.StepValidatable
 import com.brunocodex.kotlinproject.utils.VehicleStepNavigator
 import com.brunocodex.kotlinproject.viewmodels.VehicleRegisterViewModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.android.material.progressindicator.CircularProgressIndicator
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 
-class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigator {
+class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigator, StepActionsFragment.Listener {
 
     private val vehicleViewModel: VehicleRegisterViewModel by viewModels()
     private val vehicleSyncRepository by lazy { VehicleSyncRepository(this) }
@@ -42,9 +41,7 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
     private lateinit var viewPager: ViewPager2
     private lateinit var steps: List<View>
     private lateinit var lines: List<View>
-    private lateinit var btnBack: Button
-    private lateinit var btnNext: Button
-    private lateinit var progressBtnNext: CircularProgressIndicator
+    private lateinit var stepActionsFragment: StepActionsFragment
     private lateinit var tvStepTitle: TextView
     private lateinit var stepStates: MutableList<StepState>
     private var isSubmitting = false
@@ -107,6 +104,7 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
             findViewById(R.id.step6),
             findViewById(R.id.step7)
         )
+        bindStepClickNavigation()
 
         lines = listOf(
             findViewById(R.id.line1),
@@ -117,54 +115,11 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
             findViewById(R.id.line6)
         )
 
-        btnBack = findViewById(R.id.btnBack)
-        btnNext = findViewById(R.id.btnNext)
-        progressBtnNext = findViewById(R.id.progressBtnNext)
+        stepActionsFragment = supportFragmentManager.findFragmentById(R.id.step_actions) as StepActionsFragment
         stepStates = MutableList(adapter.itemCount) { StepState.PENDING }
 
         val safeStep = vehicleViewModel.currentStep.coerceIn(0, adapter.itemCount - 1)
         viewPager.setCurrentItem(safeStep, false)
-
-        btnBack.setOnClickListener {
-            if (isSubmitting) return@setOnClickListener
-            val previous = (viewPager.currentItem - 1).coerceAtLeast(0)
-            vehicleViewModel.currentStep = previous
-            viewPager.setCurrentItem(previous, true)
-        }
-
-        btnNext.setOnClickListener {
-            if (isSubmitting) return@setOnClickListener
-            val current = viewPager.currentItem
-            val lastIndex = (viewPager.adapter?.itemCount ?: 1) - 1
-
-            if (!validateStep(current, showErrors = true)) {
-                markAlert(current)
-                renderStepper(current)
-                return@setOnClickListener
-            } else {
-                clearAlert(current)
-            }
-
-            if (current == lastIndex) {
-                val firstInvalid = findFirstInvalidStep()
-                if (firstInvalid != -1) {
-                    markAlert(firstInvalid)
-                    vehicleViewModel.currentStep = firstInvalid
-                    viewPager.setCurrentItem(firstInvalid, true)
-                    renderStepper(firstInvalid)
-                    validateStep(firstInvalid, showErrors = true)
-                    return@setOnClickListener
-                }
-
-                submitVehicle()
-                return@setOnClickListener
-            }
-
-            val next = (current + 1).coerceAtMost(lastIndex)
-            vehicleViewModel.currentStep = next
-            saveDraftProgress()
-            viewPager.setCurrentItem(next, true)
-        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -172,9 +127,7 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
                 if (viewPager.currentItem == 0) {
                     showCancelDialog()
                 } else {
-                    val previous = (viewPager.currentItem - 1).coerceAtLeast(0)
-                    vehicleViewModel.currentStep = previous
-                    viewPager.setCurrentItem(previous, true)
+                    onStepBackClicked()
                 }
             }
         })
@@ -191,6 +144,47 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
                 notifyCurrentStepToFragment(position)
             }
         })
+    }
+
+    override fun onStepBackClicked() {
+        if (isSubmitting) return
+        val previous = (viewPager.currentItem - 1).coerceAtLeast(0)
+        vehicleViewModel.currentStep = previous
+        viewPager.setCurrentItem(previous, true)
+    }
+
+    override fun onStepNextClicked() {
+        if (isSubmitting) return
+        val current = viewPager.currentItem
+        val lastIndex = (viewPager.adapter?.itemCount ?: 1) - 1
+
+        if (!validateStep(current, showErrors = true)) {
+            markAlert(current)
+            renderStepper(current)
+            return
+        } else {
+            clearAlert(current)
+        }
+
+        if (current == lastIndex) {
+            val firstInvalid = findFirstInvalidStep()
+            if (firstInvalid != -1) {
+                markAlert(firstInvalid)
+                vehicleViewModel.currentStep = firstInvalid
+                viewPager.setCurrentItem(firstInvalid, true)
+                renderStepper(firstInvalid)
+                validateStep(firstInvalid, showErrors = true)
+                return
+            }
+
+            submitVehicle()
+            return
+        }
+
+        val next = (current + 1).coerceAtMost(lastIndex)
+        vehicleViewModel.currentStep = next
+        saveDraftProgress()
+        viewPager.setCurrentItem(next, true)
     }
 
     private fun showCancelDialog() {
@@ -290,6 +284,17 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
         return validatable?.validateStep(showErrors) ?: false
     }
 
+    private fun bindStepClickNavigation() {
+        steps.forEachIndexed { index, stepView ->
+            stepView.setOnClickListener {
+                if (isSubmitting || !::viewPager.isInitialized) return@setOnClickListener
+                if (index == viewPager.currentItem) return@setOnClickListener
+                vehicleViewModel.currentStep = index
+                viewPager.setCurrentItem(index, true)
+            }
+        }
+    }
+
     private fun findFirstInvalidStep(): Int {
         val count = viewPager.adapter?.itemCount ?: 0
         for (i in 0 until count) {
@@ -345,13 +350,17 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
 
         val lastIndex = (viewPager.adapter?.itemCount ?: 1) - 1
 
-        btnBack.isEnabled = currentIndex > 0
-        btnNext.text = when {
-            currentIndex != lastIndex -> getString(R.string.register_next)
-            vehicleViewModel.availabilityMode == VehicleRegisterViewModel.AVAILABILITY_DRAFT ->
-                getString(R.string.vehicle_register_save_draft)
-            else -> getString(R.string.vehicle_register_publish)
-        }
+        stepActionsFragment.setLoading(false)
+        stepActionsFragment.setBackEnabled(currentIndex > 0)
+        stepActionsFragment.setNextEnabled(true)
+        stepActionsFragment.setNextText(
+            when {
+                currentIndex != lastIndex -> getString(R.string.register_next)
+                vehicleViewModel.availabilityMode == VehicleRegisterViewModel.AVAILABILITY_DRAFT ->
+                    getString(R.string.vehicle_register_save_draft)
+                else -> getString(R.string.vehicle_register_publish)
+            }
+        )
 
         val total = viewPager.adapter?.itemCount ?: 1
         tvStepTitle.text = getString(R.string.vehicle_register_step_of_total, currentIndex + 1, total)
@@ -360,14 +369,13 @@ class ProviderVehicleRegisterActivity : AppCompatActivity(), VehicleStepNavigato
     private fun setSubmitLoading(loading: Boolean) {
         isSubmitting = loading
         if (loading) {
-            btnNext.isEnabled = false
-            btnBack.isEnabled = false
-            btnNext.text = ""
-            progressBtnNext.visibility = View.VISIBLE
+            stepActionsFragment.setBackEnabled(false)
+            stepActionsFragment.setNextEnabled(false)
+            stepActionsFragment.setLoading(true)
             return
         }
 
-        progressBtnNext.visibility = View.GONE
+        stepActionsFragment.setLoading(false)
         updateButtons(viewPager.currentItem)
     }
 

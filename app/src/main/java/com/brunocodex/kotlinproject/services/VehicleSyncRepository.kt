@@ -147,6 +147,7 @@ class VehicleSyncRepository(context: Context) {
             }
 
             mergeRemoteRowsIntoLocal(localRows, remoteRows)
+            refreshPublicIndexFromRows(remoteRows)
             localDb.getVehicles(normalizedOwner)
         }
 
@@ -267,19 +268,11 @@ class VehicleSyncRepository(context: Context) {
                 .await()
 
             if (pickupCoordinates != null && row.status == SQLiteConfiguration.STATUS_PUBLISHED) {
-                val geoHash = GeoFireUtils.getGeoHashForLocation(
-                    GeoLocation(pickupCoordinates.first, pickupCoordinates.second)
-                )
-                val indexPayload = linkedMapOf<String, Any>(
-                    "vehicleId" to row.vehicleId,
-                    "ownerId" to row.ownerId,
-                    "status" to row.status,
-                    "vehicleType" to vehicleType,
-                    "pickupLatitude" to pickupCoordinates.first,
-                    "pickupLongitude" to pickupCoordinates.second,
-                    "pickupGeohash" to geoHash,
-                    "updatedAtClient" to row.updatedAt,
-                    "updatedAtServer" to ServerValue.TIMESTAMP
+                val indexPayload = buildPublicIndexPayload(
+                    row = row,
+                    payloadObject = payloadObject,
+                    vehicleType = vehicleType,
+                    pickupCoordinates = pickupCoordinates
                 )
                 vehiclesPublicIndexRef.child(row.vehicleId)
                     .setValue(indexPayload)
@@ -300,6 +293,105 @@ class VehicleSyncRepository(context: Context) {
             }
             true
         }
+    }
+
+    private suspend fun refreshPublicIndexFromRows(rows: List<SQLiteConfiguration.VehicleRow>) {
+        rows.filter { row ->
+            !row.deleted && row.status == SQLiteConfiguration.STATUS_PUBLISHED
+        }.forEach { row ->
+            val payloadObject = runCatching { JSONObject(row.payloadJson) }.getOrElse { JSONObject() }
+            val vehicleType = normalizeVehicleType(payloadObject.optString("vehicleType"))
+            payloadObject.put("vehicleType", vehicleType)
+            val pickupCoordinates = resolvePickupCoordinates(payloadObject) ?: return@forEach
+            val indexPayload = buildPublicIndexPayload(
+                row = row,
+                payloadObject = payloadObject,
+                vehicleType = vehicleType,
+                pickupCoordinates = pickupCoordinates
+            )
+            runCatching {
+                vehiclesPublicIndexRef.child(row.vehicleId)
+                    .setValue(indexPayload)
+                    .await()
+            }
+        }
+    }
+
+    private fun buildPublicIndexPayload(
+        row: SQLiteConfiguration.VehicleRow,
+        payloadObject: JSONObject,
+        vehicleType: String,
+        pickupCoordinates: Pair<Double, Double>
+    ): Map<String, Any> {
+        val geoHash = GeoFireUtils.getGeoHashForLocation(
+            GeoLocation(pickupCoordinates.first, pickupCoordinates.second)
+        )
+        val publicBrand = payloadObject.optString("brand").trim()
+        val publicModel = payloadObject.optString("model").trim()
+        val publicManufactureYear = payloadObject.optString("manufactureYear").trim()
+        val publicModelYear = payloadObject.optString("modelYear").trim()
+        val publicColor = payloadObject.optString("color").trim()
+        val publicBodyType = payloadObject.optString("bodyType").trim()
+        val publicDailyPrice = payloadObject.optString("dailyPrice").trim()
+        val publicCondition = payloadObject.optString("condition").trim()
+        val publicMileage = payloadObject.optString("mileage").trim()
+        val publicTransmissionType = payloadObject.optString("transmissionType").trim()
+        val publicFuelType = payloadObject.optString("fuelType").trim()
+        val publicSeats = payloadObject.optString("seats").trim()
+        val publicCityState = payloadObject.optString("cityState").trim()
+        val publicNeighborhood = payloadObject.optString("neighborhood").trim()
+        val publicHighlightTags = payloadObject.optStringList("highlightTags")
+        val publicSafetyItems = payloadObject.optStringList("safetyItems")
+        val publicComfortItems = payloadObject.optStringList("comfortItems")
+        val publicAllowTrip = payloadObject.optNullableBoolean("allowTrip") ?: false
+        val publicAllowedTripTypes = payloadObject.optStringList("allowedTripTypes")
+        val publicUploadedPhotoUrls = payloadObject.optStringMap("uploadedPhotoUrls")
+        val publicPickupOnLocation = payloadObject.optNullableBoolean("pickupOnLocation") ?: false
+        val publicDeliveryByFee = payloadObject.optNullableBoolean("deliveryByFee") ?: false
+        val publicDeliveryRadiusKm = payloadObject.optString("deliveryRadiusKm").trim()
+        val publicDeliveryFee = payloadObject.optString("deliveryFee").trim()
+        val publicDocumentsUpToDate = payloadObject.optNullableBoolean("documentsUpToDate") ?: false
+        val publicIpvaLicensingOk = payloadObject.optNullableBoolean("ipvaLicensingOk") ?: false
+        val publicHasInsurance = payloadObject.optNullableBoolean("hasInsurance") ?: false
+
+        return linkedMapOf(
+            "vehicleId" to row.vehicleId,
+            "ownerId" to row.ownerId,
+            "status" to row.status,
+            "vehicleType" to vehicleType,
+            "brand" to publicBrand,
+            "model" to publicModel,
+            "manufactureYear" to publicManufactureYear,
+            "modelYear" to publicModelYear,
+            "color" to publicColor,
+            "bodyType" to publicBodyType,
+            "dailyPrice" to publicDailyPrice,
+            "condition" to publicCondition,
+            "mileage" to publicMileage,
+            "transmissionType" to publicTransmissionType,
+            "fuelType" to publicFuelType,
+            "seats" to publicSeats,
+            "cityState" to publicCityState,
+            "neighborhood" to publicNeighborhood,
+            "highlightTags" to publicHighlightTags,
+            "safetyItems" to publicSafetyItems,
+            "comfortItems" to publicComfortItems,
+            "allowTrip" to publicAllowTrip,
+            "allowedTripTypes" to publicAllowedTripTypes,
+            "uploadedPhotoUrls" to publicUploadedPhotoUrls,
+            "pickupOnLocation" to publicPickupOnLocation,
+            "deliveryByFee" to publicDeliveryByFee,
+            "deliveryRadiusKm" to publicDeliveryRadiusKm,
+            "deliveryFee" to publicDeliveryFee,
+            "documentsUpToDate" to publicDocumentsUpToDate,
+            "ipvaLicensingOk" to publicIpvaLicensingOk,
+            "hasInsurance" to publicHasInsurance,
+            "pickupLatitude" to pickupCoordinates.first,
+            "pickupLongitude" to pickupCoordinates.second,
+            "pickupGeohash" to geoHash,
+            "updatedAtClient" to row.updatedAt,
+            "updatedAtServer" to ServerValue.TIMESTAMP
+        )
     }
 
     private data class PickupAddressParts(
@@ -532,6 +624,71 @@ class VehicleSyncRepository(context: Context) {
             is String -> value.toDoubleOrNull()
             else -> null
         }
+    }
+
+    private fun JSONObject.optNullableBoolean(key: String): Boolean? {
+        if (isNull(key)) return null
+        return when (val value = opt(key)) {
+            is Boolean -> value
+            is Number -> value.toInt() != 0
+            is String -> when (value.trim().lowercase()) {
+                "true", "1", "yes", "sim" -> true
+                "false", "0", "no", "nao" -> false
+                else -> null
+            }
+            else -> null
+        }
+    }
+
+    private fun JSONObject.optStringList(key: String): List<String> {
+        if (isNull(key)) return emptyList()
+        return when (val value = opt(key)) {
+            is org.json.JSONArray -> {
+                buildList {
+                    for (index in 0 until value.length()) {
+                        val item = value.optString(index).trim()
+                        if (item.isNotBlank()) add(item)
+                    }
+                }
+            }
+            is Collection<*> -> value.mapNotNull { item ->
+                item?.toString()?.trim()?.takeIf { it.isNotBlank() }
+            }
+            is String -> value.split(",")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+            else -> emptyList()
+        }
+    }
+
+    private fun JSONObject.optStringMap(key: String): Map<String, String> {
+        if (isNull(key)) return emptyMap()
+        val raw = opt(key)
+        val result = linkedMapOf<String, String>()
+
+        when (raw) {
+            is JSONObject -> {
+                val keys = raw.keys()
+                while (keys.hasNext()) {
+                    val mapKey = keys.next().orEmpty().trim()
+                    val mapValue = raw.optString(mapKey).trim()
+                    if (mapKey.isNotBlank() && mapValue.isNotBlank()) {
+                        result[mapKey] = mapValue
+                    }
+                }
+            }
+            is Map<*, *> -> {
+                raw.forEach { (mapKeyRaw, mapValueRaw) ->
+                    val mapKey = mapKeyRaw?.toString()?.trim().orEmpty()
+                    val mapValue = mapValueRaw?.toString()?.trim().orEmpty()
+                    if (mapKey.isNotBlank() && mapValue.isNotBlank()) {
+                        result[mapKey] = mapValue
+                    }
+                }
+            }
+        }
+
+        return result
     }
 
     private suspend fun <T> Task<T>.await(): T? {

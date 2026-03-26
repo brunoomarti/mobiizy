@@ -4,20 +4,20 @@ import android.os.Bundle
 import android.util.Patterns
 import android.view.View
 import android.widget.TextView
-import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.utils.StepValidatable
 import com.brunocodex.kotlinproject.utils.StepValidationUtils
 import com.brunocodex.kotlinproject.viewmodels.RegisterViewModel
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 
 class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), StepValidatable {
 
     private var tvHeaderStep: TextView? = null
     private val registerViewModel: RegisterViewModel by activityViewModels()
+    private lateinit var emailInputFragment: EmailInputFragment
+    private lateinit var passwordInputFragment: PasswordInputFragment
+    private lateinit var confirmPasswordInputFragment: PasswordInputFragment
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -27,105 +27,134 @@ class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), St
         view.findViewById<TextView>(R.id.stepSubtitle).text =
             getString(R.string.credentials_step_subtitle)
 
-        val emailLayout = view.findViewById<TextInputLayout>(R.id.emailLayout)
-        val passwordLayout = view.findViewById<TextInputLayout>(R.id.passwordLayout)
-        val confirmPasswordLayout = view.findViewById<TextInputLayout>(R.id.confirmPasswordLayout)
+        ensureEmailInputFragment()
+        ensurePasswordInputFragments()
+        configureEmailInputFragment()
+        configurePasswordInputFragments()
 
-        val email = view.findViewById<TextInputEditText>(R.id.emailInput)
-        val pass = view.findViewById<TextInputEditText>(R.id.passwordInput)
-        val confirm = view.findViewById<TextInputEditText>(R.id.confirmPasswordInput)
+        emailInputFragment.setFieldText(registerViewModel.email.orEmpty())
+        passwordInputFragment.setFieldText(registerViewModel.password.orEmpty())
+        confirmPasswordInputFragment.setFieldText("")
 
-        email?.setText(registerViewModel.email.orEmpty())
-        pass?.setText(registerViewModel.password.orEmpty())
-
-        email?.doAfterTextChanged { registerViewModel.email = it?.toString() }
-        pass?.doAfterTextChanged { registerViewModel.password = it?.toString() }
-
-        setupLiveValidation(email, pass, confirm)
-        applyProviderUiLocks(emailLayout, passwordLayout, confirmPasswordLayout, email, pass, confirm)
+        setupLiveValidation()
+        applyProviderUiLocks()
     }
 
-    private fun setupLiveValidation(
-        email: TextInputEditText?,
-        pass: TextInputEditText?,
-        confirm: TextInputEditText?
-    ) {
-        email?.doAfterTextChanged { email.error = null }
-        pass?.doAfterTextChanged {
-            pass.error = null
-            validatePasswordMatch(pass, confirm)
+    private fun ensureEmailInputFragment() {
+        emailInputFragment = ensureEmailInputFragment(R.id.emailFieldContainer)
+    }
+
+    private fun ensureEmailInputFragment(containerId: Int): EmailInputFragment {
+        val existing = childFragmentManager.findFragmentById(containerId) as? EmailInputFragment
+        if (existing != null) return existing
+
+        val fragment = EmailInputFragment()
+        childFragmentManager.beginTransaction()
+            .replace(containerId, fragment)
+            .commitNow()
+        return fragment
+    }
+
+    private fun ensurePasswordInputFragments() {
+        passwordInputFragment = ensurePasswordInputFragment(R.id.passwordFieldContainer)
+        confirmPasswordInputFragment = ensurePasswordInputFragment(R.id.confirmPasswordFieldContainer)
+    }
+
+    private fun ensurePasswordInputFragment(containerId: Int): PasswordInputFragment {
+        val existing = childFragmentManager.findFragmentById(containerId) as? PasswordInputFragment
+        if (existing != null) return existing
+
+        val fragment = PasswordInputFragment()
+        childFragmentManager.beginTransaction()
+            .replace(containerId, fragment)
+            .commitNow()
+        return fragment
+    }
+
+    private fun configureEmailInputFragment() {
+        emailInputFragment.configure(
+            hintText = getString(R.string.email),
+            inputTag = FIELD_TAG_EMAIL
+        )
+    }
+
+    private fun configurePasswordInputFragments() {
+        passwordInputFragment.configure(
+            hintText = getString(R.string.password),
+            inputTag = FIELD_TAG_PASSWORD
+        )
+        confirmPasswordInputFragment.configure(
+            hintText = getString(R.string.hint_confirm_password),
+            inputTag = FIELD_TAG_CONFIRM_PASSWORD
+        )
+    }
+
+    private fun setupLiveValidation() {
+        emailInputFragment.setOnValueChangedListener { value ->
+            registerViewModel.email = value
+            emailInputFragment.clearFieldError()
         }
-        confirm?.doAfterTextChanged {
-            confirm.error = null
-            validatePasswordMatch(pass, confirm)
+        passwordInputFragment.setOnValueChangedListener { value ->
+            registerViewModel.password = value
+            passwordInputFragment.clearFieldError()
+            validatePasswordMatch()
+        }
+        confirmPasswordInputFragment.setOnValueChangedListener {
+            confirmPasswordInputFragment.clearFieldError()
+            validatePasswordMatch()
         }
     }
 
-    private fun applyProviderUiLocks(
-        emailLayout: TextInputLayout,
-        passwordLayout: TextInputLayout,
-        confirmPasswordLayout: TextInputLayout,
-        email: TextInputEditText?,
-        pass: TextInputEditText?,
-        confirm: TextInputEditText?
-    ) {
+    private fun applyProviderUiLocks() {
         if (registerViewModel.lockEmailFromProvider) {
-            email?.setText(registerViewModel.email.orEmpty())
-            email?.isEnabled = false
-            email?.isFocusable = false
-            email?.isFocusableInTouchMode = false
-            email?.isClickable = false
-            emailLayout.helperText = getString(R.string.helper_prefilled_google_account)
+            emailInputFragment.setFieldText(registerViewModel.email.orEmpty())
+            emailInputFragment.setFieldEnabled(false)
+            emailInputFragment.setHelperText(getString(R.string.helper_prefilled_google_account))
         } else {
-            email?.isEnabled = true
-            email?.isFocusable = true
-            email?.isFocusableInTouchMode = true
-            email?.isClickable = true
-            emailLayout.helperText = null
+            emailInputFragment.setFieldEnabled(true)
+            emailInputFragment.setHelperText(null)
         }
 
         if (!registerViewModel.passwordRequired) {
             registerViewModel.password = null
-            pass?.setText("")
-            confirm?.setText("")
-
-            passwordLayout.tag = ""
-            confirmPasswordLayout.tag = ""
-            passwordLayout.visibility = View.GONE
-            confirmPasswordLayout.visibility = View.GONE
+            passwordInputFragment.setFieldText("")
+            confirmPasswordInputFragment.setFieldText("")
+            passwordInputFragment.setValidationEnabled(false)
+            confirmPasswordInputFragment.setValidationEnabled(false)
+            passwordInputFragment.setFieldVisible(false)
+            confirmPasswordInputFragment.setFieldVisible(false)
         } else {
-            passwordLayout.tag = "required|min:6"
-            confirmPasswordLayout.tag = "required|min:6"
-            passwordLayout.visibility = View.VISIBLE
-            confirmPasswordLayout.visibility = View.VISIBLE
+            passwordInputFragment.setValidationEnabled(true)
+            confirmPasswordInputFragment.setValidationEnabled(true)
+            passwordInputFragment.setFieldVisible(true)
+            confirmPasswordInputFragment.setFieldVisible(true)
         }
     }
 
-    private fun validatePasswordMatch(pass: android.widget.EditText?, confirm: android.widget.EditText?) {
-        if (pass == null || confirm == null) return
-
-        val p = pass.text?.toString().orEmpty()
-        val c = confirm.text?.toString().orEmpty()
+    private fun validatePasswordMatch() {
+        val p = passwordInputFragment.getFieldText()
+        val c = confirmPasswordInputFragment.getFieldText()
 
         if (c.isBlank()) {
-            confirm.error = null
+            confirmPasswordInputFragment.clearFieldError()
             return
         }
 
-        confirm.error = if (p != c) getString(R.string.error_passwords_do_not_match) else null
+        confirmPasswordInputFragment.setFieldError(
+            if (p != c) getString(R.string.error_passwords_do_not_match) else null
+        )
     }
 
     override fun validateStep(showErrors: Boolean): Boolean {
         val root = view ?: return false
 
-        val email = root.findViewById<TextInputEditText>(R.id.emailInput)
-        val emailValue = email?.text?.toString()?.trim().orEmpty()
+        val emailValue = emailInputFragment.getFieldText().trim()
 
         var ok = emailValue.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(emailValue).matches()
         if (showErrors && !ok) {
-            email?.error = getString(R.string.error_enter_valid_email)
+            emailInputFragment.setFieldError(getString(R.string.error_enter_valid_email))
         } else {
-            email?.error = null
+            emailInputFragment.clearFieldError()
         }
 
         if (!registerViewModel.passwordRequired) {
@@ -134,27 +163,38 @@ class CredentialsInfoFragment : Fragment(R.layout.fragment_credentials_info), St
 
         ok = ok && StepValidationUtils.validateRequiredFields(root, showErrors)
 
-        val pass = root.findViewById<TextInputEditText>(R.id.passwordInput)
-        val confirm = root.findViewById<TextInputEditText>(R.id.confirmPasswordInput)
-
-        if (pass != null && confirm != null) {
-            val p = pass.text?.toString().orEmpty()
-            val c = confirm.text?.toString().orEmpty()
-
-            val match = p.isNotBlank() && p == c
-            if (!match) {
-                ok = false
-                if (showErrors) confirm.error = getString(R.string.error_passwords_do_not_match)
-            } else {
-                confirm.error = null
+        val p = passwordInputFragment.getFieldText()
+        val c = confirmPasswordInputFragment.getFieldText()
+        val match = p.isNotBlank() && p == c
+        if (!match) {
+            ok = false
+            if (showErrors) {
+                confirmPasswordInputFragment.setFieldError(getString(R.string.error_passwords_do_not_match))
             }
+        } else {
+            confirmPasswordInputFragment.clearFieldError()
         }
 
         return ok
     }
 
     override fun onDestroyView() {
+        if (::emailInputFragment.isInitialized) {
+            emailInputFragment.setOnValueChangedListener(null)
+        }
+        if (::passwordInputFragment.isInitialized) {
+            passwordInputFragment.setOnValueChangedListener(null)
+        }
+        if (::confirmPasswordInputFragment.isInitialized) {
+            confirmPasswordInputFragment.setOnValueChangedListener(null)
+        }
         super.onDestroyView()
         tvHeaderStep = null
+    }
+
+    companion object {
+        private const val FIELD_TAG_EMAIL = "email"
+        private const val FIELD_TAG_PASSWORD = "password"
+        private const val FIELD_TAG_CONFIRM_PASSWORD = "confirm_password"
     }
 }

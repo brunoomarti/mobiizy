@@ -75,11 +75,6 @@ android {
             "\"${esc(pickConfig("SUPABASE_BUCKET", "supabase.bucket", default = "vehicle-media"))}\""
         )
 
-        manifestPlaceholders["MAPS_API_KEY"] = pickConfig(
-            "MAPS_API_KEY",
-            "GOOGLE_MAPS_API_KEY",
-            "google.maps.api.key"
-        )
     }
 
     buildTypes {
@@ -127,7 +122,7 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation(libs.maplibre.android)
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("com.firebase:geofire-android-common:3.2.0")
     implementation("com.vanniktech:android-image-cropper:4.6.0")

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.brunocodex.kotlinproject.navigation.ProfileNavigation
+import com.brunocodex.kotlinproject.utils.AppLanguageManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -14,6 +15,7 @@ class AuthGateActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (AppLanguageManager.applyStoredLanguage(this)) return
 
         val user = auth.currentUser
 

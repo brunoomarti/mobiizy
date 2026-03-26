@@ -6,9 +6,11 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
 import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
@@ -21,10 +23,13 @@ import com.brunocodex.kotlinproject.navigation.ProfileNavigation
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -95,7 +100,7 @@ class LoginActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 setLoginLoading(false)
-                Toast.makeText(this, humanizeAuthError(e), Toast.LENGTH_LONG).show()
+                Toast.makeText(this, buildLoginErrorMessage(e), Toast.LENGTH_LONG).show()
             }
     }
 
@@ -201,23 +206,82 @@ class LoginActivity : AppCompatActivity() {
     }
 
     fun forgotPassword(view: View) {
-        val email = emailInput.text?.toString()?.trim().orEmpty()
-        if (email.isBlank()) {
-            Toast.makeText(this, getString(R.string.login_prompt_recovery_email), Toast.LENGTH_SHORT).show()
-            return
-        }
-        if (!hasInternetConnection()) {
-            Toast.makeText(this, getString(R.string.error_no_internet_check), Toast.LENGTH_LONG).show()
-            return
+        showForgotPasswordDialog()
+    }
+
+    private fun showForgotPasswordDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_forgot_password, null)
+        val emailLayout = dialogView.findViewById<TextInputLayout>(R.id.forgotPasswordEmailLayout)
+        val recoveryEmailInput = dialogView.findViewById<TextInputEditText>(R.id.forgotPasswordEmailInput)
+        val prefilledEmail = emailInput.text?.toString()?.trim().orEmpty()
+
+        if (prefilledEmail.isNotBlank()) {
+            recoveryEmailInput.setText(prefilledEmail)
+            recoveryEmailInput.setSelection(prefilledEmail.length)
         }
 
-        auth.sendPasswordResetEmail(email)
-            .addOnSuccessListener {
-                Toast.makeText(this, getString(R.string.login_success_recovery_email_sent), Toast.LENGTH_SHORT).show()
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.forgot_password_dialog_title)
+            .setMessage(R.string.forgot_password_dialog_message)
+            .setView(dialogView)
+            .setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(R.string.forgot_password_dialog_send_button, null)
+            .create()
+
+        dialog.setOnShowListener {
+            val sendButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            sendButton.setOnClickListener {
+                val email = recoveryEmailInput.text?.toString()?.trim().orEmpty()
+                when {
+                    email.isBlank() -> {
+                        emailLayout.error = getString(R.string.please_enter_your_email)
+                        return@setOnClickListener
+                    }
+
+                    !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                        emailLayout.error = getString(R.string.error_enter_valid_email)
+                        return@setOnClickListener
+                    }
+                }
+
+                emailLayout.error = null
+
+                if (!hasInternetConnection()) {
+                    Toast.makeText(this, getString(R.string.error_no_internet_check), Toast.LENGTH_LONG).show()
+                    return@setOnClickListener
+                }
+
+                sendButton.isEnabled = false
+                auth.sendPasswordResetEmail(email)
+                    .addOnSuccessListener {
+                        if (prefilledEmail.isBlank()) {
+                            emailInput.setText(email)
+                        }
+                        Toast.makeText(
+                            this,
+                            getString(R.string.login_reset_email_generic_result),
+                            Toast.LENGTH_LONG
+                        ).show()
+                        dialog.dismiss()
+                    }
+                    .addOnFailureListener { e ->
+                        if (e is FirebaseAuthInvalidUserException) {
+                            Toast.makeText(
+                                this,
+                                getString(R.string.login_reset_email_generic_result),
+                                Toast.LENGTH_LONG
+                            ).show()
+                            dialog.dismiss()
+                            return@addOnFailureListener
+                        }
+
+                        sendButton.isEnabled = true
+                        Toast.makeText(this, humanizeAuthError(e), Toast.LENGTH_LONG).show()
+                    }
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, humanizeAuthError(e), Toast.LENGTH_LONG).show()
-            }
+        }
+
+        dialog.show()
     }
 
     private fun hasInternetConnection(): Boolean {
@@ -264,6 +328,25 @@ class LoginActivity : AppCompatActivity() {
                 else -> getString(R.string.login_error_generic)
             }
         }
+    }
+
+    private fun buildLoginErrorMessage(e: Exception): String {
+        val base = humanizeAuthError(e)
+        val authCode = (e as? FirebaseAuthException)?.errorCode.orEmpty()
+
+        val shouldSuggestGoogle = authCode in setOf(
+            "ERROR_WRONG_PASSWORD",
+            "ERROR_INVALID_CREDENTIAL",
+            "ERROR_INVALID_LOGIN_CREDENTIAL"
+        )
+
+        if (!shouldSuggestGoogle) return base
+
+        return getString(
+            R.string.login_error_with_google_hint,
+            base,
+            getString(R.string.continue_with_google)
+        )
     }
 
     private fun setLoginLoading(loading: Boolean) {

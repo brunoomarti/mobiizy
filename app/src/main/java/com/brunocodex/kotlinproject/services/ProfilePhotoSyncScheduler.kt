@@ -8,6 +8,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.brunocodex.kotlinproject.workers.ProfilePhotoSyncWorker
+import com.google.firebase.auth.FirebaseAuth
 import java.util.concurrent.TimeUnit
 
 object ProfilePhotoSyncScheduler {
@@ -16,7 +17,8 @@ object ProfilePhotoSyncScheduler {
 
     fun enqueueIfPending(context: Context) {
         val appContext = context.applicationContext
-        if (!ProfilePhotoLocalStore.hasPendingSync(appContext)) return
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        if (!ProfilePhotoLocalStore.hasPendingSync(appContext, userId)) return
 
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -38,4 +40,3 @@ object ProfilePhotoSyncScheduler {
         )
     }
 }
-

@@ -19,6 +19,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
+import com.brunocodex.kotlinproject.services.FirebaseConfiguration
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.services.ProfilePhotoLocalStore
 import com.brunocodex.kotlinproject.services.ProfilePhotoSyncScheduler
@@ -234,6 +235,7 @@ class SettingsActivity : AppCompatActivity() {
         val initialRemoteUrl = user.photoUrl?.toString()?.trim()?.takeIf { it.isNotBlank() }
         currentPhotoUrl = initialRemoteUrl
         renderBestAvailableProfilePhoto(initialRemoteUrl)
+        loadProfilePhotoFromRealtime(user.uid, initialRemoteUrl)
 
         db.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
@@ -249,19 +251,17 @@ class SettingsActivity : AppCompatActivity() {
                 cityInput.setText(doc.getString("city").orEmpty())
                 stateInput.setText(doc.getString("state").orEmpty())
 
-                val photoUrl = listOf(
-                    "photoUrl",
-                    "photoURL",
-                    "profilePhotoUrl",
-                    "avatarUrl"
-                ).asSequence()
-                    .mapNotNull { key -> doc.getString(key)?.trim() }
-                    .firstOrNull { value -> value.isNotBlank() }
-                    ?: initialRemoteUrl
-
-                currentPhotoUrl = photoUrl
-                ProfilePhotoLocalStore.storeRemoteUrl(this, photoUrl)
-                renderBestAvailableProfilePhoto(photoUrl)
+                val legacyPhotoUrl = firstNonBlank(
+                    doc.getString("photoUrl"),
+                    doc.getString("photoURL"),
+                    doc.getString("profilePhotoUrl"),
+                    doc.getString("avatarUrl")
+                )
+                if (currentPhotoUrl.isNullOrBlank() && !legacyPhotoUrl.isNullOrBlank()) {
+                    currentPhotoUrl = legacyPhotoUrl
+                    ProfilePhotoLocalStore.storeRemoteUrl(this, user.uid, legacyPhotoUrl)
+                    renderBestAvailableProfilePhoto(legacyPhotoUrl)
+                }
             }
             .addOnFailureListener {
                 Toast.makeText(
@@ -270,6 +270,40 @@ class SettingsActivity : AppCompatActivity() {
                     Toast.LENGTH_LONG
                 ).show()
             }
+    }
+
+    private fun loadProfilePhotoFromRealtime(userId: String, fallbackUrl: String?) {
+        FirebaseConfiguration.getFirebaseDatabase()
+            .child("users")
+            .child(userId)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val photoUrl = firstNonBlank(
+                    snapshot.child("photoUrl").getValue(String::class.java),
+                    snapshot.child("photoURL").getValue(String::class.java),
+                    snapshot.child("profilePhotoUrl").getValue(String::class.java),
+                    snapshot.child("avatarUrl").getValue(String::class.java),
+                    fallbackUrl
+                )
+
+                currentPhotoUrl = photoUrl
+                ProfilePhotoLocalStore.storeRemoteUrl(this, userId, photoUrl)
+                renderBestAvailableProfilePhoto(photoUrl)
+            }
+            .addOnFailureListener {
+                if (!fallbackUrl.isNullOrBlank()) {
+                    currentPhotoUrl = fallbackUrl
+                    ProfilePhotoLocalStore.storeRemoteUrl(this, userId, fallbackUrl)
+                    renderBestAvailableProfilePhoto(fallbackUrl)
+                }
+            }
+    }
+
+    private fun firstNonBlank(vararg candidates: String?): String? {
+        return candidates
+            .asSequence()
+            .mapNotNull { value -> value?.trim() }
+            .firstOrNull { value -> value.isNotBlank() }
     }
 
     private fun configurePasswordSection(hasPasswordProvider: Boolean) {
@@ -425,6 +459,7 @@ class SettingsActivity : AppCompatActivity() {
                 withContext(Dispatchers.IO) {
                     ProfilePhotoLocalStore.saveLocalPhoto(
                         context = this@SettingsActivity,
+                        userId = user.uid,
                         photoBytes = bytes,
                         extension = extension
                     )
@@ -494,7 +529,13 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun renderBestAvailableProfilePhoto(remoteFallbackUrl: String?) {
-        val snapshot = ProfilePhotoLocalStore.getSnapshot(this)
+        val userId = auth.currentUser?.uid
+        val snapshot = userId?.let { ProfilePhotoLocalStore.getSnapshot(this, it) }
+            ?: ProfilePhotoLocalStore.Snapshot(
+                localPhotoPath = null,
+                remotePhotoUrl = null,
+                pendingSync = false
+            )
         val localFile = snapshot.localFileOrNull()
         if (localFile != null) {
             renderLocalProfilePhoto(localFile, snapshot.pendingSync)

@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature
         android:name="android.hardware.camera.any"
         android:required="false" />
@@ -20,10 +21,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Kotlinproject">
 
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="${MAPS_API_KEY}" />
-
         <activity
             android:name=".activities.AuthGateActivity"
             android:exported="true">
@@ -40,6 +37,7 @@
         <activity android:name=".activities.ProviderVehicleRegisterActivity" android:exported="false" />
         <activity android:name=".activities.ProviderVehicleDetailsActivity" android:exported="false" />
         <activity android:name=".activities.SettingsActivity" android:exported="false" />
+        <activity android:name=".activities.LanguageSettingsActivity" android:exported="false" />
         <activity
             android:name="com.canhub.cropper.CropImageActivity"
             android:theme="@style/Theme.Kotlinproject.Cropper" />

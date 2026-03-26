@@ -32,6 +32,11 @@
     <string name="login_error_google_no_accounts">No Google account available on this device.</string>
     <string name="login_error_google_failed">Google login failed. Try again.</string>
     <string name="login_error_generic">Could not complete login. Try again.</string>
+    <string name="login_error_with_google_hint">%1$s If you created your account with Google, tap \"%2$s\".</string>
+    <string name="login_reset_email_generic_result">If an account with this email exists, we will send a reset link. If you use Google sign-in, use \"Continue with Google\".</string>
+    <string name="forgot_password_dialog_title">Reset password</string>
+    <string name="forgot_password_dialog_message">Enter the account email to receive the reset link.</string>
+    <string name="forgot_password_dialog_send_button">Send link</string>
 
     <!-- Generic errors -->
     <string name="error_no_internet_check">No internet connection. Check your connection and try again.</string>
@@ -92,6 +97,17 @@
     <string name="register_error_app_not_authorized">app not authorized. Check package name and SHA in Firebase.</string>
     <string name="register_error_unknown">unknown error.</string>
     <string name="register_error_with_code">%1$s [code: %2$s]</string>
+    <string name="register_profile_photo_title">Profile photo</string>
+    <string name="register_profile_photo_subtitle">Add a photo to identify your account.</string>
+    <string name="register_error_profile_photo_required">Add a profile photo to continue.</string>
+    <string name="register_profile_photo_source_dialog_title">Choose how to add the photo</string>
+    <string name="register_profile_photo_source_camera">Take photo</string>
+    <string name="register_profile_photo_source_gallery">Choose from gallery</string>
+    <string name="register_profile_photo_source_cancel">Cancel</string>
+    <string name="register_profile_photo_camera_permission_title">Allow camera access</string>
+    <string name="register_profile_photo_camera_permission_message">To take a profile photo, allow camera access.</string>
+    <string name="register_profile_photo_camera_permission_confirm">Allow</string>
+    <string name="register_profile_photo_camera_permission_denied">Camera permission denied. Could not take the photo.</string>
 
     <!-- Form hints -->
     <string name="hint_search_address">Search address</string>
@@ -220,6 +236,7 @@
     <string name="personal_data_password_error_generic">Could not update password right now.</string>
     <string name="provider_home_fragment_title">Your host dashboard</string>
     <string name="provider_home_fragment_subtitle">List cars, track bookings, and keep your fleet earning.</string>
+    <string name="provider_home_go_to_vehicles">View all registered vehicles</string>
     <string name="provider_vehicles_fragment_title">Vehicle management</string>
     <string name="provider_vehicles_fragment_subtitle">Register cars, adjust availability, and review listing details.</string>
     <string name="provider_rentals_fragment_title">Rental flow</string>
@@ -231,6 +248,21 @@
     <string name="renter_map_card_title">Map near you</string>
     <string name="renter_map_card_subtitle">Tap to open full screen</string>
     <string name="renter_map_close">Close map</string>
+    <string name="renter_home_nearby_section_title">Available cars nearby</string>
+    <string name="renter_home_nearby_section_subtitle">List updated based on your location.</string>
+    <string name="renter_home_nearby_search_radius_placeholder">Search radius used: --</string>
+    <string name="renter_home_nearby_search_radius">Search radius used: %1$s</string>
+    <string name="renter_home_nearby_search_radius_expanded">Search radius used: %1$s (automatic expanded search)</string>
+    <string name="renter_home_nearby_empty_state">No available cars found nearby.</string>
+    <string name="renter_home_nearby_status_available">Tap to see more</string>
+    <string name="renter_home_nearby_color_line">Color: %1$s</string>
+    <string name="renter_home_nearby_plate_line">Plate: %1$s</string>
+    <string name="renter_home_nearby_city_line">Area: %1$s</string>
+    <string name="renter_home_nearby_plate_city_line">Plate: %1$s - %2$s</string>
+    <string name="renter_home_nearby_distance_meters">%1$.0f m away</string>
+    <string name="renter_home_nearby_distance_km">%1$.1f km away</string>
+    <string name="renter_home_nearby_daily_price">Daily: %1$s</string>
+    <string name="renter_home_nearby_unknown_vehicle">Nearby vehicle</string>
     <string name="renter_discover_fragment_title">Discover vehicles</string>
     <string name="renter_discover_fragment_subtitle">Search by city, price range, category, and rental period.</string>
     <string name="renter_rentals_fragment_title">Your rentals</string>
@@ -265,6 +297,11 @@
     <string name="provider_vehicle_details_subtitle">Review listing data and use the button below to edit.</string>
     <string name="provider_vehicle_details_edit_listing">Edit listing</string>
     <string name="provider_vehicle_details_line">%1$s: %2$s</string>
+    <string name="provider_vehicle_details_photos_title">Registered photos</string>
+    <string name="provider_vehicle_details_photos_empty">No photos registered for this vehicle.</string>
+    <string name="provider_vehicle_details_photo_content_description">Vehicle photo</string>
+    <string name="provider_vehicle_details_photo_previous">Previous photo</string>
+    <string name="provider_vehicle_details_photo_next">Next photo</string>
 
     <string name="vehicle_register_step_initial">Step 1 of 7</string>
     <string name="vehicle_register_step_of_total">Step %1$d of %2$d</string>
@@ -550,6 +587,7 @@
     <string name="vehicle_checklist_location_defined">Location defined</string>
     <string name="vehicle_error_complete_checklist_before_publish">Complete the checklist before publishing.</string>
     <string name="vehicle_step7_edit_any_step">Edit any step</string>
+    <string name="vehicle_step7_edit_step_named">Edit step (%1$s)</string>
     <string name="vehicle_edit_step_1">Edit step 1</string>
     <string name="vehicle_edit_step_2">Edit step 2</string>
     <string name="vehicle_edit_step_3">Edit step 3</string>
@@ -564,6 +602,15 @@
     <string name="vehicle_summary_price_and_condition">Daily: %1$s | Condition: %2$s</string>
     <string name="vehicle_summary_rules">Rules: Pets %1$s | Smoking %2$s | Trips %3$s</string>
     <string name="vehicle_summary_location">Location: %1$s - %2$s</string>
+
+    <!-- Language settings -->
+    <string name="profile_action_language">App language</string>
+    <string name="profile_action_language_subtitle">Automatic, Portuguese (Brazil), or English.</string>
+    <string name="language_settings_title">App language</string>
+    <string name="language_settings_subtitle">Choose how the app text should be displayed.</string>
+    <string name="language_option_system">Automatic (System default)</string>
+    <string name="language_option_portuguese_brazil">Portuguese (Brazil)</string>
+    <string name="language_option_english">English</string>
 
     <!-- Commons -->
     <string name="common_yes">Yes</string>

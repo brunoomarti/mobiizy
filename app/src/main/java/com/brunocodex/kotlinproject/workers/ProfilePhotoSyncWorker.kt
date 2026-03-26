@@ -5,6 +5,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.brunocodex.kotlinproject.services.ProfilePhotoLocalStore
 import com.brunocodex.kotlinproject.services.ProfilePhotoSyncService
+import com.google.firebase.auth.FirebaseAuth
 
 class ProfilePhotoSyncWorker(
     appContext: Context,
@@ -12,7 +13,8 @@ class ProfilePhotoSyncWorker(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        if (!ProfilePhotoLocalStore.hasPendingSync(applicationContext)) {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return Result.success()
+        if (!ProfilePhotoLocalStore.hasPendingSync(applicationContext, userId)) {
             return Result.success()
         }
 
@@ -25,4 +27,3 @@ class ProfilePhotoSyncWorker(
         }
     }
 }
-

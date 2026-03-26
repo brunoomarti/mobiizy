@@ -2,7 +2,7 @@ package com.brunocodex.kotlinproject.services
 
 import android.content.Context
 import android.location.Location
-import com.google.android.gms.maps.model.LatLng
+import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.firebase.geofire.GeoFireUtils
 import com.firebase.geofire.GeoLocation
@@ -14,9 +14,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
 
 class NearbyVehiclesRepository(context: Context) {
+
+    companion object {
+        private const val TAG = "NearbyVehiclesRepo"
+    }
 
     data class NearbyVehicle(
         val vehicleId: String,
@@ -24,23 +27,35 @@ class NearbyVehiclesRepository(context: Context) {
         val pickupLatitude: Double,
         val pickupLongitude: Double,
         val vehicleType: String?,
+        val brand: String?,
+        val model: String?,
+        val manufactureYear: String?,
+        val modelYear: String?,
+        val color: String?,
+        val bodyType: String?,
+        val dailyPrice: String?,
+        val condition: String?,
+        val highlightTags: List<String>,
+        val allowTrip: Boolean?,
+        val allowedTripTypes: List<String>,
+        val uploadedPhotoUrls: Map<String, String>,
+        val plate: String,
+        val payloadJson: String,
         val distanceMeters: Double
     )
 
-    private val vehiclesRef by lazy {
-        FirebaseConfiguration.getFirebaseDatabase().child("vehicles")
-    }
     private val vehiclesPublicIndexRef by lazy {
         FirebaseConfiguration.getFirebaseDatabase().child("vehicles_public_index")
     }
 
     suspend fun getNearbyPublishedVehicles(
-        center: LatLng,
+        centerLatitude: Double,
+        centerLongitude: Double,
         radiusMeters: Double
     ): List<NearbyVehicle> = withContext(Dispatchers.IO) {
         if (radiusMeters <= 0.0) return@withContext emptyList()
 
-        val centerGeo = GeoLocation(center.latitude, center.longitude)
+        val centerGeo = GeoLocation(centerLatitude, centerLongitude)
         val bounds = GeoFireUtils.getGeoHashQueryBounds(centerGeo, radiusMeters)
         if (bounds.isEmpty()) return@withContext emptyList()
 
@@ -55,16 +70,20 @@ class NearbyVehiclesRepository(context: Context) {
                         .endAt(bound.endHash)
                         .get()
                         .await()
+                }.onFailure { throwable ->
+                    Log.w(TAG, "Indexed nearby query failed for hash bound ${bound.startHash}..${bound.endHash}", throwable)
                 }.getOrNull()
             }
         }.awaitAll()
 
+        var indexedCandidates = 0
         snapshots.forEach { snapshot ->
             snapshot?.children?.forEach { child ->
+                indexedCandidates++
                 val entry = parseIndexedVehicle(child) ?: return@forEach
                 val distance = distanceMeters(
-                    fromLatitude = center.latitude,
-                    fromLongitude = center.longitude,
+                    fromLatitude = centerLatitude,
+                    fromLongitude = centerLongitude,
                     toLatitude = entry.pickupLatitude,
                     toLongitude = entry.pickupLongitude
                 )
@@ -77,23 +96,26 @@ class NearbyVehiclesRepository(context: Context) {
             }
         }
 
-        if (indexedById.isNotEmpty()) {
-            hydrateMissingVehicleTypes(indexedById)
-        }
+        Log.d(
+            TAG,
+            "Indexed nearby scan: bounds=${bounds.size}, candidates=$indexedCandidates, inRadius=${indexedById.size}, radius=$radiusMeters"
+        )
 
         if (indexedById.isEmpty()) {
-            val legacy = fetchNearbyFromLegacyTree(center, radiusMeters)
-            return@withContext legacy
+            return@withContext emptyList()
         }
 
-        indexedById.values.sortedBy { it.distanceMeters }
+        val result = indexedById.values.sortedBy { it.distanceMeters }
+        Log.d(
+            TAG,
+            "Indexed nearby final count=${result.size}, radius=$radiusMeters"
+        )
+        result
     }
 
     private fun parseIndexedVehicle(snapshot: DataSnapshot): NearbyVehicle? {
         val status = snapshot.child("status").getValue(String::class.java)
-            .orEmpty()
-            .ifBlank { SQLiteConfiguration.STATUS_DRAFT }
-        if (status != SQLiteConfiguration.STATUS_PUBLISHED) return null
+        if (!isPublishedStatusOrUnknown(status)) return null
 
         val vehicleId = snapshot.child("vehicleId").getValue(String::class.java)
             .orEmpty()
@@ -108,6 +130,34 @@ class NearbyVehiclesRepository(context: Context) {
         val vehicleType = normalizeVehicleType(
             snapshot.child("vehicleType").getValue(String::class.java)
         )
+        val brand = snapshot.child("brand").getValue(String::class.java)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+        val model = snapshot.child("model").getValue(String::class.java)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+        val manufactureYear = snapshot.child("manufactureYear").getValue(String::class.java)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+        val modelYear = snapshot.child("modelYear").getValue(String::class.java)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+        val color = snapshot.child("color").getValue(String::class.java)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+        val bodyType = normalizeBodyType(
+            snapshot.child("bodyType").getValue(String::class.java)
+        )
+        val dailyPrice = snapshot.child("dailyPrice").getValue(String::class.java)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+        val condition = snapshot.child("condition").getValue(String::class.java)
+            ?.trim()
+            ?.takeIf { it.isNotBlank() }
+        val highlightTags = snapshot.child("highlightTags").toStringList()
+        val allowTrip = snapshot.child("allowTrip").toNullableBoolean()
+        val allowedTripTypes = snapshot.child("allowedTripTypes").toStringList()
+        val uploadedPhotoUrls = snapshot.child("uploadedPhotoUrls").toStringMap()
 
         return NearbyVehicle(
             vehicleId = vehicleId,
@@ -115,93 +165,27 @@ class NearbyVehiclesRepository(context: Context) {
             pickupLatitude = latitude,
             pickupLongitude = longitude,
             vehicleType = vehicleType,
+            brand = brand,
+            model = model,
+            manufactureYear = manufactureYear,
+            modelYear = modelYear,
+            color = color,
+            bodyType = bodyType,
+            dailyPrice = dailyPrice,
+            condition = condition,
+            highlightTags = highlightTags,
+            allowTrip = allowTrip,
+            allowedTripTypes = allowedTripTypes,
+            uploadedPhotoUrls = uploadedPhotoUrls,
+            plate = "",
+            payloadJson = "{}",
             distanceMeters = Double.MAX_VALUE
         )
     }
 
-    private suspend fun hydrateMissingVehicleTypes(
-        indexedById: MutableMap<String, NearbyVehicle>
-    ) {
-        val missingTypeEntries = indexedById.values.filter { it.vehicleType.isNullOrBlank() }
-        if (missingTypeEntries.isEmpty()) return
-
-        missingTypeEntries.forEach { entry ->
-            val snapshot = runCatching {
-                vehiclesRef.child(entry.ownerId).child(entry.vehicleId).get().await()
-            }.getOrNull() ?: return@forEach
-
-            val directType = normalizeVehicleType(snapshot.child("vehicleType").getValue(String::class.java))
-            val payloadType = if (directType != null) {
-                null
-            } else {
-                runCatching {
-                    val payloadRaw = snapshot.child("payloadJson").getValue(String::class.java).orEmpty()
-                    if (payloadRaw.isBlank()) {
-                        null
-                    } else {
-                        normalizeVehicleType(JSONObject(payloadRaw).optNullableString("vehicleType"))
-                    }
-                }.getOrNull()
-            }
-
-            val resolvedType = directType ?: payloadType ?: return@forEach
-            indexedById[entry.vehicleId] = entry.copy(vehicleType = resolvedType)
-        }
-    }
-
-    private suspend fun fetchNearbyFromLegacyTree(
-        center: LatLng,
-        radiusMeters: Double
-    ): List<NearbyVehicle> {
-        val root = runCatching { vehiclesRef.get().await() }.getOrNull() ?: return emptyList()
-        val found = linkedMapOf<String, NearbyVehicle>()
-
-        root.children.forEach { ownerNode ->
-            val ownerId = ownerNode.key.orEmpty().ifBlank { return@forEach }
-            ownerNode.children.forEach { vehicleNode ->
-                val status = vehicleNode.child("status").getValue(String::class.java)
-                    .orEmpty()
-                    .ifBlank { SQLiteConfiguration.STATUS_DRAFT }
-                if (status != SQLiteConfiguration.STATUS_PUBLISHED) return@forEach
-
-                val vehicleId = vehicleNode.child("vehicleId").getValue(String::class.java)
-                    .orEmpty()
-                    .ifBlank { vehicleNode.key.orEmpty() }
-                    .ifBlank { return@forEach }
-                val payloadRaw = vehicleNode.child("payloadJson").getValue(String::class.java).orEmpty()
-                val payload = runCatching { JSONObject(payloadRaw) }.getOrNull() ?: return@forEach
-                val vehicleType = normalizeVehicleType(payload.optNullableString("vehicleType"))
-
-                val latitude = payload.optNullableDouble("pickupLatitude")
-                    ?: payload.optNullableDouble("pickupLat")
-                val longitude = payload.optNullableDouble("pickupLongitude")
-                    ?: payload.optNullableDouble("pickupLng")
-                    ?: payload.optNullableDouble("pickupLon")
-                if (latitude == null || longitude == null) return@forEach
-
-                val distance = distanceMeters(
-                    fromLatitude = center.latitude,
-                    fromLongitude = center.longitude,
-                    toLatitude = latitude,
-                    toLongitude = longitude
-                )
-                if (distance > radiusMeters) return@forEach
-
-                val current = found[vehicleId]
-                if (current == null || distance < current.distanceMeters) {
-                    found[vehicleId] = NearbyVehicle(
-                        vehicleId = vehicleId,
-                        ownerId = ownerId,
-                        pickupLatitude = latitude,
-                        pickupLongitude = longitude,
-                        vehicleType = vehicleType,
-                        distanceMeters = distance
-                    )
-                }
-            }
-        }
-
-        return found.values.sortedBy { it.distanceMeters }
+    private fun isPublishedStatusOrUnknown(rawStatus: String?): Boolean {
+        val normalized = rawStatus?.trim()?.lowercase()
+        return normalized.isNullOrBlank() || normalized == SQLiteConfiguration.STATUS_PUBLISHED
     }
 
     private fun DataSnapshot.toNullableDouble(): Double? {
@@ -213,18 +197,65 @@ class NearbyVehiclesRepository(context: Context) {
         }
     }
 
-    private fun JSONObject.optNullableDouble(key: String): Double? {
-        if (isNull(key)) return null
-        return when (val raw = opt(key)) {
-            is Number -> raw.toDouble()
-            is String -> raw.toDoubleOrNull()
+    private fun DataSnapshot.toNullableBoolean(): Boolean? {
+        val raw = value ?: return null
+        return when (raw) {
+            is Boolean -> raw
+            is Number -> raw.toInt() != 0
+            is String -> when (raw.trim().lowercase()) {
+                "true", "1", "yes", "sim" -> true
+                "false", "0", "no", "nao" -> false
+                else -> null
+            }
             else -> null
         }
     }
 
-    private fun JSONObject.optNullableString(key: String): String? {
-        if (isNull(key)) return null
-        return optString(key).trim().takeIf { it.isNotBlank() }
+    private fun DataSnapshot.toStringList(): List<String> {
+        if (childrenCount > 0) {
+            return children.mapNotNull { child ->
+                child.getValue(String::class.java)
+                    ?.trim()
+                    ?.takeIf { it.isNotBlank() }
+            }
+        }
+
+        return when (val raw = value) {
+            is List<*> -> raw.mapNotNull { item ->
+                item?.toString()?.trim()?.takeIf { it.isNotBlank() }
+            }
+            is String -> raw.split(",")
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+            else -> emptyList()
+        }
+    }
+
+    private fun DataSnapshot.toStringMap(): Map<String, String> {
+        val fromChildren = linkedMapOf<String, String>()
+        children.forEach { child ->
+            val key = child.key.orEmpty().trim()
+            val mapValue = child.getValue(String::class.java).orEmpty().trim()
+            if (key.isNotBlank() && mapValue.isNotBlank()) {
+                fromChildren[key] = mapValue
+            }
+        }
+        if (fromChildren.isNotEmpty()) return fromChildren
+
+        val raw = value
+        if (raw is Map<*, *>) {
+            val fromMap = linkedMapOf<String, String>()
+            raw.forEach { (mapKeyRaw, mapValueRaw) ->
+                val key = mapKeyRaw?.toString()?.trim().orEmpty()
+                val mapValue = mapValueRaw?.toString()?.trim().orEmpty()
+                if (key.isNotBlank() && mapValue.isNotBlank()) {
+                    fromMap[key] = mapValue
+                }
+            }
+            return fromMap
+        }
+
+        return emptyMap()
     }
 
     private fun normalizeVehicleType(raw: String?): String? {
@@ -233,6 +264,10 @@ class NearbyVehiclesRepository(context: Context) {
             "motorcycle", "moto" -> "motorcycle"
             else -> null
         }
+    }
+
+    private fun normalizeBodyType(raw: String?): String? {
+        return raw?.trim()?.takeIf { it.isNotBlank() }
     }
 
     private fun distanceMeters(

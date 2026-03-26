@@ -26,7 +26,8 @@ data class ProviderVehicleCardUi(
     val pendingSyncLabel: String,
     val vehicleType: String? = null,
     val bodyType: String? = null,
-    val localDraftId: String? = null
+    val localDraftId: String? = null,
+    val sideTagLabel: String? = null
 )
 
 class ProviderVehiclesAdapter(
@@ -52,6 +53,7 @@ class ProviderVehiclesAdapter(
         private val tvVehiclePlate: TextView = itemView.findViewById(R.id.tvVehiclePlate)
         private val tvVehicleUpdatedAt: TextView = itemView.findViewById(R.id.tvVehicleUpdatedAt)
         private val tvVehicleStatus: TextView = itemView.findViewById(R.id.tvVehicleStatus)
+        private val tvVehicleSideTag: TextView = itemView.findViewById(R.id.tvVehicleSideTag)
         private val tvSyncPending: TextView = itemView.findViewById(R.id.tvSyncPending)
         private val ivVehicleThumb: ImageView = itemView.findViewById(R.id.ivVehicleThumb)
 
@@ -60,6 +62,8 @@ class ProviderVehiclesAdapter(
             tvVehiclePlate.text = item.plateLabel
             tvVehicleUpdatedAt.text = item.updatedAtLabel
             tvVehicleStatus.text = item.statusLabel
+            tvVehicleSideTag.text = item.sideTagLabel.orEmpty()
+            tvVehicleSideTag.isVisible = !item.sideTagLabel.isNullOrBlank()
             tvSyncPending.text = item.pendingSyncLabel
             tvSyncPending.isVisible = item.hasPendingSync
             ivVehicleThumb.setImageResource(resolveVehicleImageRes(item))
@@ -70,7 +74,14 @@ class ProviderVehiclesAdapter(
             val normalizedType = normalizeKey(item.vehicleType)
             val normalizedBodyType = normalizeKey(item.bodyType)
 
-            if (normalizedType == "motorcycle" || normalizedBodyType in MOTORCYCLE_BODY_TYPES) {
+            if (normalizedType == VEHICLE_TYPE_MOTORCYCLE) {
+                return R.drawable.motorcycle
+            }
+            if (normalizedType == VEHICLE_TYPE_CAR) {
+                return R.drawable.car_sedan
+            }
+
+            if (normalizedBodyType in MOTORCYCLE_BODY_TYPES) {
                 return R.drawable.motorcycle
             }
 
@@ -91,6 +102,9 @@ class ProviderVehiclesAdapter(
         }
 
         companion object {
+            private const val VEHICLE_TYPE_CAR = "car"
+            private const val VEHICLE_TYPE_MOTORCYCLE = "motorcycle"
+
             private val MOTORCYCLE_BODY_TYPES = setOf(
                 "street",
                 "scooter",

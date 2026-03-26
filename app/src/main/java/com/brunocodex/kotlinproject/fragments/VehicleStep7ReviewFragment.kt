@@ -38,12 +38,12 @@ class VehicleStep7ReviewFragment : Fragment(R.layout.fragment_vehicle_step7_revi
         cbChecklistLocation = view.findViewById(R.id.cbChecklistLocation)
         tvChecklistError = view.findViewById(R.id.tvChecklistError)
 
-        bindEditButton(view, R.id.btnEditStep1, 0)
-        bindEditButton(view, R.id.btnEditStep2, 1)
-        bindEditButton(view, R.id.btnEditStep3, 2)
-        bindEditButton(view, R.id.btnEditStep4, 3)
-        bindEditButton(view, R.id.btnEditStep5, 4)
-        bindEditButton(view, R.id.btnEditStep6, 5)
+        bindEditButton(view, R.id.btnEditStep1, 0, R.string.vehicle_step1_headline)
+        bindEditButton(view, R.id.btnEditStep2, 1, R.string.vehicle_step2_headline)
+        bindEditButton(view, R.id.btnEditStep3, 2, R.string.vehicle_step3_headline)
+        bindEditButton(view, R.id.btnEditStep4, 3, R.string.vehicle_step4_headline)
+        bindEditButton(view, R.id.btnEditStep5, 4, R.string.vehicle_step5_headline)
+        bindEditButton(view, R.id.btnEditStep6, 5, R.string.vehicle_step6_headline)
 
         refreshReview()
     }
@@ -53,9 +53,15 @@ class VehicleStep7ReviewFragment : Fragment(R.layout.fragment_vehicle_step7_revi
         refreshReview()
     }
 
-    private fun bindEditButton(root: View, buttonId: Int, step: Int) {
-        root.findViewById<Button>(buttonId).setOnClickListener {
-            (activity as? VehicleStepNavigator)?.goToStep(step)
+    private fun bindEditButton(root: View, buttonId: Int, step: Int, stepTitleResId: Int) {
+        root.findViewById<Button>(buttonId).apply {
+            text = getString(
+                R.string.vehicle_step7_edit_step_named,
+                getString(stepTitleResId)
+            )
+            setOnClickListener {
+                (activity as? VehicleStepNavigator)?.goToStep(step)
+            }
         }
     }
 

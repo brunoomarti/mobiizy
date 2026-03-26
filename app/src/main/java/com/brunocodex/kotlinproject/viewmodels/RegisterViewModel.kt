@@ -32,6 +32,11 @@ class RegisterViewModel : ViewModel() {
     // Credenciais
     var password: String? = null
 
+    // Foto de perfil (bytes/extensao nao persistem em draft)
+    var profilePhotoUrl: String? = null
+    var pendingProfilePhotoBytes: ByteArray? = null
+    var pendingProfilePhotoExtension: String? = null
+
     fun toDraftMap(): Map<String, Any?> {
         return mapOf(
             "currentStep" to currentStep,
@@ -41,6 +46,7 @@ class RegisterViewModel : ViewModel() {
             "phone" to phone,
             "cpf" to cpf,
             "date" to date,
+            "profilePhotoUrl" to profilePhotoUrl,
             "cep" to cep,
             "street" to street,
             "number" to number,
@@ -63,6 +69,7 @@ class RegisterViewModel : ViewModel() {
         phone = data["phone"] as? String
         cpf = data["cpf"] as? String
         date = data["date"] as? String
+        profilePhotoUrl = data["profilePhotoUrl"] as? String
         cep = data["cep"] as? String
         street = data["street"] as? String
         number = data["number"] as? String
@@ -82,6 +89,10 @@ class RegisterViewModel : ViewModel() {
             "phone" to phone,
             "cpf" to cpf,
             "date" to date,
+            "photoUrl" to profilePhotoUrl,
+            "photoURL" to profilePhotoUrl,
+            "profilePhotoUrl" to profilePhotoUrl,
+            "avatarUrl" to profilePhotoUrl,
             "cep" to cep,
             "street" to street,
             "number" to number,

@@ -123,37 +123,13 @@
         app:layout_constraintTop_toBottomOf="@id/step_header"
         app:layout_constraintBottom_toTopOf="@id/step_actions" />
 
-    <LinearLayout
+    <androidx.fragment.app.FragmentContainerView
         android:id="@+id/step_actions"
+        android:name="com.brunocodex.kotlinproject.fragments.StepActionsFragment"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/app_padding_horizontal"
-        android:paddingEnd="@dimen/app_padding_horizontal"
-        android:paddingTop="28dp"
-        android:paddingBottom="18dp"
-        android:gravity="center_vertical"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <Button
-            android:id="@+id/btnBack"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="@string/register_back" />
-
-        <Space
-            android:layout_width="12dp"
-            android:layout_height="1dp" />
-
-        <Button
-            android:id="@+id/btnNext"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="@string/register_next" />
-    </LinearLayout>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

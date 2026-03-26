@@ -1,6 +1,11 @@
 package com.brunocodex.kotlinproject.fragments
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,6 +15,9 @@ import android.widget.Filter
 import android.widget.Filterable
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -20,8 +28,15 @@ import com.brunocodex.kotlinproject.utils.NominatimResult
 import com.brunocodex.kotlinproject.utils.StepValidatable
 import com.brunocodex.kotlinproject.utils.StepValidationUtils
 import com.brunocodex.kotlinproject.viewmodels.RegisterViewModel
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -29,7 +44,9 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.Normalizer
+import java.util.Locale
 
 class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValidatable {
 
@@ -37,6 +54,38 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
     private val queryFlow = MutableStateFlow("")
     private var ignoreTextChanges = false
     private var tvHeaderStep: TextView? = null
+    private var useCurrentLocationButton: MaterialButton? = null
+    private var fusedLocationClient: FusedLocationProviderClient? = null
+    private var currentLocationTokenSource: CancellationTokenSource? = null
+    private var pendingLocationPermissionAction: (() -> Unit)? = null
+    private var isCurrentLocationLookupInProgress = false
+
+    private data class DeviceAddress(
+        val displayLine: String,
+        val street: String,
+        val number: String,
+        val neighborhood: String,
+        val city: String,
+        val stateUf: String,
+        val cep: String
+    )
+
+    private val locationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { results ->
+            val granted = results.values.any { it }
+            val pendingAction = pendingLocationPermissionAction
+            pendingLocationPermissionAction = null
+
+            if (granted) {
+                pendingAction?.invoke()
+            } else if (isAdded) {
+                Toast.makeText(
+                    requireContext(),
+                    R.string.register_address_location_permission_denied,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
 
     // --- dropdown rows (loading / empty / result)
     private sealed class DropRow {
@@ -121,6 +170,10 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
         val cityInput = view.findViewById<TextInputEditText>(R.id.cityInput)
         val stateInput = view.findViewById<TextInputEditText>(R.id.stateInput)
         val cepInput = view.findViewById<TextInputEditText>(R.id.cepInput)
+        val btnUseCurrentLocationAddress =
+            view.findViewById<MaterialButton>(R.id.btnUseCurrentLocationAddress)
+        useCurrentLocationButton = btnUseCurrentLocationAddress
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
 
         restoreData(cepInput, streetInput, numberInput, neighborhoodInput, cityInput, stateInput)
         setupDataSaving(cepInput, streetInput, numberInput, neighborhoodInput, cityInput, stateInput)
@@ -128,6 +181,19 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
         tvHeaderStep = view.findViewById(R.id.tvStepTitle)
         view.findViewById<TextView>(R.id.stepHeadline).text = getString(R.string.address_step_headline)
         view.findViewById<TextView>(R.id.stepSubtitle).text = getString(R.string.address_step_subtitle)
+        btnUseCurrentLocationAddress.setOnClickListener {
+            ensureLocationPermissionAndRun {
+                fetchCurrentLocationAndSuggestAddress(
+                    addressInput = addressInput,
+                    streetInput = streetInput,
+                    numberInput = numberInput,
+                    neighborhoodInput = neighborhoodInput,
+                    cityInput = cityInput,
+                    stateInput = stateInput,
+                    cepInput = cepInput
+                )
+            }
+        }
 
         val dropAdapter = AddressDropAdapter(requireContext(), layoutInflater)
         addressInput.setAdapter(dropAdapter)
@@ -232,6 +298,257 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
         neighborhoodInput.doOnTextChanged { text, _, _, _ -> registerViewModel.neighborhood = text.toString() }
         cityInput.doOnTextChanged { text, _, _, _ -> registerViewModel.city = text.toString() }
         stateInput.doOnTextChanged { text, _, _, _ -> registerViewModel.state = text.toString() }
+    }
+
+    private fun ensureLocationPermissionAndRun(onGranted: () -> Unit) {
+        if (hasLocationPermission()) {
+            onGranted()
+            return
+        }
+
+        pendingLocationPermissionAction = onGranted
+
+        val shouldShowRationale =
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) ||
+                shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+        if (shouldShowRationale) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.register_address_location_permission_title)
+                .setMessage(R.string.register_address_location_permission_message)
+                .setPositiveButton(R.string.register_address_location_permission_confirm) { _, _ ->
+                    requestLocationPermissions()
+                }
+                .setNegativeButton(R.string.register_profile_photo_source_cancel) { _, _ ->
+                    pendingLocationPermissionAction = null
+                }
+                .show()
+            return
+        }
+
+        requestLocationPermissions()
+    }
+
+    private fun requestLocationPermissions() {
+        locationPermissionLauncher.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val context = context ?: return false
+        val fineGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        return fineGranted || coarseGranted
+    }
+
+    private fun hasFineLocationPermission(): Boolean {
+        val context = context ?: return false
+        return ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun fetchCurrentLocationAndSuggestAddress(
+        addressInput: MaterialAutoCompleteTextView,
+        streetInput: TextInputEditText,
+        numberInput: TextInputEditText,
+        neighborhoodInput: TextInputEditText,
+        cityInput: TextInputEditText,
+        stateInput: TextInputEditText,
+        cepInput: TextInputEditText
+    ) {
+        if (isCurrentLocationLookupInProgress) return
+        val client = fusedLocationClient ?: return
+
+        setCurrentLocationLookupInProgress(true)
+
+        currentLocationTokenSource?.cancel()
+        val tokenSource = CancellationTokenSource()
+        currentLocationTokenSource = tokenSource
+
+        val priority = if (hasFineLocationPermission()) {
+            Priority.PRIORITY_HIGH_ACCURACY
+        } else {
+            Priority.PRIORITY_BALANCED_POWER_ACCURACY
+        }
+
+        client.getCurrentLocation(priority, tokenSource.token)
+            .addOnSuccessListener { location ->
+                if (!isAdded || view == null) {
+                    setCurrentLocationLookupInProgress(false)
+                    return@addOnSuccessListener
+                }
+
+                if (location == null) {
+                    setCurrentLocationLookupInProgress(false)
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.register_address_location_unavailable,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    return@addOnSuccessListener
+                }
+
+                viewLifecycleOwner.lifecycleScope.launch {
+                    val resolvedAddress = resolveDeviceAddressFromLocation(location)
+                    setCurrentLocationLookupInProgress(false)
+
+                    if (!isAdded || view == null) return@launch
+                    if (resolvedAddress == null) {
+                        Toast.makeText(
+                            requireContext(),
+                            R.string.register_address_location_unavailable,
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@launch
+                    }
+
+                    showAddressConfirmationDialog(resolvedAddress) {
+                        applyDeviceAddressToInputs(
+                            resolvedAddress = resolvedAddress,
+                            addressInput = addressInput,
+                            streetInput = streetInput,
+                            numberInput = numberInput,
+                            neighborhoodInput = neighborhoodInput,
+                            cityInput = cityInput,
+                            stateInput = stateInput,
+                            cepInput = cepInput
+                        )
+                    }
+                }
+            }
+            .addOnFailureListener {
+                if (!isAdded || view == null) {
+                    setCurrentLocationLookupInProgress(false)
+                    return@addOnFailureListener
+                }
+
+                setCurrentLocationLookupInProgress(false)
+                Toast.makeText(
+                    requireContext(),
+                    R.string.register_address_location_unavailable,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .addOnCompleteListener {
+                if (currentLocationTokenSource === tokenSource) {
+                    currentLocationTokenSource = null
+                }
+            }
+    }
+
+    private suspend fun resolveDeviceAddressFromLocation(location: Location): DeviceAddress? {
+        val appContext = context ?: return null
+        if (!Geocoder.isPresent()) return null
+
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                val geocoder = Geocoder(appContext, Locale.forLanguageTag("pt-BR"))
+                @Suppress("DEPRECATION")
+                geocoder.getFromLocation(location.latitude, location.longitude, 1)
+            }.getOrNull()
+                ?.firstOrNull()
+                ?.toDeviceAddressOrNull()
+        }
+    }
+
+    private fun Address.toDeviceAddressOrNull(): DeviceAddress? {
+        val streetValue = thoroughfare.orEmpty()
+        val numberValue = subThoroughfare.orEmpty()
+        val neighborhoodValue = (subLocality ?: locality).orEmpty()
+        val cityValue = (locality ?: subAdminArea).orEmpty()
+        val stateValue = toUf(adminArea.orEmpty())
+        val cepValue = formatCep(postalCode.orEmpty())
+
+        val fallbackLine = listOf(
+            listOf(streetValue, numberValue).filter { it.isNotBlank() }.joinToString(", "),
+            neighborhoodValue,
+            listOf(cityValue, stateValue).filter { it.isNotBlank() }.joinToString(" - "),
+            cepValue
+        ).filter { it.isNotBlank() }
+            .joinToString("\n")
+
+        val displayLine = getAddressLine(0).orEmpty().ifBlank { fallbackLine }
+        if (displayLine.isBlank()) return null
+
+        return DeviceAddress(
+            displayLine = displayLine,
+            street = streetValue,
+            number = numberValue,
+            neighborhood = neighborhoodValue,
+            city = cityValue,
+            stateUf = stateValue,
+            cep = cepValue
+        )
+    }
+
+    private fun showAddressConfirmationDialog(
+        resolvedAddress: DeviceAddress,
+        onConfirm: () -> Unit
+    ) {
+        if (!isAdded) return
+
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.register_address_confirm_location_title)
+            .setMessage(
+                getString(
+                    R.string.register_address_confirm_location_message,
+                    resolvedAddress.displayLine
+                )
+            )
+            .setPositiveButton(R.string.common_yes) { _, _ -> onConfirm() }
+            .setNegativeButton(R.string.register_address_confirm_location_negative, null)
+            .show()
+    }
+
+    private fun applyDeviceAddressToInputs(
+        resolvedAddress: DeviceAddress,
+        addressInput: MaterialAutoCompleteTextView,
+        streetInput: TextInputEditText,
+        numberInput: TextInputEditText,
+        neighborhoodInput: TextInputEditText,
+        cityInput: TextInputEditText,
+        stateInput: TextInputEditText,
+        cepInput: TextInputEditText
+    ) {
+        ignoreTextChanges = true
+        addressInput.setText(resolvedAddress.displayLine, false)
+        ignoreTextChanges = false
+        addressInput.dismissDropDown()
+
+        streetInput.setText(resolvedAddress.street)
+        numberInput.setText(resolvedAddress.number)
+        neighborhoodInput.setText(resolvedAddress.neighborhood)
+        cityInput.setText(resolvedAddress.city)
+        stateInput.setText(resolvedAddress.stateUf)
+        cepInput.setText(resolvedAddress.cep)
+
+        if (numberInput.text.isNullOrBlank()) {
+            numberInput.requestFocus()
+        }
+    }
+
+    private fun setCurrentLocationLookupInProgress(isInProgress: Boolean) {
+        isCurrentLocationLookupInProgress = isInProgress
+        useCurrentLocationButton?.isEnabled = !isInProgress
+        useCurrentLocationButton?.text = getString(
+            if (isInProgress) {
+                R.string.register_address_use_current_location_loading
+            } else {
+                R.string.register_address_use_current_location
+            }
+        )
     }
 
     private suspend fun searchMerged(raw: String, city: String, uf: String): List<NominatimResult> {
@@ -398,7 +715,14 @@ class AddressInfoFragment : Fragment(R.layout.fragment_address_info), StepValida
     }
 
     override fun onDestroyView() {
-        super.onDestroyView()
+        useCurrentLocationButton?.setOnClickListener(null)
+        useCurrentLocationButton = null
+        pendingLocationPermissionAction = null
+        currentLocationTokenSource?.cancel()
+        currentLocationTokenSource = null
+        fusedLocationClient = null
+        isCurrentLocationLookupInProgress = false
         tvHeaderStep = null
+        super.onDestroyView()
     }
 }

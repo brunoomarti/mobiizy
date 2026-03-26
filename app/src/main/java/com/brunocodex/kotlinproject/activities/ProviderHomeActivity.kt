@@ -1,9 +1,9 @@
 package com.brunocodex.kotlinproject.activities
 
 import android.os.Bundle
+import android.view.View
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.fragments.ProfileFragment
-import com.brunocodex.kotlinproject.fragments.ProviderEarningsFragment
 import com.brunocodex.kotlinproject.fragments.ProviderHomeFragment
 import com.brunocodex.kotlinproject.fragments.ProviderRentalsFragment
 import com.brunocodex.kotlinproject.fragments.ProviderVehiclesFragment
@@ -16,6 +16,8 @@ class ProviderHomeActivity : BaseHomeActivity() {
             rootViewId = R.id.main,
             savedInstanceState = savedInstanceState
         )
+
+        findViewById<View>(R.id.navWalletItem)?.visibility = View.GONE
     }
 
     override fun defaultNavItemId(): Int = R.id.navHomeItem
@@ -54,15 +56,6 @@ class ProviderHomeActivity : BaseHomeActivity() {
                 contentDescription = getString(R.string.nav_provider_rentals)
             ) {
                 ProviderRentalsFragment()
-            },
-            NavDestination(
-                itemId = R.id.navWalletItem,
-                tag = "provider_earnings",
-                title = getString(R.string.nav_provider_earnings),
-                iconName = "payments",
-                contentDescription = getString(R.string.nav_provider_earnings)
-            ) {
-                ProviderEarningsFragment()
             },
             NavDestination(
                 itemId = R.id.navProfileItem,

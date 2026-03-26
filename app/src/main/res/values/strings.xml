@@ -32,6 +32,11 @@
     <string name="login_error_google_no_accounts">Nenhuma conta Google disponivel neste dispositivo.</string>
     <string name="login_error_google_failed">Falha no login Google. Tente novamente.</string>
     <string name="login_error_generic">Nao foi possivel concluir o login. Tente novamente.</string>
+    <string name="login_error_with_google_hint">%1$s Se voce criou sua conta com Google, toque em \"%2$s\".</string>
+    <string name="login_reset_email_generic_result">Se existir uma conta com este e-mail, enviaremos o link de redefinicao. Se voce usa Google, entre com \"Continuar com Google\".</string>
+    <string name="forgot_password_dialog_title">Redefinir senha</string>
+    <string name="forgot_password_dialog_message">Informe o e-mail da conta para receber o link de redefinicao.</string>
+    <string name="forgot_password_dialog_send_button">Enviar link</string>
 
     <!-- Generic errors -->
     <string name="error_no_internet_check">Sem internet. Verifique sua conexao e tente novamente.</string>
@@ -92,6 +97,27 @@
     <string name="register_error_app_not_authorized">app nao autorizado. Confira package name e SHA no Firebase.</string>
     <string name="register_error_unknown">erro desconhecido.</string>
     <string name="register_error_with_code">%1$s [codigo: %2$s]</string>
+    <string name="register_profile_photo_title">Foto de perfil</string>
+    <string name="register_profile_photo_subtitle">Adicione uma foto para identificar sua conta.</string>
+    <string name="register_error_profile_photo_required">Adicione uma foto de perfil para continuar.</string>
+    <string name="register_profile_photo_source_dialog_title">Escolha como adicionar a foto</string>
+    <string name="register_profile_photo_source_camera">Tirar foto</string>
+    <string name="register_profile_photo_source_gallery">Escolher da galeria</string>
+    <string name="register_profile_photo_source_cancel">Cancelar</string>
+    <string name="register_profile_photo_camera_permission_title">Permitir uso da camera</string>
+    <string name="register_profile_photo_camera_permission_message">Para tirar foto de perfil, permita o acesso a camera.</string>
+    <string name="register_profile_photo_camera_permission_confirm">Permitir</string>
+    <string name="register_profile_photo_camera_permission_denied">Sem permissao de camera, nao foi possivel tirar a foto.</string>
+    <string name="register_address_use_current_location">Usar localizacao atual</string>
+    <string name="register_address_use_current_location_loading">Buscando endereco atual...</string>
+    <string name="register_address_location_permission_title">Permitir localizacao</string>
+    <string name="register_address_location_permission_message">Para preencher o endereco automaticamente, permita o acesso a localizacao.</string>
+    <string name="register_address_location_permission_confirm">Permitir</string>
+    <string name="register_address_location_permission_denied">Sem permissao de localizacao, nao foi possivel buscar seu endereco atual.</string>
+    <string name="register_address_location_unavailable">Nao foi possivel identificar seu endereco atual agora.</string>
+    <string name="register_address_confirm_location_title">Confirmar endereco atual</string>
+    <string name="register_address_confirm_location_message">%1$s\n\nEsse e o seu endereco residencial?</string>
+    <string name="register_address_confirm_location_negative">Nao, vou editar manualmente</string>
 
     <!-- Form hints -->
     <string name="hint_search_address">Pesquisar endereco</string>
@@ -162,46 +188,46 @@
     <string name="profile_hero_hint">Gerencie sua conta e acompanhe seus dados principais.</string>
     <string name="profile_quick_actions_title">Acesso rapido</string>
     <string name="profile_action_personal_data">Dados pessoais</string>
-    <string name="profile_action_personal_data_subtitle">Nome, telefone e endereco.</string>
+    <string name="profile_action_personal_data_subtitle">Nome, telefone e endereço.</string>
     <string name="profile_action_security">Seguranca</string>
     <string name="profile_action_security_subtitle">Senha, login e dispositivos conectados.</string>
     <string name="profile_action_notifications">Notificacoes</string>
     <string name="profile_action_notifications_subtitle">Alertas de reservas, mensagens e novidades.</string>
     <string name="profile_action_support">Ajuda e suporte</string>
     <string name="profile_action_support_subtitle">Central de ajuda, termos e contato.</string>
-    <string name="profile_email_unavailable">E-mail nao disponivel</string>
+    <string name="profile_email_unavailable">E-mail nao disponível</string>
     <string name="profile_default_initial">U</string>
     <string name="profile_logout_button">Sair da conta</string>
     <string name="personal_data_back">Voltar</string>
     <string name="personal_data_title">Dados pessoais</string>
-    <string name="personal_data_profile_photo_content_description">Foto de perfil do usuario</string>
+    <string name="personal_data_profile_photo_content_description">Foto de perfil do usuário</string>
     <string name="personal_data_photo_change">Alterar foto de perfil</string>
     <string name="personal_data_photo_uploading">Enviando foto...</string>
     <string name="personal_data_photo_updated">Foto de perfil atualizada.</string>
-    <string name="personal_data_photo_upload_failed">Nao foi possivel atualizar a foto de perfil.</string>
+    <string name="personal_data_photo_upload_failed">Nao foi possível atualizar a foto de perfil.</string>
     <string name="personal_data_photo_crop_title">Recortar foto de perfil</string>
     <string name="personal_data_photo_crop_apply">Concluir</string>
-    <string name="personal_data_photo_crop_failed">Nao foi possivel recortar a imagem selecionada.</string>
+    <string name="personal_data_photo_crop_failed">Nao foi possível recortar a imagem selecionada.</string>
     <string name="personal_data_photo_upload_not_configured">Upload de foto indisponivel. Configure o Supabase.</string>
     <string name="personal_data_photo_saved_local_pending_sync">Foto salva no celular. Sincronizacao com a nuvem pendente.</string>
-    <string name="personal_data_photo_sync_unavailable">Nao foi possivel sincronizar a foto agora. Tentaremos novamente quando houver internet.</string>
+    <string name="personal_data_photo_sync_unavailable">Nao foi possível sincronizar a foto agora. Tentaremos novamente quando houver internet.</string>
     <string name="profile_photo_pending_sync_content_description">Foto de perfil aguardando sincronizacao na nuvem</string>
-    <string name="personal_data_contact_title">Contato e endereco</string>
-    <string name="personal_data_contact_subtitle">Edite telefone e endereco para manter seu cadastro atualizado.</string>
+    <string name="personal_data_contact_title">Contato e endereço</string>
+    <string name="personal_data_contact_subtitle">Edite telefone e endereço para manter seu cadastro atualizado.</string>
     <string name="personal_data_save_button">Salvar dados</string>
     <string name="personal_data_save_loading">Salvando...</string>
     <string name="personal_data_saved_success">Dados pessoais salvos com sucesso.</string>
-    <string name="personal_data_save_failed">Nao foi possivel salvar seus dados agora.</string>
-    <string name="personal_data_load_failed">Nao foi possivel carregar seus dados completos.</string>
-    <string name="personal_data_error_user_not_authenticated">Usuario nao autenticado.</string>
+    <string name="personal_data_save_failed">Nao foi possível salvar seus dados agora.</string>
+    <string name="personal_data_load_failed">Nao foi possível carregar seus dados completos.</string>
+    <string name="personal_data_error_user_not_authenticated">Usuário nao autenticado.</string>
     <string name="personal_data_error_phone_invalid">Informe um telefone valido com DDD.</string>
     <string name="personal_data_error_cep_invalid">Informe um CEP valido.</string>
     <string name="personal_data_error_state_invalid">Informe uma UF valida com 2 letras.</string>
-    <string name="personal_data_error_address_incomplete">Preencha os campos de endereco obrigatorios.</string>
+    <string name="personal_data_error_address_incomplete">Preencha os campos de endereço obrigatorios.</string>
     <string name="personal_data_password_title">Senha da conta</string>
     <string name="personal_data_password_subtitle">Atualize sua senha de acesso quando precisar.</string>
     <string name="personal_data_password_hint_email">Para alterar a senha, informe a senha atual e a nova senha.</string>
-    <string name="personal_data_password_hint_google">Sua conta usa login social. Enviaremos um e-mail para redefinicao de senha.</string>
+    <string name="personal_data_password_hint_google">Sua conta usa login social. Enviaremos um e-mail para redefinição de senha.</string>
     <string name="personal_data_password_current">Senha atual</string>
     <string name="personal_data_password_new">Nova senha</string>
     <string name="personal_data_password_confirm">Confirmar nova senha</string>
@@ -210,7 +236,7 @@
     <string name="personal_data_password_updating">Atualizando senha...</string>
     <string name="personal_data_password_reset_sending">Enviando e-mail...</string>
     <string name="personal_data_password_updated">Senha atualizada com sucesso.</string>
-    <string name="personal_data_password_reset_sent">Enviamos um e-mail para redefinicao de senha.</string>
+    <string name="personal_data_password_reset_sent">Enviamos um e-mail para redefinição de senha.</string>
     <string name="personal_data_password_error_user_email">Nao encontramos um e-mail valido para esta conta.</string>
     <string name="personal_data_password_error_current_required">Informe sua senha atual.</string>
     <string name="personal_data_password_error_new_required">Informe a nova senha.</string>
@@ -218,32 +244,51 @@
     <string name="personal_data_password_error_mismatch">A confirmacao de senha nao confere.</string>
     <string name="personal_data_password_error_min">A senha deve ter pelo menos 6 caracteres.</string>
     <string name="personal_data_password_error_wrong_current">Senha atual incorreta.</string>
-    <string name="personal_data_password_error_generic">Nao foi possivel atualizar a senha agora.</string>
+    <string name="personal_data_password_error_generic">Nao foi possível atualizar a senha agora.</string>
     <string name="provider_home_fragment_title">Seu painel de proprietario</string>
     <string name="provider_home_fragment_subtitle">O que deseja fazer hoje?</string>
-    <string name="provider_home_go_to_vehicles">Ver todos os veiculos cadastrados</string>
-    <string name="provider_vehicles_fragment_title">Gestao de veiculos</string>
+    <string name="provider_home_go_to_vehicles">Ver todos os veículos cadastrados</string>
+    <string name="provider_vehicles_fragment_title">Gestao de veículos</string>
     <string name="provider_vehicles_fragment_subtitle">Cadastre carros, ajuste disponibilidade e revise informacoes de cada anuncio.</string>
     <string name="provider_rentals_fragment_title">Fluxo de alugueis</string>
-    <string name="provider_rentals_fragment_subtitle">Gerencie solicitacoes, check-in, check-out e historico de corridas.</string>
+    <string name="provider_rentals_fragment_subtitle">Gerencie solicitações, check-in, check-out e histórico de corridas.</string>
     <string name="provider_earnings_fragment_title">Painel financeiro</string>
-    <string name="provider_earnings_fragment_subtitle">Visualize saldo disponivel, repasses pendentes e historico de recebimentos.</string>
+    <string name="provider_earnings_fragment_subtitle">Visualize saldo disponível, repasses pendentes e histórico de recebimentos.</string>
     <string name="renter_home_fragment_title">Bem-vindo(a) de volta!</string>
     <string name="renter_home_fragment_subtitle">Qual carro deseja alugar hoje?</string>
     <string name="renter_map_card_title">Mapa perto de voce</string>
     <string name="renter_map_card_subtitle">Toque para abrir em tela cheia</string>
     <string name="renter_map_close">Fechar mapa</string>
-    <string name="renter_discover_fragment_title">Descobrir veiculos</string>
-    <string name="renter_discover_fragment_subtitle">Busque por cidade, faixa de preco, categoria e periodo do aluguel.</string>
+    <string name="renter_home_change_location">Mudar localizacao</string>
+    <string name="renter_home_location_default_title">Defina uma localizacao</string>
+    <string name="renter_home_use_current_location">Usar localizacao atual</string>
+    <string name="renter_home_location_pick_failed">Nao foi possivel usar o endereco selecionado.</string>
+    <string name="renter_home_nearby_section_title">Veículos disponíveis nas proximidades</string>
+    <string name="renter_home_nearby_section_subtitle">Lista atualizada com base na sua localização.</string>
+    <string name="renter_home_nearby_search_radius_placeholder">Raio de busca usado: --</string>
+    <string name="renter_home_nearby_search_radius">Raio de busca usado: %1$s</string>
+    <string name="renter_home_nearby_search_radius_expanded">Raio de busca usado: %1$s (busca expandida automática)</string>
+    <string name="renter_home_nearby_empty_state">Nenhum carro disponível encontrado por perto.</string>
+    <string name="renter_home_nearby_status_available">Clique e veja mais</string>
+    <string name="renter_home_nearby_color_line">Cor: %1$s</string>
+    <string name="renter_home_nearby_plate_line">Placa: %1$s</string>
+    <string name="renter_home_nearby_city_line">Região: %1$s</string>
+    <string name="renter_home_nearby_plate_city_line">Placa: %1$s - %2$s</string>
+    <string name="renter_home_nearby_distance_meters">A %1$.0f m de voce</string>
+    <string name="renter_home_nearby_distance_km">A %1$.1f km de voce</string>
+    <string name="renter_home_nearby_daily_price">Diária: %1$s</string>
+    <string name="renter_home_nearby_unknown_vehicle">Veiculo proximo</string>
+    <string name="renter_discover_fragment_title">Descobrir veículos</string>
+    <string name="renter_discover_fragment_subtitle">Busque por cidade, faixa de preço, categoria e período do aluguel.</string>
     <string name="renter_rentals_fragment_title">Seus alugueis</string>
-    <string name="renter_rentals_fragment_subtitle">Acompanhe reservas ativas, historico de contratos e status de devolucao.</string>
+    <string name="renter_rentals_fragment_subtitle">Acompanhe reservas ativas, histórico de contratos e status de devolução.</string>
 
     <!-- Legacy home layouts -->
-    <string name="legacy_provider_home_title">Home - Proprietario</string>
-    <string name="legacy_provider_card_title">Gerenciar frota e anuncios</string>
-    <string name="legacy_provider_card_subtitle">Tela focada em cadastro de veiculos, disponibilidade e precos.</string>
-    <string name="legacy_renter_home_title">Home - Locatario</string>
-    <string name="legacy_renter_card_title">Buscar carros disponiveis</string>
+    <string name="legacy_provider_home_title">Home - Proprietário</string>
+    <string name="legacy_provider_card_title">Gerenciar frota e anúncios</string>
+    <string name="legacy_provider_card_subtitle">Tela focada em cadastro de veículos, disponibilidade e preços.</string>
+    <string name="legacy_renter_home_title">Home - Locatário</string>
+    <string name="legacy_renter_card_title">Buscar carros disponíveis</string>
     <string name="legacy_renter_card_subtitle">Tela focada em localizar, filtrar e reservar carros.</string>
 
     <!-- Provider vehicle register -->
@@ -265,9 +310,14 @@
     <string name="provider_vehicle_thumbnail_content_description">Imagem do veiculo</string>
     <string name="provider_vehicle_details_back">Voltar</string>
     <string name="provider_vehicle_details_title">Informacoes gerais do veiculo</string>
-    <string name="provider_vehicle_details_subtitle">Confira os dados do anuncio e use o botao abaixo para editar.</string>
+    <string name="provider_vehicle_details_subtitle">Confira os dados do anuncio e use o botão abaixo para editar.</string>
     <string name="provider_vehicle_details_edit_listing">Editar anuncio</string>
     <string name="provider_vehicle_details_line">%1$s: %2$s</string>
+    <string name="provider_vehicle_details_photos_title">Fotos cadastradas</string>
+    <string name="provider_vehicle_details_photos_empty">Nenhuma foto cadastrada para este veiculo.</string>
+    <string name="provider_vehicle_details_photo_content_description">Foto do veiculo</string>
+    <string name="provider_vehicle_details_photo_previous">Foto anterior</string>
+    <string name="provider_vehicle_details_photo_next">Proxima foto</string>
 
     <string name="vehicle_register_step_initial">Etapa 1 de 7</string>
     <string name="vehicle_register_step_of_total">Etapa %1$d de %2$d</string>
@@ -278,7 +328,7 @@
     <string name="vehicle_register_draft_saved_pending_sync">Rascunho salvo localmente. Sincronizacao online pendente.</string>
     <string name="vehicle_register_publish_success">Anuncio publicado com sucesso.</string>
     <string name="vehicle_register_publish_saved_pending_sync">Anuncio salvo localmente. Sincronizacao online pendente.</string>
-    <string name="vehicle_register_save_failed">Nao foi possivel salvar o carro agora. Tente novamente.</string>
+    <string name="vehicle_register_save_failed">Nao foi possível salvar o carro agora. Tente novamente.</string>
     <string name="vehicle_register_cancel_dialog_title">Sair do cadastro de carro?</string>
     <string name="vehicle_register_cancel_dialog_message_with_draft">Se voce sair agora, salvamos o rascunho para continuar depois.</string>
     <string name="vehicle_register_cancel_dialog_message_without_draft">Deseja sair desta tela?</string>
@@ -390,8 +440,8 @@
 
     <string-array name="vehicle_transmission_types_motorcycle">
         <item>Manual</item>
-        <item>Semi-automatica (DCT)</item>
-        <item>Automatica/CVT</item>
+        <item>Semi-automática (DCT)</item>
+        <item>Automática/CVT</item>
         <item>Sem cambio (eletrica)</item>
     </string-array>
 
@@ -554,6 +604,7 @@
     <string name="vehicle_checklist_location_defined">Local definido</string>
     <string name="vehicle_error_complete_checklist_before_publish">Conclua o checklist antes de publicar.</string>
     <string name="vehicle_step7_edit_any_step">Editar qualquer etapa</string>
+    <string name="vehicle_step7_edit_step_named">Editar etapa (%1$s)</string>
     <string name="vehicle_edit_step_1">Editar etapa 1</string>
     <string name="vehicle_edit_step_2">Editar etapa 2</string>
     <string name="vehicle_edit_step_3">Editar etapa 3</string>
@@ -569,6 +620,15 @@
     <string name="vehicle_summary_rules">Regras: Pet %1$s | Fumar %2$s | Viagem %3$s</string>
     <string name="vehicle_summary_rules_motorcycle">Regras: Viagem %1$s</string>
     <string name="vehicle_summary_location">Local: %1$s - %2$s</string>
+
+    <!-- Language settings -->
+    <string name="profile_action_language">Idioma do app</string>
+    <string name="profile_action_language_subtitle">Automatico, Portugues (Brasil) ou Ingles.</string>
+    <string name="language_settings_title">Idioma do app</string>
+    <string name="language_settings_subtitle">Selecione como os textos do aplicativo serao exibidos.</string>
+    <string name="language_option_system">Automático (Definido pelo sistema)</string>
+    <string name="language_option_portuguese_brazil">Português (Brasil)</string>
+    <string name="language_option_english">Inglês</string>
 
     <!-- Commons -->
     <string name="common_yes">Sim</string>
