@@ -213,8 +213,9 @@
             <LinearLayout
                 android:id="@+id/fullscreenLocationSearchContainer"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="64dp"
                 android:layout_marginTop="2dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:visibility="gone">
 
@@ -222,10 +223,10 @@
                     android:id="@+id/fullscreenLocationSearchLayout"
                     style="@style/AppTextInputDropdown"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:hint="@string/hint_search_address"
-                    app:boxBackgroundColor="?attr/colorSurfaceVariant">
+                    app:boxBackgroundColor="?attr/colorSurface">
 
                     <com.google.android.material.textfield.MaterialAutoCompleteTextView
                         android:id="@+id/fullscreenLocationSearchInput"
@@ -237,8 +238,8 @@
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/btnFullscreenUseCurrentLocation"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
                     android:layout_gravity="center_vertical"
                     android:layout_marginStart="8dp"
                     android:clickable="true"
@@ -294,7 +295,7 @@
     <View
         android:id="@+id/bottomNavScrim"
         android:layout_width="match_parent"
-        android:layout_height="220dp"
+        android:layout_height="156dp"
         android:layout_gravity="bottom"
         android:background="@drawable/bg_bottom_nav_scrim"
         android:importantForAccessibility="no" />

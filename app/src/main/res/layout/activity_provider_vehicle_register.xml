@@ -132,7 +132,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/vehicle_register_step_initial"
-            android:textColor="@color/md_theme_light_textMuted"
+            android:textColor="?attr/textMuted"
             android:textSize="14sp"
             android:textStyle="bold" />
 
@@ -144,7 +144,7 @@
             android:focusable="true"
             android:foreground="?attr/selectableItemBackgroundBorderless"
             android:text="@string/vehicle_register_cancel"
-            android:textColor="@color/md_theme_light_textSecondary"
+            android:textColor="?attr/textSecondary"
             android:textSize="13sp" />
     </LinearLayout>
 

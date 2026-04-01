@@ -41,10 +41,10 @@
             android:indeterminate="true"
             android:translationZ="8dp"
             android:visibility="gone"
-            app:indicatorColor="@android:color/white"
+            app:indicatorColor="?attr/colorOnPrimary"
             app:indicatorInset="0dp"
             app:indicatorSize="20dp"
-            app:trackColor="#4DFFFFFF"
+            app:trackColor="@color/progress_btn_next_track"
             app:trackThickness="2dp" />
     </FrameLayout>
 

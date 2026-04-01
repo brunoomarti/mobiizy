@@ -44,13 +44,12 @@
                 android:layout_width="0dp"
                 android:layout_height="48dp"
                 android:layout_weight="1"
-                android:backgroundTint="@android:color/transparent"
                 android:gravity="center"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:text="@string/vehicle_upload_photo_button"
-                android:textColor="?attr/colorPrimary"
-                app:strokeColor="?attr/colorPrimary"
+                android:textColor="?attr/textPrimary"
+                app:strokeColor="?attr/borderLight"
                 app:strokeWidth="1dp" />
 
             <com.google.android.material.button.MaterialButton
@@ -59,7 +58,6 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_marginStart="8dp"
-                android:backgroundTint="@android:color/transparent"
                 android:contentDescription="@string/vehicle_view_photo_button"
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
@@ -73,8 +71,8 @@
                 app:icon="@drawable/ic_visibility_24"
                 app:iconGravity="textTop"
                 app:iconPadding="0dp"
-                app:iconTint="?attr/colorPrimary"
-                app:strokeColor="?attr/colorPrimary"
+                app:iconTint="?attr/textPrimary"
+                app:strokeColor="?attr/borderLight"
                 app:strokeWidth="1dp" />
         </LinearLayout>
     </LinearLayout>

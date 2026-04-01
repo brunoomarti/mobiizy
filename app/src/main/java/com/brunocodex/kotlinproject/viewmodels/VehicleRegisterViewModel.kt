@@ -8,6 +8,7 @@ class VehicleRegisterViewModel : ViewModel() {
 
     data class DaySchedule(
         var enabled: Boolean = false,
+        var allDay: Boolean = false,
         var startTime: String = "",
         var endTime: String = ""
     )
@@ -317,9 +318,12 @@ class VehicleRegisterViewModel : ViewModel() {
         val scheduleJson = JSONObject()
         weeklySchedule.forEach { (day, schedule) ->
             scheduleJson.put(day, JSONObject().apply {
+                val startTime = if (schedule.allDay) "" else schedule.startTime
+                val endTime = if (schedule.allDay) "" else schedule.endTime
                 put("enabled", schedule.enabled)
-                put("startTime", schedule.startTime)
-                put("endTime", schedule.endTime)
+                put("allDay", schedule.allDay)
+                put("startTime", startTime)
+                put("endTime", endTime)
             })
         }
         json.put("weeklySchedule", scheduleJson)
@@ -406,8 +410,9 @@ class VehicleRegisterViewModel : ViewModel() {
         weeklySchedule.forEach { (day, schedule) ->
             val item = scheduleJson.optJSONObject(day) ?: return@forEach
             schedule.enabled = item.optBoolean("enabled", false)
-            schedule.startTime = item.optString("startTime", "")
-            schedule.endTime = item.optString("endTime", "")
+            schedule.allDay = item.optBoolean("allDay", false)
+            schedule.startTime = if (schedule.allDay) "" else item.optString("startTime", "")
+            schedule.endTime = if (schedule.allDay) "" else item.optString("endTime", "")
         }
     }
 

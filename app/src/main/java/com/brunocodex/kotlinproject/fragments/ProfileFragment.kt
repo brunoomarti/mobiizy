@@ -15,6 +15,8 @@ import com.brunocodex.kotlinproject.activities.LanguageSettingsActivity
 import com.brunocodex.kotlinproject.activities.SettingsActivity
 import com.brunocodex.kotlinproject.services.ProfilePhotoLocalStore
 import com.brunocodex.kotlinproject.services.ProfilePhotoSyncScheduler
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.progressindicator.CircularProgressIndicator
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,14 +27,31 @@ import java.util.Locale
 class ProfileFragment : Fragment(R.layout.fragment_profile) {
 
     private var photoLoadToken: Int = 0
+    private var logoutInProgress: Boolean = false
+    private lateinit var btnProfileLogout: MaterialButton
+    private lateinit var progressProfileLogout: CircularProgressIndicator
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         bindProfileHeader(view)
         bindQuickActions(view)
         ProfilePhotoSyncScheduler.enqueueIfPending(requireContext())
-        view.findViewById<View>(R.id.btnProfileLogout).setOnClickListener { clicked ->
-            (activity as? BaseHomeActivity)?.onLogoutClicked(clicked)
+        btnProfileLogout = view.findViewById(R.id.btnProfileLogout)
+        progressProfileLogout = view.findViewById(R.id.progressProfileLogout)
+        setLogoutLoading(loading = false)
+
+        btnProfileLogout.setOnClickListener { clicked ->
+            if (logoutInProgress) return@setOnClickListener
+            logoutInProgress = true
+            setLogoutLoading(loading = true)
+
+            val host = activity as? BaseHomeActivity
+            if (host == null) {
+                logoutInProgress = false
+                setLogoutLoading(loading = false)
+                return@setOnClickListener
+            }
+            host.onLogoutClicked(clicked)
         }
     }
 
@@ -166,5 +185,11 @@ class ProfileFragment : Fragment(R.layout.fragment_profile) {
             ?.trim()
             .orEmpty()
         return emailName.ifBlank { getString(R.string.dashboard_user_fallback_name) }
+    }
+
+    private fun setLogoutLoading(loading: Boolean) {
+        btnProfileLogout.isEnabled = !loading
+        btnProfileLogout.text = if (loading) "" else getString(R.string.profile_logout_button)
+        progressProfileLogout.visibility = if (loading) View.VISIBLE else View.GONE
     }
 }

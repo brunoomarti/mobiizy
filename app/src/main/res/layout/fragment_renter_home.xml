@@ -15,16 +15,18 @@
         <LinearLayout
             android:id="@+id/renterLocationSearchRow"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="64dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/renterLocationSearchLayout"
                 style="@style/AppTextInputDropdown"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
-                android:hint="@string/hint_search_address">
+                android:hint="@string/hint_search_address"
+                app:boxBackgroundColor="?attr/colorSurface">
 
                 <com.google.android.material.textfield.MaterialAutoCompleteTextView
                     android:id="@+id/renterLocationSearchInput"
@@ -37,8 +39,8 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnRenterUseCurrentLocation"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="8dp"
                 android:clickable="true"
@@ -46,7 +48,6 @@
                 android:focusable="true"
                 app:cardBackgroundColor="?attr/colorSurface"
                 app:cardCornerRadius="12dp"
-                app:cardElevation="1dp"
                 app:strokeColor="?attr/borderLight"
                 app:strokeWidth="1dp">
 
@@ -105,7 +106,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="14dp"
             android:orientation="vertical">
 
             <TextView
@@ -144,15 +145,42 @@
             android:textSize="13sp"
             android:visibility="gone" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvNearbyVehicles"
+        <FrameLayout
+            android:id="@+id/nearbyVehiclesContentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:clipToPadding="false"
-            android:nestedScrollingEnabled="false"
-            android:paddingBottom="12dp"
-            tools:listitem="@layout/item_provider_vehicle_card" />
+            android:clipToPadding="false">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvNearbyVehicles"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:paddingBottom="12dp"
+                tools:listitem="@layout/item_provider_vehicle_card" />
+
+            <LinearLayout
+                android:id="@+id/nearbyVehiclesSkeletonContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <include layout="@layout/item_provider_vehicle_card_skeleton" />
+
+                <include layout="@layout/item_provider_vehicle_card_skeleton" />
+
+                <include layout="@layout/item_provider_vehicle_card_skeleton" />
+            </LinearLayout>
+
+        </FrameLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/renter_home_list_bottom_spacer"
+            android:importantForAccessibility="no" />
 
     </LinearLayout>
 

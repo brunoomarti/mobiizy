@@ -115,7 +115,7 @@ abstract class BaseHomeActivity : AppCompatActivity() {
         dashboardHomeAvatarFallback = findViewById(R.id.tvDashboardHomeAvatarFallback)
         dashboardHomeAvatarSyncBadge = findViewById(R.id.dashboardHomeAvatarSyncBadge)
         dashboardHomeAvatarCard?.setOnClickListener {
-            startActivity(Intent(this, SettingsActivity::class.java))
+            selectNavItem(R.id.navProfileItem)
         }
         seedFirstNameFromFirebaseAuth()
         anchorBottomNavToScreenBottom()

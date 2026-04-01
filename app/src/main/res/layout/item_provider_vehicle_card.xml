@@ -21,8 +21,8 @@
         android:padding="14dp">
 
         <com.google.android.material.card.MaterialCardView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="88dp"
+            android:layout_height="88dp"
             app:cardCornerRadius="10dp"
             app:cardElevation="0dp"
             app:strokeWidth="0dp">
@@ -30,7 +30,7 @@
             <ImageView
                 android:id="@+id/ivVehicleThumb"
                 android:layout_width="88dp"
-                android:layout_height="72dp"
+                android:layout_height="88dp"
                 android:contentDescription="@string/provider_vehicle_thumbnail_content_description"
                 android:scaleType="centerCrop"
                 tools:src="@drawable/car_sedan" />

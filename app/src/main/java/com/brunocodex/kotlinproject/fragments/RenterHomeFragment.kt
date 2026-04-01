@@ -1,10 +1,14 @@
 package com.brunocodex.kotlinproject.fragments
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.Manifest
+import android.content.Intent
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
@@ -18,6 +22,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.LinearInterpolator
 import android.widget.BaseAdapter
 import android.widget.Filter
 import android.widget.Filterable
@@ -37,6 +42,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.brunocodex.kotlinproject.R
+import com.brunocodex.kotlinproject.activities.RenterVehicleDetailsActivity
 import com.brunocodex.kotlinproject.adapters.ProviderVehicleCardUi
 import com.brunocodex.kotlinproject.adapters.ProviderVehiclesAdapter
 import com.brunocodex.kotlinproject.services.NearbyVehiclesRepository
@@ -67,7 +73,11 @@ import org.maplibre.android.style.layers.PropertyFactory.iconAllowOverlap
 import org.maplibre.android.style.layers.PropertyFactory.iconAnchor
 import org.maplibre.android.style.layers.PropertyFactory.iconIgnorePlacement
 import org.maplibre.android.style.layers.PropertyFactory.iconImage
+import org.maplibre.android.style.layers.PropertyFactory.circleColor
+import org.maplibre.android.style.layers.PropertyFactory.circleOpacity
+import org.maplibre.android.style.layers.PropertyFactory.circleRadius
 import org.maplibre.android.style.layers.SymbolLayer
+import org.maplibre.android.style.layers.CircleLayer
 import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
@@ -75,9 +85,14 @@ import org.maplibre.geojson.Point
 import org.json.JSONObject
 import java.text.Normalizer
 import java.util.Locale
+import java.util.Random
 import java.util.function.Consumer
+import kotlin.math.asin
+import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
+import kotlin.math.sin
 import org.maplibre.android.style.expressions.Expression.get
 
 class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCallback {
@@ -108,6 +123,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
     private var isCurrentLocationRequestInFlight = false
     private var lastCurrentLocationRequestAtMs = 0L
     private var hasRequestedFreshLocationThisSession = false
+    private var exactUserLocation: LatLng? = null
     private var fusedLocationClient: FusedLocationProviderClient? = null
     private var currentLocationTokenSource: CancellationTokenSource? = null
     private var locationSearchDebounceJob: Job? = null
@@ -121,6 +137,8 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
     private lateinit var rvNearbyVehicles: RecyclerView
     private lateinit var tvNearbyVehiclesEmpty: TextView
     private lateinit var tvNearbySearchRadius: TextView
+    private lateinit var nearbyVehiclesSkeletonContainer: ViewGroup
+    private val nearbySkeletonAnimators = mutableListOf<ObjectAnimator>()
 
     private sealed class DropRow {
         data object Loading : DropRow()
@@ -222,6 +240,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         rvNearbyVehicles = view.findViewById(R.id.rvNearbyVehicles)
         tvNearbyVehiclesEmpty = view.findViewById(R.id.tvNearbyVehiclesEmpty)
         tvNearbySearchRadius = view.findViewById(R.id.tvNearbySearchRadius)
+        nearbyVehiclesSkeletonContainer = view.findViewById(R.id.nearbyVehiclesSkeletonContainer)
         homeLocationSearchInput = view.findViewById(R.id.renterLocationSearchInput)
         homeUseCurrentLocationButton = view.findViewById(R.id.btnRenterUseCurrentLocation)
 
@@ -236,15 +255,20 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         fullscreenLocationTitle = activity?.findViewById(R.id.tvFullscreenLocationTitle)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         nearbyVehiclesRepository = NearbyVehiclesRepository(requireContext().applicationContext)
-        nearbyVehiclesAdapter = ProviderVehiclesAdapter {
+        nearbyVehiclesAdapter = ProviderVehiclesAdapter(viewLifecycleOwner.lifecycleScope) {
             if (!isAdded) return@ProviderVehiclesAdapter
-            Toast.makeText(requireContext(), getString(R.string.feature_coming_soon), Toast.LENGTH_SHORT).show()
+            startActivity(
+                Intent(requireContext(), RenterVehicleDetailsActivity::class.java)
+                    .putExtra(RenterVehicleDetailsActivity.EXTRA_VEHICLE_ID, it.vehicleId)
+                    .putExtra(RenterVehicleDetailsActivity.EXTRA_PAYLOAD_JSON, it.payloadJson)
+            )
         }
         rvNearbyVehicles.layoutManager = LinearLayoutManager(requireContext())
         rvNearbyVehicles.adapter = nearbyVehiclesAdapter
         rvNearbyVehicles.isNestedScrollingEnabled = false
         rvNearbyVehicles.isVisible = false
         tvNearbyVehiclesEmpty.isVisible = false
+        nearbyVehiclesSkeletonContainer.isVisible = false
         tvNearbySearchRadius.text = getString(
             R.string.renter_home_nearby_search_radius,
             formatSearchRadiusKm(selectedSearchRadiusMeters)
@@ -362,6 +386,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         isCurrentLocationRequestInFlight = false
         lastCurrentLocationRequestAtMs = 0L
         hasRequestedFreshLocationThisSession = false
+        stopNearbyVehiclesSkeletonAnimation()
         if (::rvNearbyVehicles.isInitialized) {
             rvNearbyVehicles.adapter = null
         }
@@ -801,7 +826,9 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
     }
 
     private fun applyMapVisualStyle(map: MapLibreMap) {
-        map.setStyle(Style.Builder().fromJson(buildOsmRasterStyleJson())) {
+        map.setStyle(Style.Builder().fromJson(buildOsmRasterStyleJson())) { style ->
+            ensureUserExactLocationStyleLayer(style)
+            renderUserExactLocationOnMap()
             applyMapUiState()
             ensureLocationReady(shouldRequestPermission = true)
         }
@@ -878,6 +905,12 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
     private fun ensureLocationReady(shouldRequestPermission: Boolean) {
         val cachedLocation = readCachedLocation()
         if (isManualLocationOverride && cachedLocation != null) {
+            if (hasLocationPermission()) {
+                maybeCaptureExactUserLocationWithoutRecenter()
+                renderUserExactLocationOnMap()
+            } else {
+                updateExactUserLocationMarker(null)
+            }
             val manualCenter = LatLng(cachedLocation.latitude, cachedLocation.longitude)
             mapLibreMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(manualCenter, USER_ZOOM))
             loadNearbyVehiclesForCurrentHomeEntry(manualCenter)
@@ -898,6 +931,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
             return
         }
 
+        updateExactUserLocationMarker(null)
         val fallbackCenter = cachedLocation?.let { LatLng(it.latitude, it.longitude) } ?: DEFAULT_LOCATION
         val fallbackZoom = if (cachedLocation != null) USER_ZOOM else DEFAULT_ZOOM
         mapLibreMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(fallbackCenter, fallbackZoom))
@@ -927,6 +961,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         var candidateAddressLabel: String? = null
 
         if (!hasLocationPermission()) {
+            updateExactUserLocationMarker(null)
             val fallbackCenter = resolveFallbackSearchCenter()
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(fallbackCenter, DEFAULT_ZOOM))
             loadNearbyVehiclesForCurrentHomeEntry(fallbackCenter)
@@ -970,6 +1005,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         }
 
         if (lastKnown != null) {
+            updateExactUserLocationMarker(LatLng(lastKnown.latitude, lastKnown.longitude))
             val shouldUseLastKnown = forceFreshRequest ||
                 !isCachedFresh ||
                 (cacheDistanceFromLastKnown != null && cacheDistanceFromLastKnown > LOCATION_CACHE_RADIUS_METERS)
@@ -1057,6 +1093,93 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
             .maxByOrNull { it.time }
     }
 
+    private fun maybeCaptureExactUserLocationWithoutRecenter() {
+        if (exactUserLocation != null) return
+        val locationManager = context?.getSystemService(LocationManager::class.java) ?: return
+        val lastKnown = findBestLastKnownLocation(locationManager) ?: return
+        updateExactUserLocationMarker(LatLng(lastKnown.latitude, lastKnown.longitude))
+    }
+
+    private fun updateExactUserLocationMarker(location: LatLng?) {
+        exactUserLocation = location
+        renderUserExactLocationOnMap()
+    }
+
+    private fun renderUserExactLocationOnMap() {
+        val map = mapLibreMap ?: return
+        val style = map.style ?: return
+        ensureUserExactLocationStyleLayer(style)
+        val source = style.getSourceAs<GeoJsonSource>(USER_EXACT_LOCATION_SOURCE_ID) ?: return
+        val exactLocation = exactUserLocation
+        if (exactLocation == null) {
+            source.setGeoJson(FeatureCollection.fromFeatures(emptyList()))
+            return
+        }
+
+        val feature = Feature.fromGeometry(
+            Point.fromLngLat(exactLocation.longitude, exactLocation.latitude)
+        )
+        source.setGeoJson(FeatureCollection.fromFeature(feature))
+        map.triggerRepaint()
+    }
+
+    private fun ensureUserExactLocationStyleLayer(style: Style) {
+        var source = style.getSourceAs<GeoJsonSource>(USER_EXACT_LOCATION_SOURCE_ID)
+        if (source == null) {
+            source = GeoJsonSource(USER_EXACT_LOCATION_SOURCE_ID, FeatureCollection.fromFeatures(emptyList()))
+            style.addSource(source)
+        }
+
+        val context = context ?: return
+        val markerColor = MaterialColors.getColor(
+            context,
+            com.google.android.material.R.attr.colorSecondary,
+            ContextCompat.getColor(context, android.R.color.holo_orange_light)
+        )
+        val haloColor = blendColorWithWhite(
+            color = markerColor,
+            whiteBlendFactor = USER_EXACT_LOCATION_HALO_LIGHT_BLEND_FACTOR
+        )
+
+        if (style.getLayer(USER_EXACT_LOCATION_HALO_LAYER_ID) == null) {
+            style.addLayer(
+                CircleLayer(USER_EXACT_LOCATION_HALO_LAYER_ID, USER_EXACT_LOCATION_SOURCE_ID).withProperties(
+                    circleColor(colorToHexRgb(haloColor)),
+                    circleOpacity(USER_EXACT_LOCATION_HALO_OPACITY),
+                    circleRadius(USER_EXACT_LOCATION_HALO_RADIUS_PX)
+                )
+            )
+        }
+
+        if (style.getLayer(USER_EXACT_LOCATION_LAYER_ID) == null) {
+            style.addLayer(
+                CircleLayer(USER_EXACT_LOCATION_LAYER_ID, USER_EXACT_LOCATION_SOURCE_ID).withProperties(
+                    circleColor(colorToHexRgb(markerColor)),
+                    circleRadius(USER_EXACT_LOCATION_RADIUS_PX)
+                )
+            )
+        }
+    }
+
+    private fun colorToHexRgb(color: Int): String {
+        return String.format(
+            Locale.US,
+            "#%02X%02X%02X",
+            Color.red(color),
+            Color.green(color),
+            Color.blue(color)
+        )
+    }
+
+    private fun blendColorWithWhite(color: Int, whiteBlendFactor: Float): Int {
+        val blend = whiteBlendFactor.coerceIn(0f, 1f)
+        val inverse = 1f - blend
+        val red = (Color.red(color) * inverse + 255f * blend).roundToInt().coerceIn(0, 255)
+        val green = (Color.green(color) * inverse + 255f * blend).roundToInt().coerceIn(0, 255)
+        val blue = (Color.blue(color) * inverse + 255f * blend).roundToInt().coerceIn(0, 255)
+        return Color.rgb(red, green, blue)
+    }
+
     private fun requestCurrentLocation(locationManager: LocationManager?, requestTimestampMs: Long) {
         val now = requestTimestampMs
         if (isCurrentLocationRequestInFlight) return
@@ -1131,6 +1254,7 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         if (isManualLocationOverride) return
 
         val freshCenter = LatLng(location.latitude, location.longitude)
+        updateExactUserLocationMarker(freshCenter)
 
         saveCachedLocation(
             location.latitude,
@@ -1328,8 +1452,14 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
                     effectiveRadiusMeters = snapshot.effectiveRadiusMeters,
                     usedFallbackRadius = snapshot.usedFallbackRadius
                 )
+            } else {
+                showNearbyVehiclesLoadingState()
             }
             return
+        }
+
+        if (snapshot.vehicles.isEmpty()) {
+            showNearbyVehiclesLoadingState()
         }
 
         synchronized(NEARBY_SESSION_LOCK) {
@@ -1406,6 +1536,17 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
                     isLoadingNearbyVehiclesInSession = false
                 }
                 Log.w(TAG, "Failed to load nearby vehicles for map.", throwable)
+                if (!isAdded || view == null) return@launch
+                val hasCachedVehicles = synchronized(NEARBY_SESSION_LOCK) {
+                    cachedNearbyVehiclesInSession.isNotEmpty()
+                }
+                if (!hasCachedVehicles) {
+                    renderNearbyVehicleList(
+                        vehicles = emptyList(),
+                        effectiveRadiusMeters = selectedSearchRadiusMeters,
+                        usedFallbackRadius = false
+                    )
+                }
             }
         }
     }
@@ -1431,8 +1572,66 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         nearbyVehiclesAdapter.submitList(cards)
 
         val hasCards = cards.isNotEmpty()
+        stopNearbyVehiclesSkeletonAnimation()
+        nearbyVehiclesSkeletonContainer.isVisible = false
         rvNearbyVehicles.isVisible = hasCards
         tvNearbyVehiclesEmpty.isVisible = !hasCards
+    }
+
+    private fun showNearbyVehiclesLoadingState() {
+        if (!::rvNearbyVehicles.isInitialized) return
+        if (!::tvNearbyVehiclesEmpty.isInitialized) return
+        if (!::nearbyVehiclesSkeletonContainer.isInitialized) return
+
+        rvNearbyVehicles.isVisible = false
+        tvNearbyVehiclesEmpty.isVisible = false
+        nearbyVehiclesSkeletonContainer.isVisible = true
+        startNearbyVehiclesSkeletonAnimation()
+    }
+
+    private fun startNearbyVehiclesSkeletonAnimation() {
+        if (nearbySkeletonAnimators.isNotEmpty()) return
+
+        val blocks = mutableListOf<View>()
+        collectSkeletonBlocks(nearbyVehiclesSkeletonContainer, blocks)
+        blocks.forEachIndexed { index, block ->
+            val animator = ObjectAnimator.ofFloat(block, View.ALPHA, 0.45f, 1f).apply {
+                duration = 850L
+                startDelay = (index % 5) * 90L
+                repeatMode = ValueAnimator.REVERSE
+                repeatCount = ValueAnimator.INFINITE
+                interpolator = LinearInterpolator()
+                start()
+            }
+            nearbySkeletonAnimators += animator
+        }
+    }
+
+    private fun stopNearbyVehiclesSkeletonAnimation() {
+        if (nearbySkeletonAnimators.isEmpty()) return
+        nearbySkeletonAnimators.forEach { it.cancel() }
+        nearbySkeletonAnimators.clear()
+        resetSkeletonAlpha(nearbyVehiclesSkeletonContainer)
+    }
+
+    private fun collectSkeletonBlocks(view: View, out: MutableList<View>) {
+        if (view.tag?.toString() == "skeleton_block") {
+            out += view
+        }
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) {
+                collectSkeletonBlocks(view.getChildAt(index), out)
+            }
+        }
+    }
+
+    private fun resetSkeletonAlpha(view: View) {
+        view.alpha = 1f
+        if (view is ViewGroup) {
+            for (index in 0 until view.childCount) {
+                resetSkeletonAlpha(view.getChildAt(index))
+            }
+        }
     }
 
     private fun NearbyVehiclesRepository.NearbyVehicle.toProviderCardUi(): ProviderVehicleCardUi {
@@ -1542,11 +1741,17 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
             return
         }
 
-        val features = vehicles.map { vehicle ->
+        val obfuscatedPointsByVehicleId = vehicles.associate { vehicle ->
+            vehicle.vehicleId to buildObfuscatedVehicleMarkerLocation(vehicle)
+        }
+
+        val features = vehicles.mapNotNull { vehicle ->
+            val obfuscatedPoint = obfuscatedPointsByVehicleId[vehicle.vehicleId]
+                ?: return@mapNotNull null
             Feature.fromGeometry(
                 Point.fromLngLat(
-                    vehicle.pickupLongitude,
-                    vehicle.pickupLatitude
+                    obfuscatedPoint.longitude,
+                    obfuscatedPoint.latitude
                 )
             ).apply {
                 addStringProperty(
@@ -1558,13 +1763,18 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
 
         source.setGeoJson(FeatureCollection.fromFeatures(features))
         map.triggerRepaint()
-        frameCollapsedPreviewToNearbyVehicles(searchCenter, vehicles)
+        frameCollapsedPreviewToNearbyVehicles(
+            searchCenter = searchCenter,
+            vehicles = vehicles,
+            obfuscatedPointsByVehicleId = obfuscatedPointsByVehicleId
+        )
         Log.d(TAG, "Rendered ${vehicles.size} nearby vehicle markers.")
     }
 
     private fun frameCollapsedPreviewToNearbyVehicles(
         searchCenter: LatLng,
-        vehicles: List<NearbyVehiclesRepository.NearbyVehicle>
+        vehicles: List<NearbyVehiclesRepository.NearbyVehicle>,
+        obfuscatedPointsByVehicleId: Map<String, LatLng>
     ) {
         if (isMapExpanded || vehicles.isEmpty()) return
 
@@ -1573,7 +1783,10 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         val previewPoints = vehicles
             .asSequence()
             .take(MAX_PREVIEW_MARKERS_FOR_CAMERA_FRAME)
-            .map { LatLng(it.pickupLatitude, it.pickupLongitude) }
+            .map { vehicle ->
+                obfuscatedPointsByVehicleId[vehicle.vehicleId]
+                    ?: LatLng(vehicle.pickupLatitude, vehicle.pickupLongitude)
+            }
             .toList()
         if (previewPoints.isEmpty()) return
 
@@ -1594,6 +1807,75 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
                 Log.w(TAG, "Failed to frame collapsed map preview to nearby vehicles.", throwable)
             }
         }
+    }
+
+    private fun buildObfuscatedVehicleMarkerLocation(
+        vehicle: NearbyVehiclesRepository.NearbyVehicle
+    ): LatLng {
+        val exactLocation = LatLng(vehicle.pickupLatitude, vehicle.pickupLongitude)
+        val random = Random(
+            calculateVehicleObfuscationSeed(
+                exactLocation = exactLocation,
+                vehicleId = vehicle.vehicleId
+            )
+        )
+        val offsetMeters = HOME_VEHICLE_OBFUSCATION_MIN_OFFSET_METERS +
+            (random.nextDouble() * (
+                HOME_VEHICLE_OBFUSCATION_MAX_OFFSET_METERS -
+                    HOME_VEHICLE_OBFUSCATION_MIN_OFFSET_METERS
+                ))
+        val bearingDegrees = random.nextDouble() * 360.0
+        return destinationPoint(
+            start = exactLocation,
+            distanceMeters = offsetMeters,
+            bearingDegrees = bearingDegrees
+        )
+    }
+
+    private fun calculateVehicleObfuscationSeed(exactLocation: LatLng, vehicleId: String): Long {
+        val seedSource = buildString {
+            append("renter_home_obfuscation")
+            append('|')
+            append(vehicleId)
+            append('|')
+            append(String.format(Locale.US, "%.6f", exactLocation.latitude))
+            append('|')
+            append(String.format(Locale.US, "%.6f", exactLocation.longitude))
+        }
+        return seedSource.fold(1125899906842597L) { acc, char ->
+            (acc * 31L) + char.code
+        }
+    }
+
+    private fun destinationPoint(
+        start: LatLng,
+        distanceMeters: Double,
+        bearingDegrees: Double
+    ): LatLng {
+        val angularDistance = distanceMeters / GEO_EARTH_RADIUS_METERS
+        val bearingRad = Math.toRadians(bearingDegrees)
+        val startLatRad = Math.toRadians(start.latitude)
+        val startLngRad = Math.toRadians(start.longitude)
+
+        val targetLatRad = asin(
+            sin(startLatRad) * cos(angularDistance) +
+                cos(startLatRad) * sin(angularDistance) * cos(bearingRad)
+        )
+        val targetLngRad = startLngRad + atan2(
+            sin(bearingRad) * sin(angularDistance) * cos(startLatRad),
+            cos(angularDistance) - sin(startLatRad) * sin(targetLatRad)
+        )
+
+        val targetLatitude = Math.toDegrees(targetLatRad)
+        val targetLongitude = normalizeLongitude(Math.toDegrees(targetLngRad))
+        return LatLng(targetLatitude, targetLongitude)
+    }
+
+    private fun normalizeLongitude(longitude: Double): Double {
+        var normalized = longitude
+        while (normalized > 180.0) normalized -= 360.0
+        while (normalized < -180.0) normalized += 360.0
+        return normalized
     }
 
     private fun clearNearbyVehicleMarkers() {
@@ -1631,15 +1913,23 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         }
 
         if (style.getLayer(NEARBY_VEHICLES_LAYER_ID) == null) {
-            style.addLayer(
-                SymbolLayer(NEARBY_VEHICLES_LAYER_ID, NEARBY_VEHICLES_SOURCE_ID)
-                    .withProperties(
-                        iconImage(get(NEARBY_VEHICLE_ICON_PROPERTY)),
-                        iconAnchor("bottom"),
-                        iconAllowOverlap(true),
-                        iconIgnorePlacement(true)
-                    )
-            )
+            val nearbyVehiclesLayer = SymbolLayer(NEARBY_VEHICLES_LAYER_ID, NEARBY_VEHICLES_SOURCE_ID)
+                .withProperties(
+                    iconImage(get(NEARBY_VEHICLE_ICON_PROPERTY)),
+                    iconAnchor("bottom"),
+                    iconAllowOverlap(true),
+                    iconIgnorePlacement(true)
+                )
+            val userLocationTopLayerId = when {
+                style.getLayer(USER_EXACT_LOCATION_HALO_LAYER_ID) != null -> USER_EXACT_LOCATION_HALO_LAYER_ID
+                style.getLayer(USER_EXACT_LOCATION_LAYER_ID) != null -> USER_EXACT_LOCATION_LAYER_ID
+                else -> null
+            }
+            if (userLocationTopLayerId != null) {
+                style.addLayerBelow(nearbyVehiclesLayer, userLocationTopLayerId)
+            } else {
+                style.addLayer(nearbyVehiclesLayer)
+            }
         }
     }
 
@@ -1778,6 +2068,10 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         private const val NEARBY_SESSION_CACHE_TTL_MS = 10L * 60L * 1000L
         private const val NEARBY_EMPTY_CACHE_TTL_MS = 20_000L
         private const val NEARBY_SESSION_CACHE_CENTER_DELTA_METERS = 1200f
+        private const val HOME_VEHICLE_OBFUSCATION_RADIUS_METERS = 500.0
+        private const val HOME_VEHICLE_OBFUSCATION_MIN_OFFSET_METERS = 180.0
+        private const val HOME_VEHICLE_OBFUSCATION_MAX_OFFSET_METERS = HOME_VEHICLE_OBFUSCATION_RADIUS_METERS
+        private const val GEO_EARTH_RADIUS_METERS = 6371000.0
         private const val PREVIEW_CAMERA_PADDING_DP = 22f
         private const val MAX_PREVIEW_MARKERS_FOR_CAMERA_FRAME = 8
         private const val BALLOON_BITMAP_WIDTH_DP = 30f
@@ -1792,6 +2086,13 @@ class RenterHomeFragment : Fragment(R.layout.fragment_renter_home), OnMapReadyCa
         private const val NEARBY_VEHICLES_SOURCE_ID = "nearby-vehicles-source"
         private const val NEARBY_VEHICLES_LAYER_ID = "nearby-vehicles-layer"
         private const val NEARBY_VEHICLE_ICON_PROPERTY = "marker_icon_id"
+        private const val USER_EXACT_LOCATION_SOURCE_ID = "user-exact-location-source"
+        private const val USER_EXACT_LOCATION_HALO_LAYER_ID = "user-exact-location-halo-layer"
+        private const val USER_EXACT_LOCATION_LAYER_ID = "user-exact-location-layer"
+        private const val USER_EXACT_LOCATION_HALO_RADIUS_PX = 15f
+        private const val USER_EXACT_LOCATION_HALO_OPACITY = 0.45f
+        private const val USER_EXACT_LOCATION_RADIUS_PX = 6f
+        private const val USER_EXACT_LOCATION_HALO_LIGHT_BLEND_FACTOR = 0.62f
         private const val NEARBY_ICON_IMAGE_CAR_ID = "nearby-icon-car"
         private const val NEARBY_ICON_IMAGE_MOTORCYCLE_ID = "nearby-icon-motorcycle"
         private const val VEHICLE_TYPE_CAR = "car"

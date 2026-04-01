@@ -175,10 +175,8 @@
     <string name="nav_trips">Viagens</string>
     <string name="nav_profile">Perfil</string>
     <string name="nav_provider_vehicles">Veiculos</string>
-    <string name="nav_provider_rentals">Alugueis</string>
     <string name="nav_provider_earnings">Ganhos</string>
     <string name="nav_renter_discover">Descobrir</string>
-    <string name="nav_renter_rentals">Alugueis</string>
     <string name="action_logout">Sair</string>
     <string name="feature_coming_soon">Funcionalidade em breve.</string>
 
@@ -247,11 +245,9 @@
     <string name="personal_data_password_error_generic">Nao foi possível atualizar a senha agora.</string>
     <string name="provider_home_fragment_title">Seu painel de proprietario</string>
     <string name="provider_home_fragment_subtitle">O que deseja fazer hoje?</string>
-    <string name="provider_home_go_to_vehicles">Ver todos os veículos cadastrados</string>
+    <string name="provider_home_go_to_vehicles">Ver meus veículos</string>
     <string name="provider_vehicles_fragment_title">Gestao de veículos</string>
     <string name="provider_vehicles_fragment_subtitle">Cadastre carros, ajuste disponibilidade e revise informacoes de cada anuncio.</string>
-    <string name="provider_rentals_fragment_title">Fluxo de alugueis</string>
-    <string name="provider_rentals_fragment_subtitle">Gerencie solicitações, check-in, check-out e histórico de corridas.</string>
     <string name="provider_earnings_fragment_title">Painel financeiro</string>
     <string name="provider_earnings_fragment_subtitle">Visualize saldo disponível, repasses pendentes e histórico de recebimentos.</string>
     <string name="renter_home_fragment_title">Bem-vindo(a) de volta!</string>
@@ -263,8 +259,8 @@
     <string name="renter_home_location_default_title">Defina uma localizacao</string>
     <string name="renter_home_use_current_location">Usar localizacao atual</string>
     <string name="renter_home_location_pick_failed">Nao foi possivel usar o endereco selecionado.</string>
-    <string name="renter_home_nearby_section_title">Veículos disponíveis nas proximidades</string>
-    <string name="renter_home_nearby_section_subtitle">Lista atualizada com base na sua localização.</string>
+    <string name="renter_home_nearby_section_title">Veículos por perto</string>
+    <string name="renter_home_nearby_section_subtitle">Com base na sua localização.</string>
     <string name="renter_home_nearby_search_radius_placeholder">Raio de busca usado: --</string>
     <string name="renter_home_nearby_search_radius">Raio de busca usado: %1$s</string>
     <string name="renter_home_nearby_search_radius_expanded">Raio de busca usado: %1$s (busca expandida automática)</string>
@@ -278,10 +274,71 @@
     <string name="renter_home_nearby_distance_km">A %1$.1f km de voce</string>
     <string name="renter_home_nearby_daily_price">Diária: %1$s</string>
     <string name="renter_home_nearby_unknown_vehicle">Veiculo proximo</string>
+    <string name="renter_vehicle_details_unknown_vehicle">Veiculo</string>
+    <string name="renter_vehicle_details_photos_empty">Nenhuma foto disponível para este veículo.</string>
+    <string name="renter_vehicle_details_daily_price_label">Diária</string>
+    <string name="renter_vehicle_details_daily_price_value">R$ %1$s</string>
+    <string name="renter_vehicle_details_daily_price_not_informed">Preço não informado</string>
+    <string name="renter_vehicle_details_availability_format">%1$s • %2$s</string>
+    <string name="renter_vehicle_details_availability_mon_to_fri">Disponível de seg à sex</string>
+    <string name="renter_vehicle_details_availability_selected_days">Disponível em dias específicos</string>
+    <string name="renter_vehicle_details_availability_full_week">Disponível a semana toda</string>
+    <string name="renter_vehicle_details_availability_all_day">o dia todo</string>
+    <string name="renter_vehicle_details_availability_time_restricted">com restrição de horário</string>
+    <string name="renter_vehicle_details_availability_mixed_hours">horários variados</string>
+    <string name="renter_vehicle_details_bottom_title">Pronto para alugar?</string>
+    <string name="renter_vehicle_details_bottom_subtitle">Escolha as datas para ver o orçamento.</string>
+    <string name="renter_vehicle_details_bottom_subtitle_single_date">Retirada em %1$s. Toque na devolução.</string>
+    <string name="renter_vehicle_details_bottom_subtitle_range">%1$s até %2$s</string>
+    <string name="renter_vehicle_details_bottom_subtitle_with_budget">%1$d diária(s) • Estimativa: %2$s</string>
+    <string name="renter_vehicle_details_approx_location_title">Localizacao aproximada</string>
+    <string name="renter_vehicle_details_approx_location_subtitle">A retirada exata fica protegida. O veiculo esta em uma area aproximada de ate 500 m.</string>
+    <string name="renter_vehicle_details_approx_location_badge">Raio aproximado de 500 m</string>
+    <string name="renter_vehicle_details_approx_location_unavailable">Nao foi possivel carregar a localizacao aproximada deste veiculo.</string>
+    <string name="renter_vehicle_details_see_availability">Ver disponibilidade</string>
+    <string name="renter_vehicle_details_rent_now">Alugar agora</string>
+    <string name="renter_vehicle_details_calendar_title">Disponibilidade</string>
+    <string name="renter_vehicle_details_calendar_subtitle">Selecione uma data de retirada ou um período completo.</string>
+    <string name="renter_vehicle_details_calendar_selected_none">Escolha uma data de retirada para começar.</string>
+    <string name="renter_vehicle_details_calendar_selected_start">Retirada: %1$s (agora selecione a devolução).</string>
+    <string name="renter_vehicle_details_calendar_selected_same_day">Retirada e devolução no mesmo dia: %1$s.</string>
+    <string name="renter_vehicle_details_calendar_selected_range">Período selecionado: %1$s até %2$s.</string>
+    <string name="renter_vehicle_details_view_quote">Ver orçamento</string>
+    <string name="renter_vehicle_details_show_more_info">Ver mais detalhes</string>
+    <string name="renter_vehicle_details_show_less_info">Ver menos detalhes</string>
+    <string name="renter_vehicle_details_quote_single_day">Retirada em %1$s.</string>
+    <string name="renter_vehicle_details_quote_range">Período: %1$s até %2$s (%3$d diária(s)).</string>
+    <string name="renter_vehicle_details_quote_with_total">Período: %1$s até %2$s (%3$d diária(s)) • Estimativa: %4$s</string>
+    <string name="renter_vehicle_details_safety_title">Segurança</string>
+    <string name="renter_vehicle_details_safety_insurance_yes">Com seguro</string>
+    <string name="renter_vehicle_details_safety_insurance_no">Sem seguro</string>
+    <string name="renter_vehicle_details_safety_insurance_not_informed">Seguro não informado</string>
+    <string name="renter_vehicle_details_tag_seats_format">%1$s lugares</string>
+    <string name="renter_vehicle_details_delivery_type_none">Sem entrega</string>
+    <string name="renter_vehicle_details_delivery_radius_tag">Raio: %1$s km</string>
+    <string name="renter_vehicle_details_delivery_radius_not_informed">Raio não informado</string>
+    <string name="renter_vehicle_details_delivery_fee_tag">Taxa: %1$s</string>
+    <string name="renter_vehicle_details_delivery_fee_not_informed">Taxa não informada</string>
+    <string name="renter_vehicle_details_tag_prefix_color">Cor</string>
+    <string name="renter_vehicle_details_condition_title">Condição</string>
+    <string name="renter_vehicle_details_condition_mileage_tag">Km rod.: %1$s</string>
+    <string name="renter_vehicle_details_trip_title">Viagem</string>
+    <string name="renter_vehicle_details_trip_allowed_yes">Permite viagem</string>
+    <string name="renter_vehicle_details_trip_allowed_no">Não permite viagem</string>
+    <string name="renter_vehicle_details_trip_allowed_not_informed">Viagem não informada</string>
+    <string name="renter_vehicle_details_documents_title">Documentos</string>
+    <string name="renter_vehicle_details_documents_general_yes">Documentação em dia</string>
+    <string name="renter_vehicle_details_documents_general_no">Documentação pendente</string>
+    <string name="renter_vehicle_details_documents_general_not_informed">Documentação não informada</string>
+    <string name="renter_vehicle_details_documents_ipva_yes">IPVA/licenciamento ok</string>
+    <string name="renter_vehicle_details_documents_ipva_no">IPVA/licenciamento pendente</string>
+    <string name="renter_vehicle_details_documents_ipva_not_informed">IPVA/licenciamento não informado</string>
     <string name="renter_discover_fragment_title">Descobrir veículos</string>
     <string name="renter_discover_fragment_subtitle">Busque por cidade, faixa de preço, categoria e período do aluguel.</string>
-    <string name="renter_rentals_fragment_title">Seus alugueis</string>
-    <string name="renter_rentals_fragment_subtitle">Acompanhe reservas ativas, histórico de contratos e status de devolução.</string>
+
+    <string name="renter_discover_search_hint">Pesquisar por marca, modelo ou ano</string>
+    <string name="renter_discover_search_empty">Nenhum veiculo encontrado para esta busca.</string>
+    <string name="renter_discover_search_idle_message">Digite palavras-chave para buscar veículos.\nExemplo: carro flex vermelho.</string>
 
     <!-- Legacy home layouts -->
     <string name="legacy_provider_home_title">Home - Proprietário</string>
@@ -374,7 +431,6 @@
         <item>Viagem</item>
         <item>Luxo</item>
         <item>Compacto</item>
-        <item>SUV</item>
         <item>Executivo</item>
         <item>Urbano</item>
         <item>Aventura</item>
@@ -474,6 +530,11 @@
     <string name="vehicle_view_photo_button">Ver foto</string>
     <string name="vehicle_photo_source_dialog_title">Escolha como enviar a foto</string>
     <string name="vehicle_photo_source_camera">Tirar foto</string>
+    <string name="vehicle_photo_camera_permission_title">Permitir uso da camera</string>
+    <string name="vehicle_photo_camera_permission_message">Para tirar foto do veiculo, permita o acesso a camera.</string>
+    <string name="vehicle_photo_camera_permission_confirm">Permitir</string>
+    <string name="vehicle_photo_camera_permission_denied">Sem permissao de camera, nao foi possivel tirar a foto.</string>
+    <string name="vehicle_photo_camera_unavailable">Nao foi possivel abrir a camera neste aparelho.</string>
     <string name="vehicle_photo_source_gallery">Escolher da galeria</string>
     <string name="vehicle_photo_source_cancel">Cancelar</string>
     <string name="vehicle_close_photo_preview">Fechar visualizacao da foto</string>
@@ -552,6 +613,10 @@
     <string name="vehicle_field_allow_pet">Permite pet?</string>
     <string name="vehicle_field_allow_smoking">Permite fumar?</string>
     <string name="vehicle_field_allow_trip">Permite viagem?</string>
+    <string name="vehicle_field_allowed_trip_types">Tipos de viagem permitidos</string>
+    <string name="vehicle_field_pickup_on_location">Retirada no local</string>
+    <string name="vehicle_field_delivery_by_fee">Entrega por taxa</string>
+    <string name="vehicle_field_public_photos">Fotos públicas</string>
     <string name="vehicle_error_select_trip_type">Selecione ao menos um tipo de viagem.</string>
     <string name="vehicle_field_min_driver_age">Idade minima</string>
     <string name="vehicle_field_min_cnh_years">Tempo minimo de CNH</string>
@@ -582,9 +647,10 @@
     <string name="vehicle_field_delivery_radius">Raio da entrega (km)</string>
     <string name="vehicle_field_delivery_fee">Valor da entrega (R$)</string>
     <string name="vehicle_field_available_schedule">Horarios disponiveis por dia</string>
-    <string name="vehicle_field_available_schedule_hint">Ative os dias que deseja disponibilizar e preencha inicio/fim.</string>
-    <string name="vehicle_error_fill_one_schedule">Configure ao menos um dia com horario completo.</string>
+    <string name="vehicle_field_available_schedule_hint">Ative os dias que deseja disponibilizar e preencha inicio/fim ou marque dia todo.</string>
+    <string name="vehicle_error_fill_one_schedule">Configure ao menos um dia com horario completo ou como dia todo.</string>
     <string name="vehicle_schedule_available">Disponivel</string>
+    <string name="vehicle_schedule_all_day">Disponivel o dia todo</string>
     <string name="vehicle_schedule_start">Inicio</string>
     <string name="vehicle_schedule_end">Fim</string>
     <string name="vehicle_day_mon">Segunda</string>

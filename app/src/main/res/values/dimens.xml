@@ -4,5 +4,6 @@
     <dimen name="app_padding_vertical">16dp</dimen>
 
     <!-- se quiser específico para telas de formulário -->
+    <dimen name="renter_home_list_bottom_spacer">112dp</dimen>
     <dimen name="form_padding">30dp</dimen>
 </resources>

@@ -1,16 +1,29 @@
 package com.brunocodex.kotlinproject.adapters
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Log
+import android.util.LruCache
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.brunocodex.kotlinproject.R
-import java.util.Locale
+import com.brunocodex.kotlinproject.services.SupabaseStorageService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.json.JSONObject
+import java.net.URL
+import kotlin.math.roundToInt
 
 data class ProviderVehicleCardUi(
     val vehicleId: String,
@@ -27,25 +40,42 @@ data class ProviderVehicleCardUi(
     val vehicleType: String? = null,
     val bodyType: String? = null,
     val localDraftId: String? = null,
-    val sideTagLabel: String? = null
+    val sideTagLabel: String? = null,
+    val thumbnailUrl: String? = null
 )
 
 class ProviderVehiclesAdapter(
+    private val lifecycleScope: LifecycleCoroutineScope,
     private val onCardClick: (ProviderVehicleCardUi) -> Unit
-) : ListAdapter<ProviderVehicleCardUi, ProviderVehiclesAdapter.ProviderVehicleViewHolder>(DiffCallback) {
+    ) : ListAdapter<ProviderVehicleCardUi, ProviderVehiclesAdapter.ProviderVehicleViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProviderVehicleViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_provider_vehicle_card, parent, false)
-        return ProviderVehicleViewHolder(view, onCardClick)
+        return ProviderVehicleViewHolder(
+            itemView = view,
+            lifecycleScope = lifecycleScope,
+            onCardClick = onCardClick
+        )
     }
 
     override fun onBindViewHolder(holder: ProviderVehicleViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
+    override fun onViewRecycled(holder: ProviderVehicleViewHolder) {
+        holder.clearImageLoad()
+        super.onViewRecycled(holder)
+    }
+
+    override fun onViewDetachedFromWindow(holder: ProviderVehicleViewHolder) {
+        holder.clearImageLoad()
+        super.onViewDetachedFromWindow(holder)
+    }
+
     class ProviderVehicleViewHolder(
         itemView: View,
+        private val lifecycleScope: LifecycleCoroutineScope,
         private val onCardClick: (ProviderVehicleCardUi) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
 
@@ -56,6 +86,8 @@ class ProviderVehiclesAdapter(
         private val tvVehicleSideTag: TextView = itemView.findViewById(R.id.tvVehicleSideTag)
         private val tvSyncPending: TextView = itemView.findViewById(R.id.tvSyncPending)
         private val ivVehicleThumb: ImageView = itemView.findViewById(R.id.ivVehicleThumb)
+        private var imageLoadJob: Job? = null
+        private var imageLoadToken = 0L
 
         fun bind(item: ProviderVehicleCardUi) {
             tvVehicleTitle.text = item.title
@@ -66,63 +98,184 @@ class ProviderVehiclesAdapter(
             tvVehicleSideTag.isVisible = !item.sideTagLabel.isNullOrBlank()
             tvSyncPending.text = item.pendingSyncLabel
             tvSyncPending.isVisible = item.hasPendingSync
-            ivVehicleThumb.setImageResource(resolveVehicleImageRes(item))
+            bindVehicleThumbnail(item)
             itemView.setOnClickListener { onCardClick(item) }
         }
 
-        private fun resolveVehicleImageRes(item: ProviderVehicleCardUi): Int {
-            val normalizedType = normalizeKey(item.vehicleType)
-            val normalizedBodyType = normalizeKey(item.bodyType)
+        fun clearImageLoad() {
+            imageLoadJob?.cancel()
+            imageLoadJob = null
+            imageLoadToken += 1L
+            showThumbnailPlaceholder()
+        }
 
-            if (normalizedType == VEHICLE_TYPE_MOTORCYCLE) {
-                return R.drawable.motorcycle
-            }
-            if (normalizedType == VEHICLE_TYPE_CAR) {
-                return R.drawable.car_sedan
+        private fun bindVehicleThumbnail(item: ProviderVehicleCardUi) {
+            imageLoadJob?.cancel()
+            imageLoadJob = null
+
+            val requestToken = ++imageLoadToken
+            showThumbnailPlaceholder()
+
+            val photoUrl = resolveThumbnailUrl(item)
+            if (photoUrl.isNullOrBlank()) return
+
+            thumbnailBitmapCache.get(photoUrl)?.let { cachedBitmap ->
+                if (!cachedBitmap.isRecycled) {
+                    showThumbnailBitmap(cachedBitmap)
+                    return
+                }
             }
 
-            if (normalizedBodyType in MOTORCYCLE_BODY_TYPES) {
-                return R.drawable.motorcycle
-            }
+            val targetPx = (THUMBNAIL_SIZE_DP * itemView.resources.displayMetrics.density)
+                .roundToInt()
+                .coerceAtLeast(1)
 
-            return if (normalizedBodyType in SUV_LIKE_BODY_TYPES) {
-                R.drawable.car_suv
-            } else {
-                R.drawable.car_sedan
+            imageLoadJob = lifecycleScope.launch {
+                val bitmap = withContext(Dispatchers.IO) {
+                    try {
+                        loadBitmapFromUrl(photoUrl, targetPx)
+                    } catch (error: Throwable) {
+                        if (error is CancellationException) throw error
+                        Log.w(
+                            TAG,
+                            "Falha inesperada no carregamento da thumbnail para '$photoUrl'",
+                            error
+                        )
+                        null
+                    }
+                }
+
+                if (requestToken != imageLoadToken) return@launch
+                if (bitmap == null) {
+                    showThumbnailPlaceholder()
+                    return@launch
+                }
+
+                thumbnailBitmapCache.put(photoUrl, bitmap)
+                showThumbnailBitmap(bitmap)
             }
         }
 
-        private fun normalizeKey(raw: String?): String {
-            return raw.orEmpty()
-                .trim()
-                .lowercase(Locale.ROOT)
-                .replace("-", "")
-                .replace("_", "")
-                .replace(" ", "")
+        private fun showThumbnailPlaceholder() {
+            ivVehicleThumb.setImageDrawable(null)
+            ivVehicleThumb.setBackgroundResource(R.drawable.bg_skeleton_block)
+        }
+
+        private fun showThumbnailBitmap(bitmap: Bitmap) {
+            ivVehicleThumb.background = null
+            ivVehicleThumb.setImageBitmap(bitmap)
         }
 
         companion object {
-            private const val VEHICLE_TYPE_CAR = "car"
-            private const val VEHICLE_TYPE_MOTORCYCLE = "motorcycle"
-
-            private val MOTORCYCLE_BODY_TYPES = setOf(
-                "street",
-                "scooter",
-                "trail",
-                "naked",
-                "sport",
-                "touring",
-                "custom",
-                "bigtrail",
-                "offroad"
+            private const val TAG = "ProviderVehiclesAdapter"
+            private const val THUMBNAIL_SIZE_DP = 88
+            private const val PHOTO_FRONT_SLOT_KEY = "front"
+            private val PHOTO_FRONT_SLOT_ALIASES = listOf(
+                "front",
+                "frente",
+                "frontal",
+                "foto_frontal",
+                "front_view",
+                "front-photo",
+                "front_photo"
             )
 
-            private val SUV_LIKE_BODY_TYPES = setOf(
-                "suv",
-                "picape",
-                "van",
-                "crossover"
-            )
+            private val thumbnailBitmapCache = object : LruCache<String, Bitmap>(18 * 1024) {
+                override fun sizeOf(key: String, value: Bitmap): Int {
+                    return value.byteCount / 1024
+                }
+            }
+
+            private fun resolveThumbnailUrl(item: ProviderVehicleCardUi): String? {
+                val providedUrl = item.thumbnailUrl?.trim().orEmpty()
+                if (providedUrl.isNotBlank()) return providedUrl
+
+                val payload = runCatching { JSONObject(item.payloadJson) }.getOrNull() ?: return null
+                val uploadedPhotoUrls = payload.optJSONObject("uploadedPhotoUrls")
+
+                val frontPhoto = uploadedPhotoUrls
+                    ?.optString(PHOTO_FRONT_SLOT_KEY)
+                    ?.trim()
+                    .orEmpty()
+                if (frontPhoto.isNotBlank()) return frontPhoto
+
+                if (uploadedPhotoUrls != null) {
+                    val keys = uploadedPhotoUrls.keys()
+                    while (keys.hasNext()) {
+                        val rawKey = keys.next()
+                        val key = rawKey.trim().lowercase()
+                        if (PHOTO_FRONT_SLOT_ALIASES.none { alias -> key.contains(alias) }) {
+                            continue
+                        }
+
+                        val candidate = uploadedPhotoUrls.optString(rawKey).trim()
+                        if (candidate.isNotBlank()) return candidate
+                    }
+                }
+
+                return null
+            }
+
+            private suspend fun loadBitmapFromUrl(photoUrl: String, targetPx: Int): Bitmap? {
+                val normalizedUrl = photoUrl.trim()
+                if (normalizedUrl.isBlank()) return null
+
+                val bytes = try {
+                    SupabaseStorageService.downloadBytesByPublicUrl(normalizedUrl)
+                } catch (primaryError: Throwable) {
+                    if (primaryError is CancellationException) throw primaryError
+
+                    try {
+                        URL(normalizedUrl).openConnection().apply {
+                            connectTimeout = 15000
+                            readTimeout = 15000
+                        }.getInputStream().use { input ->
+                            input.readBytes()
+                        }
+                    } catch (fallbackError: Throwable) {
+                        if (fallbackError is CancellationException) throw fallbackError
+                        Log.w(
+                            TAG,
+                            "Falha ao carregar thumbnail para URL '$normalizedUrl'",
+                            fallbackError
+                        )
+                        return null
+                    }
+                }
+
+                return decodeThumbnail(bytes, targetPx)
+            }
+
+            private fun decodeThumbnail(bytes: ByteArray, targetPx: Int): Bitmap? {
+                val bounds = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
+
+                val sampleSize = calculateSampleSize(bounds.outWidth, bounds.outHeight, targetPx)
+                val options = BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                    inPreferredConfig = Bitmap.Config.RGB_565
+                }
+                return BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+            }
+
+            private fun calculateSampleSize(
+                width: Int,
+                height: Int,
+                targetPx: Int
+            ): Int {
+                var inSampleSize = 1
+                var currentWidth = width
+                var currentHeight = height
+                while (currentWidth / 2 >= targetPx && currentHeight / 2 >= targetPx) {
+                    currentWidth /= 2
+                    currentHeight /= 2
+                    inSampleSize *= 2
+                }
+                return inSampleSize.coerceAtLeast(1)
+            }
         }
     }
 

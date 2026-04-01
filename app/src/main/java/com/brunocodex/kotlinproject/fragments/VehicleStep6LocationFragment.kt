@@ -47,7 +47,6 @@ class VehicleStep6LocationFragment :
     private val firestore by lazy { FirebaseFirestore.getInstance() }
 
     private data class DayRowViews(
-        val enabledCheck: MaterialCheckBox,
         val startLayout: TextInputLayout,
         val endLayout: TextInputLayout
     )
@@ -839,6 +838,7 @@ class VehicleStep6LocationFragment :
 
             val tvDayName = row.findViewById<TextView>(R.id.tvDayName)
             val cbEnabled = row.findViewById<MaterialCheckBox>(R.id.cbDayEnabled)
+            val cbAllDay = row.findViewById<MaterialCheckBox>(R.id.cbDayAllDay)
             val timeContainer = row.findViewById<View>(R.id.timeInputsContainer)
             val startLayout = row.findViewById<TextInputLayout>(R.id.startTimeLayout)
             val endLayout = row.findViewById<TextInputLayout>(R.id.endTimeLayout)
@@ -847,17 +847,54 @@ class VehicleStep6LocationFragment :
 
             tvDayName.text = dayLabel
             cbEnabled.isChecked = schedule.enabled
+            cbAllDay.isChecked = schedule.allDay
             startInput.setText(schedule.startTime)
             endInput.setText(schedule.endTime)
             timeContainer.visibility = if (schedule.enabled) View.VISIBLE else View.GONE
+            updateTimeInputsEnabledState(
+                schedule = schedule,
+                startLayout = startLayout,
+                endLayout = endLayout,
+                startInput = startInput,
+                endInput = endInput
+            )
 
             cbEnabled.setOnCheckedChangeListener { _, isChecked ->
                 schedule.enabled = isChecked
                 timeContainer.visibility = if (isChecked) View.VISIBLE else View.GONE
+                updateTimeInputsEnabledState(
+                    schedule = schedule,
+                    startLayout = startLayout,
+                    endLayout = endLayout,
+                    startInput = startInput,
+                    endInput = endInput
+                )
                 if (!isChecked) {
                     startLayout.error = null
                     endLayout.error = null
                 }
+                if (isAtLeastOneDayEnabled()) {
+                    tvScheduleError.visibility = View.GONE
+                }
+            }
+
+            cbAllDay.setOnCheckedChangeListener { _, isChecked ->
+                schedule.allDay = isChecked
+                if (isChecked) {
+                    schedule.startTime = ""
+                    schedule.endTime = ""
+                    startInput.setText("")
+                    endInput.setText("")
+                    startLayout.error = null
+                    endLayout.error = null
+                }
+                updateTimeInputsEnabledState(
+                    schedule = schedule,
+                    startLayout = startLayout,
+                    endLayout = endLayout,
+                    startInput = startInput,
+                    endInput = endInput
+                )
                 if (isAtLeastOneDayEnabled()) {
                     tvScheduleError.visibility = View.GONE
                 }
@@ -873,9 +910,23 @@ class VehicleStep6LocationFragment :
                 if (schedule.endTime.isNotBlank()) endLayout.error = null
             }
 
-            dayRows[dayKey] = DayRowViews(cbEnabled, startLayout, endLayout)
+            dayRows[dayKey] = DayRowViews(startLayout, endLayout)
             container.addView(row)
         }
+    }
+
+    private fun updateTimeInputsEnabledState(
+        schedule: VehicleRegisterViewModel.DaySchedule,
+        startLayout: TextInputLayout,
+        endLayout: TextInputLayout,
+        startInput: TextInputEditText,
+        endInput: TextInputEditText
+    ) {
+        val timeInputsEnabled = schedule.enabled && !schedule.allDay
+        startLayout.isEnabled = timeInputsEnabled
+        endLayout.isEnabled = timeInputsEnabled
+        startInput.isEnabled = timeInputsEnabled
+        endInput.isEnabled = timeInputsEnabled
     }
 
     private fun isAtLeastOneDayEnabled(): Boolean {
@@ -915,7 +966,7 @@ class VehicleStep6LocationFragment :
 
         val enabledSchedules = vehicleViewModel.weeklySchedule.filterValues { it.enabled }
         val scheduleOk = enabledSchedules.isNotEmpty() && enabledSchedules.values.all {
-            it.startTime.isNotBlank() && it.endTime.isNotBlank()
+            it.allDay || (it.startTime.isNotBlank() && it.endTime.isNotBlank())
         }
 
         if (showErrors) {
@@ -932,7 +983,7 @@ class VehicleStep6LocationFragment :
 
             vehicleViewModel.weeklySchedule.forEach { (dayKey, schedule) ->
                 val row = dayRows[dayKey] ?: return@forEach
-                if (!schedule.enabled) {
+                if (!schedule.enabled || schedule.allDay) {
                     row.startLayout.error = null
                     row.endLayout.error = null
                 } else {

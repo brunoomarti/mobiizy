@@ -1,41 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <com.google.android.material.card.MaterialCardView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:strokeColor="?attr/borderLight"
-        app:strokeWidth="1dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/discoverVehicleSearchLayout"
+            style="@style/AppTextInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="18dp">
+            android:hint="@string/renter_discover_search_hint">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/discoverVehicleSearchInput"
+                style="@style/AppTextInputEdit"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/renter_discover_fragment_title"
-                android:textColor="?attr/textPrimary"
-                android:textSize="21sp"
-                android:textStyle="bold" />
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1" />
 
-            <TextView
-                android:layout_width="wrap_content"
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/tvDiscoverSearchEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/renter_discover_search_empty"
+            android:textColor="?attr/textSecondary"
+            android:textSize="13sp"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:id="@+id/discoverVehiclesContentContainer"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="6dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDiscoverVehicles"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:nestedScrollingEnabled="false"
+                android:paddingBottom="112dp"
+                tools:listitem="@layout/item_provider_vehicle_card" />
+
+            <LinearLayout
+                android:id="@+id/discoverVehiclesSkeletonContainer"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="@string/renter_discover_fragment_subtitle"
-                android:textColor="?attr/textSecondary"
-                android:textSize="15sp" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:visibility="gone">
 
-    </com.google.android.material.card.MaterialCardView>
+                <include layout="@layout/item_provider_vehicle_card_skeleton" />
 
-</LinearLayout>
+                <include layout="@layout/item_provider_vehicle_card_skeleton" />
+
+                <include layout="@layout/item_provider_vehicle_card_skeleton" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/discoverSearchIdleStateContainer"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:paddingHorizontal="28dp"
+                android:translationY="-56dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/discoverSearchIdleStateImage"
+                    android:layout_width="168dp"
+                    android:layout_height="112dp"
+                    android:adjustViewBounds="true"
+                    android:alpha="0"
+                    android:contentDescription="@null"
+                    android:scaleType="centerInside"
+                    android:scaleX="0"
+                    android:scaleY="0"
+                    tools:src="@drawable/car_suv" />
+
+                <TextView
+                    android:id="@+id/discoverSearchIdleStateText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:gravity="center"
+                    android:text="@string/renter_discover_search_idle_message"
+                    android:textColor="?attr/textSecondary"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+    </LinearLayout>
+
+</FrameLayout>

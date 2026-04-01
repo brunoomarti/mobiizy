@@ -56,10 +56,10 @@ class ProviderVehiclesFragment : Fragment(R.layout.fragment_provider_vehicles) {
         tvRegisteredEmpty = view.findViewById(R.id.tvRegisteredEmpty)
         skeletonContainer = view.findViewById(R.id.skeletonContainer)
 
-        inProgressAdapter = ProviderVehiclesAdapter { item ->
+        inProgressAdapter = ProviderVehiclesAdapter(viewLifecycleOwner.lifecycleScope) { item ->
             openVehicle(item)
         }
-        registeredAdapter = ProviderVehiclesAdapter { item ->
+        registeredAdapter = ProviderVehiclesAdapter(viewLifecycleOwner.lifecycleScope) { item ->
             openVehicle(item)
         }
         rvVehiclesInProgress.layoutManager = LinearLayoutManager(requireContext())

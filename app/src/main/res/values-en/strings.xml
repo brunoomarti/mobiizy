@@ -164,10 +164,8 @@
     <string name="nav_trips">Trips</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_provider_vehicles">Vehicles</string>
-    <string name="nav_provider_rentals">Rentals</string>
     <string name="nav_provider_earnings">Earnings</string>
     <string name="nav_renter_discover">Discover</string>
-    <string name="nav_renter_rentals">Rentals</string>
     <string name="action_logout">Logout</string>
     <string name="feature_coming_soon">Feature coming soon.</string>
 
@@ -239,8 +237,6 @@
     <string name="provider_home_go_to_vehicles">View all registered vehicles</string>
     <string name="provider_vehicles_fragment_title">Vehicle management</string>
     <string name="provider_vehicles_fragment_subtitle">Register cars, adjust availability, and review listing details.</string>
-    <string name="provider_rentals_fragment_title">Rental flow</string>
-    <string name="provider_rentals_fragment_subtitle">Manage requests, check-in, check-out, and rental history.</string>
     <string name="provider_earnings_fragment_title">Financial dashboard</string>
     <string name="provider_earnings_fragment_subtitle">View available balance, pending transfers, and payout history.</string>
     <string name="renter_home_fragment_title">Welcome back!</string>
@@ -248,8 +244,8 @@
     <string name="renter_map_card_title">Map near you</string>
     <string name="renter_map_card_subtitle">Tap to open full screen</string>
     <string name="renter_map_close">Close map</string>
-    <string name="renter_home_nearby_section_title">Available cars nearby</string>
-    <string name="renter_home_nearby_section_subtitle">List updated based on your location.</string>
+    <string name="renter_home_nearby_section_title">Cars nearby</string>
+    <string name="renter_home_nearby_section_subtitle">Based on your location.</string>
     <string name="renter_home_nearby_search_radius_placeholder">Search radius used: --</string>
     <string name="renter_home_nearby_search_radius">Search radius used: %1$s</string>
     <string name="renter_home_nearby_search_radius_expanded">Search radius used: %1$s (automatic expanded search)</string>
@@ -263,10 +259,71 @@
     <string name="renter_home_nearby_distance_km">%1$.1f km away</string>
     <string name="renter_home_nearby_daily_price">Daily: %1$s</string>
     <string name="renter_home_nearby_unknown_vehicle">Nearby vehicle</string>
+    <string name="renter_vehicle_details_unknown_vehicle">Vehicle</string>
+    <string name="renter_vehicle_details_photos_empty">No photos available for this vehicle.</string>
+    <string name="renter_vehicle_details_daily_price_label">Daily rate</string>
+    <string name="renter_vehicle_details_daily_price_value">R$ %1$s</string>
+    <string name="renter_vehicle_details_daily_price_not_informed">Price not informed</string>
+    <string name="renter_vehicle_details_availability_format">%1$s • %2$s</string>
+    <string name="renter_vehicle_details_availability_mon_to_fri">Available Mon to Fri</string>
+    <string name="renter_vehicle_details_availability_selected_days">Available on specific days</string>
+    <string name="renter_vehicle_details_availability_full_week">Available all week</string>
+    <string name="renter_vehicle_details_availability_all_day">all day</string>
+    <string name="renter_vehicle_details_availability_time_restricted">with time restrictions</string>
+    <string name="renter_vehicle_details_availability_mixed_hours">mixed hours</string>
+    <string name="renter_vehicle_details_bottom_title">Ready to rent?</string>
+    <string name="renter_vehicle_details_bottom_subtitle">Choose dates to see your quote.</string>
+    <string name="renter_vehicle_details_bottom_subtitle_single_date">Pickup on %1$s. Tap return date.</string>
+    <string name="renter_vehicle_details_bottom_subtitle_range">%1$s to %2$s</string>
+    <string name="renter_vehicle_details_bottom_subtitle_with_budget">%1$d day(s) • Estimate: %2$s</string>
+    <string name="renter_vehicle_details_approx_location_title">Approximate location</string>
+    <string name="renter_vehicle_details_approx_location_subtitle">Exact pickup is protected. The vehicle is shown within an approximate 500 m area.</string>
+    <string name="renter_vehicle_details_approx_location_badge">Approximate 500 m radius</string>
+    <string name="renter_vehicle_details_approx_location_unavailable">Could not load the approximate location for this vehicle.</string>
+    <string name="renter_vehicle_details_see_availability">See availability</string>
+    <string name="renter_vehicle_details_rent_now">Rent now</string>
+    <string name="renter_vehicle_details_calendar_title">Availability</string>
+    <string name="renter_vehicle_details_calendar_subtitle">Select a pickup date or a full date range.</string>
+    <string name="renter_vehicle_details_calendar_selected_none">Choose a pickup date to start.</string>
+    <string name="renter_vehicle_details_calendar_selected_start">Pickup: %1$s (now choose return date).</string>
+    <string name="renter_vehicle_details_calendar_selected_same_day">Pickup and return on the same day: %1$s.</string>
+    <string name="renter_vehicle_details_calendar_selected_range">Selected range: %1$s to %2$s.</string>
+    <string name="renter_vehicle_details_view_quote">View quote</string>
+    <string name="renter_vehicle_details_show_more_info">See more details</string>
+    <string name="renter_vehicle_details_show_less_info">See less details</string>
+    <string name="renter_vehicle_details_quote_single_day">Pickup on %1$s.</string>
+    <string name="renter_vehicle_details_quote_range">Range: %1$s to %2$s (%3$d day(s)).</string>
+    <string name="renter_vehicle_details_quote_with_total">Range: %1$s to %2$s (%3$d day(s)) • Estimate: %4$s</string>
+    <string name="renter_vehicle_details_safety_title">Safety</string>
+    <string name="renter_vehicle_details_safety_insurance_yes">With insurance</string>
+    <string name="renter_vehicle_details_safety_insurance_no">No insurance</string>
+    <string name="renter_vehicle_details_safety_insurance_not_informed">Insurance not informed</string>
+    <string name="renter_vehicle_details_tag_seats_format">%1$s seats</string>
+    <string name="renter_vehicle_details_delivery_type_none">No delivery</string>
+    <string name="renter_vehicle_details_delivery_radius_tag">Radius: %1$s km</string>
+    <string name="renter_vehicle_details_delivery_radius_not_informed">Radius not informed</string>
+    <string name="renter_vehicle_details_delivery_fee_tag">Fee: %1$s</string>
+    <string name="renter_vehicle_details_delivery_fee_not_informed">Fee not informed</string>
+    <string name="renter_vehicle_details_tag_prefix_color">Color</string>
+    <string name="renter_vehicle_details_condition_title">Condition</string>
+    <string name="renter_vehicle_details_condition_mileage_tag">Km run: %1$s</string>
+    <string name="renter_vehicle_details_trip_title">Trip</string>
+    <string name="renter_vehicle_details_trip_allowed_yes">Trip allowed</string>
+    <string name="renter_vehicle_details_trip_allowed_no">Trip not allowed</string>
+    <string name="renter_vehicle_details_trip_allowed_not_informed">Trip not informed</string>
+    <string name="renter_vehicle_details_documents_title">Documents</string>
+    <string name="renter_vehicle_details_documents_general_yes">Documents up to date</string>
+    <string name="renter_vehicle_details_documents_general_no">Documents pending</string>
+    <string name="renter_vehicle_details_documents_general_not_informed">Documents not informed</string>
+    <string name="renter_vehicle_details_documents_ipva_yes">Tax/registration ok</string>
+    <string name="renter_vehicle_details_documents_ipva_no">Tax/registration pending</string>
+    <string name="renter_vehicle_details_documents_ipva_not_informed">Tax/registration not informed</string>
     <string name="renter_discover_fragment_title">Discover vehicles</string>
     <string name="renter_discover_fragment_subtitle">Search by city, price range, category, and rental period.</string>
-    <string name="renter_rentals_fragment_title">Your rentals</string>
-    <string name="renter_rentals_fragment_subtitle">Track active bookings, contract history, and return status.</string>
+
+    <string name="renter_discover_search_hint">Search by brand, model, or year</string>
+    <string name="renter_discover_search_empty">No vehicles found for this search.</string>
+    <string name="renter_discover_search_idle_message">Type keywords to search for vehicles.\nExample: red flex car.</string>
 
     <!-- Legacy home layouts -->
     <string name="legacy_provider_home_title">Home - Provider</string>
@@ -358,7 +415,6 @@
         <item>Travel</item>
         <item>Luxury</item>
         <item>Compact</item>
-        <item>SUV</item>
         <item>Executive</item>
         <item>Urban</item>
         <item>Adventure</item>
@@ -535,6 +591,10 @@
     <string name="vehicle_field_allow_pet">Allow pets?</string>
     <string name="vehicle_field_allow_smoking">Allow smoking?</string>
     <string name="vehicle_field_allow_trip">Allow long trips?</string>
+    <string name="vehicle_field_allowed_trip_types">Allowed trip types</string>
+    <string name="vehicle_field_pickup_on_location">Pickup on location</string>
+    <string name="vehicle_field_delivery_by_fee">Delivery with fee</string>
+    <string name="vehicle_field_public_photos">Public photos</string>
     <string name="vehicle_error_select_trip_type">Select at least one trip type.</string>
     <string name="vehicle_field_min_driver_age">Minimum driver age</string>
     <string name="vehicle_field_min_cnh_years">Minimum license years</string>
@@ -565,9 +625,10 @@
     <string name="vehicle_field_delivery_radius">Delivery radius (km)</string>
     <string name="vehicle_field_delivery_fee">Delivery fee</string>
     <string name="vehicle_field_available_schedule">Available schedule by day</string>
-    <string name="vehicle_field_available_schedule_hint">Enable each day you want and fill start/end times.</string>
-    <string name="vehicle_error_fill_one_schedule">Configure at least one day with complete schedule.</string>
+    <string name="vehicle_field_available_schedule_hint">Enable each day you want and fill start/end times or mark all day.</string>
+    <string name="vehicle_error_fill_one_schedule">Configure at least one day with complete schedule or all-day availability.</string>
     <string name="vehicle_schedule_available">Available</string>
+    <string name="vehicle_schedule_all_day">Available all day</string>
     <string name="vehicle_schedule_start">Start</string>
     <string name="vehicle_schedule_end">End</string>
     <string name="vehicle_day_mon">Monday</string>

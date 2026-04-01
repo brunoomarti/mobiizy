@@ -14,6 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import org.json.JSONObject
 
 class NearbyVehiclesRepository(context: Context) {
 
@@ -158,6 +159,9 @@ class NearbyVehiclesRepository(context: Context) {
         val allowTrip = snapshot.child("allowTrip").toNullableBoolean()
         val allowedTripTypes = snapshot.child("allowedTripTypes").toStringList()
         val uploadedPhotoUrls = snapshot.child("uploadedPhotoUrls").toStringMap()
+        val plate = snapshot.child("plate").getValue(String::class.java)
+            ?.trim()
+            .orEmpty()
 
         return NearbyVehicle(
             vehicleId = vehicleId,
@@ -177,8 +181,8 @@ class NearbyVehiclesRepository(context: Context) {
             allowTrip = allowTrip,
             allowedTripTypes = allowedTripTypes,
             uploadedPhotoUrls = uploadedPhotoUrls,
-            plate = "",
-            payloadJson = "{}",
+            plate = plate,
+            payloadJson = snapshot.toPublicPayloadJson(),
             distanceMeters = Double.MAX_VALUE
         )
     }
@@ -256,6 +260,40 @@ class NearbyVehiclesRepository(context: Context) {
         }
 
         return emptyMap()
+    }
+
+    private fun DataSnapshot.toPublicPayloadJson(): String {
+        val rawMap = value as? Map<*, *> ?: return "{}"
+        val normalized = linkedMapOf<String, Any>()
+        rawMap.forEach { (mapKeyRaw, mapValueRaw) ->
+            val key = mapKeyRaw?.toString()?.trim().orEmpty()
+            val value = normalizeJsonValue(mapValueRaw)
+            if (key.isNotBlank() && value != null) {
+                normalized[key] = value
+            }
+        }
+        return JSONObject(normalized).toString()
+    }
+
+    private fun normalizeJsonValue(raw: Any?): Any? {
+        return when (raw) {
+            null -> null
+            is Map<*, *> -> {
+                val result = linkedMapOf<String, Any>()
+                raw.forEach { (nestedKeyRaw, nestedValueRaw) ->
+                    val key = nestedKeyRaw?.toString()?.trim().orEmpty()
+                    val value = normalizeJsonValue(nestedValueRaw)
+                    if (key.isNotBlank() && value != null) {
+                        result[key] = value
+                    }
+                }
+                result
+            }
+
+            is Collection<*> -> raw.mapNotNull { item -> normalizeJsonValue(item) }
+            is Number, is Boolean, is String -> raw
+            else -> raw.toString()
+        }
     }
 
     private fun normalizeVehicleType(raw: String?): String? {

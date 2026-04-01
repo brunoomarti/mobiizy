@@ -268,18 +268,34 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnProfileLogout"
-            style="@style/Widget.Material3.Button.OutlinedButton"
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:text="@string/profile_logout_button"
-            android:textAllCaps="false"
-            android:textColor="?attr/error"
-            app:cornerRadius="12dp"
-            app:strokeColor="?attr/borderLight"
-            app:strokeWidth="1dp" />
+            android:layout_marginTop="24dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnProfileLogout"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/profile_logout_button"
+                android:textAllCaps="false"
+                android:textColor="?attr/error"
+                app:cornerRadius="12dp"
+                app:strokeColor="?attr/borderLight"
+                app:strokeWidth="1dp" />
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/progressProfileLogout"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                app:indicatorColor="?attr/error"
+                app:indicatorInset="0dp"
+                app:indicatorSize="20dp"
+                app:trackThickness="2dp" />
+        </FrameLayout>
 
     </LinearLayout>
 

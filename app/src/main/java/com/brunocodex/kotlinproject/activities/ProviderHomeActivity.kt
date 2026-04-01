@@ -4,8 +4,6 @@ import android.os.Bundle
 import android.view.View
 import com.brunocodex.kotlinproject.R
 import com.brunocodex.kotlinproject.fragments.ProfileFragment
-import com.brunocodex.kotlinproject.fragments.ProviderHomeFragment
-import com.brunocodex.kotlinproject.fragments.ProviderRentalsFragment
 import com.brunocodex.kotlinproject.fragments.ProviderVehiclesFragment
 
 class ProviderHomeActivity : BaseHomeActivity() {
@@ -17,14 +15,12 @@ class ProviderHomeActivity : BaseHomeActivity() {
             savedInstanceState = savedInstanceState
         )
 
+        findViewById<View>(R.id.navGarageItem)?.visibility = View.GONE
+        findViewById<View>(R.id.navTripsItem)?.visibility = View.GONE
         findViewById<View>(R.id.navWalletItem)?.visibility = View.GONE
     }
 
     override fun defaultNavItemId(): Int = R.id.navHomeItem
-
-    fun openVehiclesTabFromHome() {
-        selectNavItem(R.id.navGarageItem)
-    }
 
     override fun buildNavDestinations(): List<NavDestination> {
         return listOf(
@@ -37,25 +33,7 @@ class ProviderHomeActivity : BaseHomeActivity() {
                 iconName = "home",
                 contentDescription = getString(R.string.nav_home)
             ) {
-                ProviderHomeFragment()
-            },
-            NavDestination(
-                itemId = R.id.navGarageItem,
-                tag = "provider_vehicles",
-                title = getString(R.string.nav_provider_vehicles),
-                iconName = "directions_car",
-                contentDescription = getString(R.string.nav_provider_vehicles)
-            ) {
                 ProviderVehiclesFragment()
-            },
-            NavDestination(
-                itemId = R.id.navTripsItem,
-                tag = "provider_rentals",
-                title = getString(R.string.nav_provider_rentals),
-                iconName = "calendar_month",
-                contentDescription = getString(R.string.nav_provider_rentals)
-            ) {
-                ProviderRentalsFragment()
             },
             NavDestination(
                 itemId = R.id.navProfileItem,

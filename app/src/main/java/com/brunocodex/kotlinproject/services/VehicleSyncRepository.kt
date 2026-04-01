@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.suspendCancellableCoroutine
+import org.json.JSONArray
 import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -353,8 +354,7 @@ class VehicleSyncRepository(context: Context) {
         val publicDocumentsUpToDate = payloadObject.optNullableBoolean("documentsUpToDate") ?: false
         val publicIpvaLicensingOk = payloadObject.optNullableBoolean("ipvaLicensingOk") ?: false
         val publicHasInsurance = payloadObject.optNullableBoolean("hasInsurance") ?: false
-
-        return linkedMapOf(
+        val publicIndexPayload = linkedMapOf<String, Any>(
             "vehicleId" to row.vehicleId,
             "ownerId" to row.ownerId,
             "status" to row.status,
@@ -392,6 +392,23 @@ class VehicleSyncRepository(context: Context) {
             "updatedAtClient" to row.updatedAt,
             "updatedAtServer" to ServerValue.TIMESTAMP
         )
+
+        putIfPresent(publicIndexPayload, "weeklySchedule", payloadObject.optSerializableValue("weeklySchedule"))
+        putIfPresent(publicIndexPayload, "bookedDates", payloadObject.optSerializableValue("bookedDates"))
+        putIfPresent(publicIndexPayload, "blockedDates", payloadObject.optSerializableValue("blockedDates"))
+        putIfPresent(publicIndexPayload, "unavailableDates", payloadObject.optSerializableValue("unavailableDates"))
+        putIfPresent(publicIndexPayload, "reservedDates", payloadObject.optSerializableValue("reservedDates"))
+        putIfPresent(publicIndexPayload, "rentedDates", payloadObject.optSerializableValue("rentedDates"))
+        putIfPresent(publicIndexPayload, "bookedDateRanges", payloadObject.optSerializableValue("bookedDateRanges"))
+        putIfPresent(publicIndexPayload, "blockedDateRanges", payloadObject.optSerializableValue("blockedDateRanges"))
+        putIfPresent(publicIndexPayload, "unavailableDateRanges", payloadObject.optSerializableValue("unavailableDateRanges"))
+        putIfPresent(publicIndexPayload, "reservedDateRanges", payloadObject.optSerializableValue("reservedDateRanges"))
+        putIfPresent(publicIndexPayload, "rentedDateRanges", payloadObject.optSerializableValue("rentedDateRanges"))
+        putIfPresent(publicIndexPayload, "rentalDateRanges", payloadObject.optSerializableValue("rentalDateRanges"))
+        putIfPresent(publicIndexPayload, "bookings", payloadObject.optSerializableValue("bookings"))
+        putIfPresent(publicIndexPayload, "reservations", payloadObject.optSerializableValue("reservations"))
+
+        return publicIndexPayload
     }
 
     private data class PickupAddressParts(
@@ -689,6 +706,60 @@ class VehicleSyncRepository(context: Context) {
         }
 
         return result
+    }
+
+    private fun putIfPresent(target: MutableMap<String, Any>, key: String, value: Any?) {
+        if (value != null) {
+            target[key] = value
+        }
+    }
+
+    private fun JSONObject.optSerializableValue(key: String): Any? {
+        if (isNull(key)) return null
+        return toSerializableValue(opt(key))
+    }
+
+    private fun toSerializableValue(raw: Any?): Any? {
+        return when (raw) {
+            null -> null
+            is JSONObject -> {
+                val result = linkedMapOf<String, Any>()
+                val keys = raw.keys()
+                while (keys.hasNext()) {
+                    val key = keys.next().trim()
+                    val value = toSerializableValue(raw.opt(key))
+                    if (key.isNotBlank() && value != null) {
+                        result[key] = value
+                    }
+                }
+                result
+            }
+
+            is JSONArray -> {
+                buildList {
+                    for (index in 0 until raw.length()) {
+                        val value = toSerializableValue(raw.opt(index)) ?: continue
+                        add(value)
+                    }
+                }
+            }
+
+            is Map<*, *> -> {
+                val result = linkedMapOf<String, Any>()
+                raw.forEach { (mapKeyRaw, mapValueRaw) ->
+                    val key = mapKeyRaw?.toString()?.trim().orEmpty()
+                    val value = toSerializableValue(mapValueRaw)
+                    if (key.isNotBlank() && value != null) {
+                        result[key] = value
+                    }
+                }
+                result
+            }
+
+            is Collection<*> -> raw.mapNotNull { item -> toSerializableValue(item) }
+            is Number, is Boolean, is String -> raw
+            else -> raw.toString()
+        }
     }
 
     private suspend fun <T> Task<T>.await(): T? {

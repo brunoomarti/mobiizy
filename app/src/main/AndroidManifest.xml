@@ -33,6 +33,7 @@
         <activity android:name=".activities.RegisterActivity" android:exported="false" />
         <activity android:name=".activities.MainActivity" android:exported="false" />
         <activity android:name=".activities.RenterHomeActivity" android:exported="false" />
+        <activity android:name=".activities.RenterVehicleDetailsActivity" android:exported="false" />
         <activity android:name=".activities.ProviderHomeActivity" android:exported="false" />
         <activity android:name=".activities.ProviderVehicleRegisterActivity" android:exported="false" />
         <activity android:name=".activities.ProviderVehicleDetailsActivity" android:exported="false" />

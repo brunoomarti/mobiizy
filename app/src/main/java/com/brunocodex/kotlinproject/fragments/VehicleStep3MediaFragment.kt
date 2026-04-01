@@ -1,6 +1,9 @@
 ﻿package com.brunocodex.kotlinproject.fragments
 
 import android.app.Dialog
+import android.Manifest
+import android.content.ActivityNotFoundException
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -18,6 +21,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -84,6 +89,16 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
             prepareGalleryImageForUpload(uri)
         }
     }
+
+    private val cameraPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) {
+                launchCameraPickerSafely()
+            } else {
+                selectedCameraSlot = null
+                showToast(R.string.vehicle_photo_camera_permission_denied)
+            }
+        }
 
     private val cameraPhotoPicker =
         registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
@@ -318,10 +333,7 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
             .setTitle(R.string.vehicle_photo_source_dialog_title)
             .setItems(options) { _, selectedIndex ->
                 when (selectedIndex) {
-                    0 -> {
-                        selectedCameraSlot = slotKey
-                        cameraPhotoPicker.launch(null)
-                    }
+                    0 -> ensureCameraPermissionAndLaunch(slotKey)
 
                     1 -> {
                         selectedPhotoSlot = slotKey
@@ -331,6 +343,56 @@ class VehicleStep3MediaFragment : Fragment(R.layout.fragment_vehicle_step3_media
             }
             .setNegativeButton(R.string.vehicle_photo_source_cancel, null)
             .show()
+    }
+
+    private fun ensureCameraPermissionAndLaunch(slotKey: String) {
+        selectedCameraSlot = slotKey
+        val context = context ?: run {
+            selectedCameraSlot = null
+            return
+        }
+
+        val alreadyGranted = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+        if (alreadyGranted) {
+            launchCameraPickerSafely()
+            return
+        }
+
+        val shouldShowRationale = shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)
+        if (shouldShowRationale) {
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.vehicle_photo_camera_permission_title)
+                .setMessage(R.string.vehicle_photo_camera_permission_message)
+                .setPositiveButton(R.string.vehicle_photo_camera_permission_confirm) { _, _ ->
+                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                }
+                .setNegativeButton(R.string.vehicle_photo_source_cancel) { _, _ ->
+                    selectedCameraSlot = null
+                }
+                .show()
+        } else {
+            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun launchCameraPickerSafely() {
+        runCatching {
+            cameraPhotoPicker.launch(null)
+        }.onFailure { throwable ->
+            selectedCameraSlot = null
+            val knownExpected = throwable is ActivityNotFoundException || throwable is IllegalStateException
+            Log.e(TAG, "Unable to launch camera source (knownExpected=$knownExpected)", throwable)
+            showToast(R.string.vehicle_photo_camera_unavailable)
+        }
+    }
+
+    private fun showToast(@StringRes messageRes: Int) {
+        context?.let { ctx ->
+            Toast.makeText(ctx, messageRes, Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun uploadPhoto(

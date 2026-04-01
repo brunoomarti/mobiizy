@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:id="@+id/contentScroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/bottomActionCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/app_padding_horizontal"
+            android:paddingTop="16dp"
+            android:paddingEnd="@dimen/app_padding_horizontal"
+            android:paddingBottom="18dp">
+
+            <TextView
+                android:id="@+id/btnBack"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:text="@string/provider_vehicle_details_back"
+                android:textColor="?attr/textSecondary"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvVehicleTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textColor="?attr/textPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvVehicleSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="?attr/textSecondary"
+                android:textSize="14sp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardVehiclePhotos"
+                android:layout_width="match_parent"
+                android:layout_height="248dp"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
+                app:strokeColor="?attr/borderLight"
+                app:strokeWidth="1dp">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <ImageView
+                        android:id="@+id/ivVehiclePhotoCarousel"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="?attr/colorSurface"
+                        android:contentDescription="@string/provider_vehicle_details_photo_content_description"
+                        android:scaleType="centerCrop" />
+
+                    <TextView
+                        android:id="@+id/tvVehiclePhotosEmpty"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:padding="20dp"
+                        android:text="@string/provider_vehicle_details_photos_empty"
+                        android:textColor="?attr/textSecondary"
+                        android:textSize="14sp"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.progressindicator.CircularProgressIndicator
+                        android:id="@+id/progressVehiclePhoto"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        android:layout_gravity="center"
+                        android:visibility="gone"
+                        app:indicatorColor="?attr/textSecondary" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/btnPrevPhoto"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:layout_gravity="start|center_vertical"
+                        android:layout_marginStart="10dp"
+                        android:background="@drawable/bg_photo_nav_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/provider_vehicle_details_photo_previous"
+                        android:focusable="true"
+                        android:fontFamily="@font/material_symbols_rounded"
+                        android:fontFeatureSettings="'liga'"
+                        android:fontVariationSettings="'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24"
+                        android:gravity="center"
+                        android:text="chevron_left"
+                        android:textColor="?attr/textPrimary"
+                        android:textSize="24sp" />
+
+                    <androidx.appcompat.widget.AppCompatTextView
+                        android:id="@+id/btnNextPhoto"
+                        android:layout_width="42dp"
+                        android:layout_height="42dp"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_photo_nav_button"
+                        android:clickable="true"
+                        android:contentDescription="@string/provider_vehicle_details_photo_next"
+                        android:focusable="true"
+                        android:fontFamily="@font/material_symbols_rounded"
+                        android:fontFeatureSettings="'liga'"
+                        android:fontVariationSettings="'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24"
+                        android:gravity="center"
+                        android:text="chevron_right"
+                        android:textColor="?attr/textPrimary"
+                        android:textSize="24sp" />
+
+                    <LinearLayout
+                        android:id="@+id/photoDotsContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom|center_horizontal"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="horizontal" />
+                </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
+                app:strokeColor="?attr/borderLight"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvDailyPriceLabel"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/renter_vehicle_details_daily_price_label"
+                        android:textColor="?attr/textSecondary"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvDailyPriceValue"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="?attr/textPrimary"
+                        android:textSize="30sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvAvailabilitySummary"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:textColor="?attr/textSecondary"
+                        android:textSize="13sp"
+                        android:visibility="gone" />
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/tagsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:paddingTop="2dp"
+                        android:paddingBottom="2dp">
+
+                        <TextView
+                            android:id="@+id/tvTagBodyType"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vehicle_detail_tag"
+                            android:paddingStart="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="6dp"
+                            android:textColor="?attr/textPrimary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTagTransmission"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vehicle_detail_tag"
+                            android:paddingStart="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="6dp"
+                            android:textColor="?attr/textPrimary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTagFuel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vehicle_detail_tag"
+                            android:paddingStart="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="6dp"
+                            android:textColor="?attr/textPrimary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTagSeats"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vehicle_detail_tag"
+                            android:paddingStart="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="6dp"
+                            android:textColor="?attr/textPrimary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvTagColor"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_vehicle_detail_tag"
+                            android:paddingStart="12dp"
+                            android:paddingTop="6dp"
+                            android:paddingEnd="12dp"
+                            android:paddingBottom="6dp"
+                            android:textColor="?attr/textPrimary"
+                            android:textSize="10sp"
+                            android:textStyle="bold" />
+
+                        <androidx.constraintlayout.helper.widget.Flow
+                            android:id="@+id/detailsTagsFlow"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            app:constraint_referenced_ids="tvTagBodyType,tvTagTransmission,tvTagFuel,tvTagSeats,tvTagColor"
+                            app:flow_horizontalBias="0"
+                            app:flow_horizontalGap="6dp"
+                            app:flow_horizontalStyle="packed"
+                            app:flow_verticalGap="6dp"
+                            app:flow_wrapMode="chain"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <FrameLayout
+                        android:id="@+id/additionalInfoFrame"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="18dp"
+                        android:clipChildren="true"
+                        android:clipToPadding="true">
+
+                        <LinearLayout
+                            android:id="@+id/additionalInfoContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/tvConditionTagsTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/renter_vehicle_details_condition_title"
+                                android:textColor="?attr/textSecondary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:id="@+id/conditionTagsContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:visibility="gone">
+
+                                <androidx.constraintlayout.helper.widget.Flow
+                                    android:id="@+id/conditionTagsFlow"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    app:flow_horizontalBias="0"
+                                    app:flow_horizontalGap="6dp"
+                                    app:flow_horizontalStyle="packed"
+                                    app:flow_verticalGap="6dp"
+                                    app:flow_wrapMode="chain"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <TextView
+                                android:id="@+id/tvSafetyTagsTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="18dp"
+                                android:text="@string/renter_vehicle_details_safety_title"
+                                android:textColor="?attr/textSecondary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:id="@+id/safetyTagsContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:visibility="gone">
+
+                                <androidx.constraintlayout.helper.widget.Flow
+                                    android:id="@+id/safetyTagsFlow"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    app:flow_horizontalBias="0"
+                                    app:flow_horizontalGap="6dp"
+                                    app:flow_horizontalStyle="packed"
+                                    app:flow_verticalGap="6dp"
+                                    app:flow_wrapMode="chain"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <TextView
+                                android:id="@+id/tvComfortTagsTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="18dp"
+                                android:text="@string/vehicle_field_comfort_items"
+                                android:textColor="?attr/textSecondary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:id="@+id/comfortTagsContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:visibility="gone">
+
+                                <androidx.constraintlayout.helper.widget.Flow
+                                    android:id="@+id/comfortTagsFlow"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    app:flow_horizontalBias="0"
+                                    app:flow_horizontalGap="6dp"
+                                    app:flow_horizontalStyle="packed"
+                                    app:flow_verticalGap="6dp"
+                                    app:flow_wrapMode="chain"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <TextView
+                                android:id="@+id/tvDeliveryTagsTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="18dp"
+                                android:text="@string/vehicle_field_delivery_options"
+                                android:textColor="?attr/textSecondary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:id="@+id/deliveryTagsContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:visibility="gone">
+
+                                <androidx.constraintlayout.helper.widget.Flow
+                                    android:id="@+id/deliveryTagsFlow"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    app:flow_horizontalBias="0"
+                                    app:flow_horizontalGap="6dp"
+                                    app:flow_horizontalStyle="packed"
+                                    app:flow_verticalGap="6dp"
+                                    app:flow_wrapMode="chain"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <TextView
+                                android:id="@+id/tvTripTagsTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="18dp"
+                                android:text="@string/renter_vehicle_details_trip_title"
+                                android:textColor="?attr/textSecondary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:id="@+id/tripTagsContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:visibility="gone">
+
+                                <androidx.constraintlayout.helper.widget.Flow
+                                    android:id="@+id/tripTagsFlow"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    app:flow_horizontalBias="0"
+                                    app:flow_horizontalGap="6dp"
+                                    app:flow_horizontalStyle="packed"
+                                    app:flow_verticalGap="6dp"
+                                    app:flow_wrapMode="chain"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <TextView
+                                android:id="@+id/tvDocumentsTagsTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="18dp"
+                                android:text="@string/renter_vehicle_details_documents_title"
+                                android:textColor="?attr/textSecondary"
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:visibility="gone" />
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:id="@+id/documentsTagsContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:paddingTop="2dp"
+                                android:paddingBottom="2dp"
+                                android:visibility="gone">
+
+                                <androidx.constraintlayout.helper.widget.Flow
+                                    android:id="@+id/documentsTagsFlow"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    app:flow_horizontalBias="0"
+                                    app:flow_horizontalGap="6dp"
+                                    app:flow_horizontalStyle="packed"
+                                    app:flow_verticalGap="6dp"
+                                    app:flow_wrapMode="chain"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            <LinearLayout
+                                android:id="@+id/publicInfoContainer"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="14dp"
+                                android:orientation="vertical" />
+                        </LinearLayout>
+
+                        <View
+                            android:id="@+id/viewMoreFade"
+                            android:layout_width="match_parent"
+                            android:layout_height="72dp"
+                            android:layout_gravity="bottom"
+                            android:background="@drawable/bg_renter_vehicle_details_more_fade"
+                            android:visibility="gone" />
+                    </FrameLayout>
+
+                    <Button
+                        android:id="@+id/btnToggleMoreInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="10dp"
+                        android:backgroundTint="?attr/colorSecondary"
+                        android:text="@string/renter_vehicle_details_show_more_info"
+                        android:textColor="?attr/colorOnSecondary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardApproximateLocationMap"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="1dp"
+                app:strokeColor="?attr/borderLight"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/renter_vehicle_details_approx_location_title"
+                        android:textColor="?attr/textPrimary"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/renter_vehicle_details_approx_location_subtitle"
+                        android:textColor="?attr/textSecondary"
+                        android:textSize="13sp" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:layout_marginTop="10dp">
+
+                        <org.maplibre.android.maps.MapView
+                            android:id="@+id/renterVehicleApproxMapView"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="top|start"
+                            android:layout_marginStart="10dp"
+                            android:layout_marginTop="10dp"
+                            android:background="@drawable/bg_tag_primary"
+                            android:paddingStart="10dp"
+                            android:paddingTop="4dp"
+                            android:paddingEnd="10dp"
+                            android:paddingBottom="4dp"
+                            android:text="@string/renter_vehicle_details_approx_location_badge"
+                            android:textColor="?attr/colorOnPrimary"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvApproximateLocationUnavailable"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:padding="20dp"
+                            android:text="@string/renter_vehicle_details_approx_location_unavailable"
+                            android:textColor="?attr/textSecondary"
+                            android:textSize="13sp"
+                            android:visibility="gone" />
+                    </FrameLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
+
+    <View
+        android:id="@+id/bottomActionFade"
+        android:layout_width="0dp"
+        android:layout_height="42dp"
+        android:background="@drawable/bg_renter_bottom_action_fade"
+        app:layout_constraintBottom_toTopOf="@id/bottomActionCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/bottomActionCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/app_padding_horizontal"
+        android:layout_marginEnd="@dimen/app_padding_horizontal"
+        android:layout_marginBottom="16dp"
+        app:cardBackgroundColor="?attr/colorSurface"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="2dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:strokeColor="?attr/borderLight"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingTop="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:paddingEnd="10dp">
+
+                <TextView
+                    android:id="@+id/tvBottomRentTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/renter_vehicle_details_bottom_title"
+                    android:textColor="?attr/textPrimary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvBottomRentSubtitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/renter_vehicle_details_bottom_subtitle"
+                    android:textColor="?attr/textSecondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btnSeeAvailability"
+                android:layout_width="wrap_content"
+                android:layout_height="46dp"
+                android:minWidth="0dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:text="@string/renter_vehicle_details_see_availability" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
